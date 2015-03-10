@@ -8,8 +8,10 @@ before_install:
   - sudo apt-get install libpcap0.8
 
 script:
-  - cargo build
+  - cargo build --verbose
+  - cargo test --verbose
+  - cargo doc
 
 after_script:
-  - curl http://www.rust-ci.org/artifacts/put?t=$RUSTCI_TOKEN | sh
+  - mv target/doc . && curl http://www.rust-ci.org/artifacts/put?t=$RUSTCI_TOKEN | sh
 
