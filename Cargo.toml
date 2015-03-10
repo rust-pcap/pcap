@@ -1,0 +1,22 @@
+[package]
+
+name = "pcap"
+version = "0.0.1"
+authors = ["Sean Bowe <ewillbefull@gmail.com>"]
+description = "A packet capture API around pcap/wpcap"
+keywords = ["pcap", "packet", "sniffing"]
+readme = "README.md"
+homepage = "https://github.com/ebfull/pcap"
+repository = "https://github.com/ebfull/pcap"
+license = "MIT"
+
+[lib]
+name = "pcap"
+
+[[example]]
+name = "listenlocalhost"
+path = "examples/listenlocalhost.rs"
+
+[[example]]
+name = "getdevices"
+path = "examples/getdevices.rs"

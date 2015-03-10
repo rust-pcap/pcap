@@ -1,0 +1,7 @@
+language: rust
+
+before_install:
+	- sudo apt-get install libpcap0.8
+
+script:
+	- cargo build
