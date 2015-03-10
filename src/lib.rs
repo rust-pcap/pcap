@@ -1,4 +1,4 @@
-#![feature(libc, int_uint, core, unique, std_misc)]
+#![feature(libc, int_uint, core, unique)]
 
 extern crate libc;
 
