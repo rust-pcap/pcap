@@ -89,47 +89,38 @@ impl Device {
 /// A packet obtained from a `Capture`.
 ///
 /// This can be dereferenced to access the raw packet data.
-pub struct Packet {
-    data: Vec<u8>
+pub enum Packet<'a> {
+    Allocated(Vec<u8>),
+    Borrowed(&'a [u8])
 }
 
-impl Deref for Packet {
+impl<'b> Deref for Packet<'b> {
     type Target = [u8];
 
     fn deref<'a>(&'a self) -> &'a [u8] {
-        self.data.as_slice()
+        match *self {
+            Packet::Allocated(ref v) => {
+                v.as_slice()
+            },
+            Packet::Borrowed(x) => x
+        }
     }
 }
 
 /// An iterator over packets obtained from a `Capture` in realtime.
+///
+/// This iterator will allocate a `Vec<u8>` for each packet it receives. If this
+/// is not tolerable, try using `.next()` on `Capture` directly instead of this
+/// iterator.
 pub struct Packets<'a> {
-    capture: &'a Capture
+    capture: &'a mut Capture
 }
 
-impl<'a> Iterator for Packets<'a> {
-    type Item = Packet;
+impl<'a, 'b> Iterator for Packets<'a> {
+    type Item = Packet<'b>;
 
     fn next(&mut self) -> Option<Packet> {
-        unsafe {
-            let mut header: *mut raw::Struct_pcap_pkthdr = ptr::null_mut();
-            let mut packet: *const libc::c_uchar = ptr::null_mut();
-            match raw::pcap_next_ex(*self.capture.handle, &mut header, &mut packet) {
-                1 => {
-                    // packet was read without issue
-                    let packet = transmute::<_, &[u8]>(Slice {
-                        data: packet,
-                        len: (*header).len as usize
-                    });
-
-                    Some(Packet {
-                        data: packet.to_vec()
-                    })
-                },
-                _ => {
-                    None
-                }
-            }
-        }
+        self.capture.next().map(|x| Packet::Allocated((*x).to_vec()))
     }
 }
 
@@ -143,7 +134,29 @@ impl Capture {
     /// Returns an iterator over packets received on this capture handle.
     pub fn listen<'a>(&'a mut self) -> Packets<'a> {
         Packets {
-            capture: &*self
+            capture: self
+        }
+    }
+
+    /// Blocks until a packet is returned from the capture handle or an error occurs.
+    pub fn next<'a>(&'a mut self) -> Option<Packet<'a>> {
+        unsafe {
+            let mut header: *mut raw::Struct_pcap_pkthdr = ptr::null_mut();
+            let mut packet: *const libc::c_uchar = ptr::null_mut();
+            match raw::pcap_next_ex(*self.handle, &mut header, &mut packet) {
+                1 => {
+                    // packet was read without issue
+                    let packet = transmute::<_, &[u8]>(Slice {
+                        data: packet,
+                        len: (*header).len as usize
+                    });
+
+                    Some(Packet::Borrowed(packet))
+                },
+                _ => {
+                    None
+                }
+            }
         }
     }
 
