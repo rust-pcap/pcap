@@ -89,7 +89,24 @@ impl Device {
 /// A packet obtained from a `Capture`.
 ///
 /// This can be dereferenced to access the raw packet data.
-pub enum Packet<'a> {
+pub struct Packet<'a> {
+    data: PacketData<'a>
+}
+
+impl<'a> Packet<'a> {
+    fn new(content: &'a [u8]) -> Packet<'a> {
+        Packet {
+            data: PacketData::Borrowed(content)
+        }
+    }
+
+    fn alloc(mut self) -> Packet<'a> {
+        self.data = PacketData::Allocated(self.to_vec());
+        self
+    }
+}
+
+enum PacketData<'a> {
     Allocated(Vec<u8>),
     Borrowed(&'a [u8])
 }
@@ -98,11 +115,11 @@ impl<'b> Deref for Packet<'b> {
     type Target = [u8];
 
     fn deref<'a>(&'a self) -> &'a [u8] {
-        match *self {
-            Packet::Allocated(ref v) => {
+        match self.data {
+            PacketData::Allocated(ref v) => {
                 v.as_slice()
             },
-            Packet::Borrowed(x) => x
+            PacketData::Borrowed(x) => x
         }
     }
 }
@@ -120,7 +137,7 @@ impl<'a, 'b> Iterator for Packets<'a> {
     type Item = Packet<'b>;
 
     fn next(&mut self) -> Option<Packet> {
-        self.capture.next().map(|x| Packet::Allocated((*x).to_vec()))
+        self.capture.next().map(|x| x.alloc())
     }
 }
 
@@ -151,7 +168,7 @@ impl Capture {
                         len: (*header).len as usize
                     });
 
-                    Some(Packet::Borrowed(packet))
+                    Some(Packet::new(packet))
                 },
                 _ => {
                     None
