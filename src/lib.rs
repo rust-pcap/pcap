@@ -6,7 +6,6 @@ use std::ptr::{self, Unique};
 use std::ffi::{CStr,CString};
 use std::default::Default;
 use std::mem::transmute;
-use std::slice::SliceExt;
 use std::raw::Slice;
 use std::ops::Deref;
 use std::str;
