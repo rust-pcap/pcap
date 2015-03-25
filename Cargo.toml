@@ -1,13 +1,14 @@
 [package]
 
 name = "pcap"
-version = "0.0.2"
+version = "0.1.0"
 authors = ["Sean Bowe <ewillbefull@gmail.com>"]
 description = "A packet capture API around pcap/wpcap"
 keywords = ["pcap", "packet", "sniffing"]
 readme = "README.md"
 homepage = "https://github.com/ebfull/pcap"
 repository = "https://github.com/ebfull/pcap"
+documentation = "http://www.rust-ci.org/ebfull/pcap/doc/pcap/"
 license = "MIT"
 
 [lib]
