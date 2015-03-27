@@ -5,10 +5,10 @@ fn main() {
     for device in pcap::Devices::list_all().unwrap() {
         println!("Found device! {:?}", device);
 
-        // now you can .open() on this device to get a Capture if you want
+        // now you can create a Capture with this Device if you want.
         let mut cap = pcap::Capture::new(device).unwrap();
 
-        // get a packet from this device
+        // get a packet from this capture
         {
         	let packet = cap.next();
 
