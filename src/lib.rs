@@ -1,4 +1,4 @@
-#![feature(libc, core, unique, convert)]
+#![feature(libc, core, unique)]
 
 extern crate libc;
 
@@ -8,7 +8,7 @@ use std::default::Default;
 use std::slice;
 use std::str;
 use std::fmt;
-use std::error::FromError;
+use std::convert::From;
 mod raw;
 
 use self::Error::*;
@@ -55,9 +55,9 @@ impl std::error::Error for Error {
     }
 }
 
-impl FromError<str::Utf8Error> for Error {
-    fn from_error(err: str::Utf8Error) -> Error {
-        MalformedError(err)
+impl From<str::Utf8Error> for Error {
+    fn from(obj: str::Utf8Error) -> Error {
+        MalformedError(obj)
     }
 }
 
