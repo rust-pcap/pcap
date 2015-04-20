@@ -32,7 +32,7 @@ pub type __pid_t = ::libc::c_int;
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct Struct_Unnamed1 {
-    pub __val: [::libc::c_int; 2us],
+    pub __val: [::libc::c_int; 2usize],
 }
 impl ::std::default::Default for Struct_Unnamed1 {
     fn default() -> Struct_Unnamed1 { unsafe { ::std::mem::zeroed() } }
@@ -107,7 +107,7 @@ pub type __sig_atomic_t = ::libc::c_int;
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct Struct_Unnamed2 {
-    pub __val: [::libc::c_ulong; 16us],
+    pub __val: [::libc::c_ulong; 16usize],
 }
 impl ::std::default::Default for Struct_Unnamed2 {
     fn default() -> Struct_Unnamed2 { unsafe { ::std::mem::zeroed() } }
@@ -137,7 +137,7 @@ pub type __fd_mask = ::libc::c_long;
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct Struct_Unnamed3 {
-    pub __fds_bits: [__fd_mask; 16us],
+    pub __fds_bits: [__fd_mask; 16usize],
 }
 impl ::std::default::Default for Struct_Unnamed3 {
     fn default() -> Struct_Unnamed3 { unsafe { ::std::mem::zeroed() } }
@@ -152,10 +152,10 @@ pub type pthread_t = ::libc::c_ulong;
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct Union_pthread_attr_t {
-    pub _bindgen_data_: [u64; 7us],
+    pub _bindgen_data_: [u64; 7usize],
 }
 impl Union_pthread_attr_t {
-    pub unsafe fn __size(&mut self) -> *mut [::libc::c_char; 56us] {
+    pub unsafe fn __size(&mut self) -> *mut [::libc::c_char; 56usize] {
         ::std::mem::transmute(&self._bindgen_data_)
     }
     pub unsafe fn __align(&mut self) -> *mut ::libc::c_long {
@@ -181,13 +181,13 @@ pub type __pthread_list_t = Struct___pthread_internal_list;
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct Union_Unnamed4 {
-    pub _bindgen_data_: [u64; 5us],
+    pub _bindgen_data_: [u64; 5usize],
 }
 impl Union_Unnamed4 {
     pub unsafe fn __data(&mut self) -> *mut Struct___pthread_mutex_s {
         ::std::mem::transmute(&self._bindgen_data_)
     }
-    pub unsafe fn __size(&mut self) -> *mut [::libc::c_char; 40us] {
+    pub unsafe fn __size(&mut self) -> *mut [::libc::c_char; 40usize] {
         ::std::mem::transmute(&self._bindgen_data_)
     }
     pub unsafe fn __align(&mut self) -> *mut ::libc::c_long {
@@ -218,10 +218,10 @@ pub type pthread_mutex_t = Union_Unnamed4;
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct Union_Unnamed5 {
-    pub _bindgen_data_: [u32; 1us],
+    pub _bindgen_data_: [u32; 1usize],
 }
 impl Union_Unnamed5 {
-    pub unsafe fn __size(&mut self) -> *mut [::libc::c_char; 4us] {
+    pub unsafe fn __size(&mut self) -> *mut [::libc::c_char; 4usize] {
         ::std::mem::transmute(&self._bindgen_data_)
     }
     pub unsafe fn __align(&mut self) -> *mut ::libc::c_int {
@@ -235,13 +235,13 @@ pub type pthread_mutexattr_t = Union_Unnamed5;
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct Union_Unnamed6 {
-    pub _bindgen_data_: [u64; 6us],
+    pub _bindgen_data_: [u64; 6usize],
 }
 impl Union_Unnamed6 {
     pub unsafe fn __data(&mut self) -> *mut Struct_Unnamed7 {
         ::std::mem::transmute(&self._bindgen_data_)
     }
-    pub unsafe fn __size(&mut self) -> *mut [::libc::c_char; 48us] {
+    pub unsafe fn __size(&mut self) -> *mut [::libc::c_char; 48usize] {
         ::std::mem::transmute(&self._bindgen_data_)
     }
     pub unsafe fn __align(&mut self) -> *mut ::libc::c_longlong {
@@ -270,10 +270,10 @@ pub type pthread_cond_t = Union_Unnamed6;
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct Union_Unnamed8 {
-    pub _bindgen_data_: [u32; 1us],
+    pub _bindgen_data_: [u32; 1usize],
 }
 impl Union_Unnamed8 {
-    pub unsafe fn __size(&mut self) -> *mut [::libc::c_char; 4us] {
+    pub unsafe fn __size(&mut self) -> *mut [::libc::c_char; 4usize] {
         ::std::mem::transmute(&self._bindgen_data_)
     }
     pub unsafe fn __align(&mut self) -> *mut ::libc::c_int {
@@ -289,13 +289,13 @@ pub type pthread_once_t = ::libc::c_int;
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct Union_Unnamed9 {
-    pub _bindgen_data_: [u64; 7us],
+    pub _bindgen_data_: [u64; 7usize],
 }
 impl Union_Unnamed9 {
     pub unsafe fn __data(&mut self) -> *mut Struct_Unnamed10 {
         ::std::mem::transmute(&self._bindgen_data_)
     }
-    pub unsafe fn __size(&mut self) -> *mut [::libc::c_char; 56us] {
+    pub unsafe fn __size(&mut self) -> *mut [::libc::c_char; 56usize] {
         ::std::mem::transmute(&self._bindgen_data_)
     }
     pub unsafe fn __align(&mut self) -> *mut ::libc::c_long {
@@ -327,10 +327,10 @@ pub type pthread_rwlock_t = Union_Unnamed9;
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct Union_Unnamed11 {
-    pub _bindgen_data_: [u64; 1us],
+    pub _bindgen_data_: [u64; 1usize],
 }
 impl Union_Unnamed11 {
-    pub unsafe fn __size(&mut self) -> *mut [::libc::c_char; 8us] {
+    pub unsafe fn __size(&mut self) -> *mut [::libc::c_char; 8usize] {
         ::std::mem::transmute(&self._bindgen_data_)
     }
     pub unsafe fn __align(&mut self) -> *mut ::libc::c_long {
@@ -345,10 +345,10 @@ pub type pthread_spinlock_t = ::libc::c_int;
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct Union_Unnamed12 {
-    pub _bindgen_data_: [u64; 4us],
+    pub _bindgen_data_: [u64; 4usize],
 }
 impl Union_Unnamed12 {
-    pub unsafe fn __size(&mut self) -> *mut [::libc::c_char; 32us] {
+    pub unsafe fn __size(&mut self) -> *mut [::libc::c_char; 32usize] {
         ::std::mem::transmute(&self._bindgen_data_)
     }
     pub unsafe fn __align(&mut self) -> *mut ::libc::c_long {
@@ -362,10 +362,10 @@ pub type pthread_barrier_t = Union_Unnamed12;
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct Union_Unnamed13 {
-    pub _bindgen_data_: [u32; 1us],
+    pub _bindgen_data_: [u32; 1usize],
 }
 impl Union_Unnamed13 {
-    pub unsafe fn __size(&mut self) -> *mut [::libc::c_char; 4us] {
+    pub unsafe fn __size(&mut self) -> *mut [::libc::c_char; 4usize] {
         ::std::mem::transmute(&self._bindgen_data_)
     }
     pub unsafe fn __align(&mut self) -> *mut ::libc::c_int {
@@ -436,13 +436,13 @@ impl ::std::default::Default for Struct_Unnamed14 {
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct Union_Unnamed15 {
-    pub _bindgen_data_: [u32; 1us],
+    pub _bindgen_data_: [u32; 1usize],
 }
 impl Union_Unnamed15 {
     pub unsafe fn __wch(&mut self) -> *mut ::libc::c_uint {
         ::std::mem::transmute(&self._bindgen_data_)
     }
-    pub unsafe fn __wchb(&mut self) -> *mut [::libc::c_char; 4us] {
+    pub unsafe fn __wchb(&mut self) -> *mut [::libc::c_char; 4usize] {
         ::std::mem::transmute(&self._bindgen_data_)
     }
 }
@@ -511,7 +511,7 @@ pub struct Struct__IO_FILE {
     pub _old_offset: __off_t,
     pub _cur_column: ::libc::c_ushort,
     pub _vtable_offset: ::libc::c_char,
-    pub _shortbuf: [::libc::c_char; 1us],
+    pub _shortbuf: [::libc::c_char; 1usize],
     pub _lock: *mut _IO_lock_t,
     pub _offset: __off64_t,
     pub __pad1: *mut ::libc::c_void,
@@ -520,7 +520,7 @@ pub struct Struct__IO_FILE {
     pub __pad4: *mut ::libc::c_void,
     pub __pad5: size_t,
     pub _mode: ::libc::c_int,
-    pub _unused2: [::libc::c_char; 20us],
+    pub _unused2: [::libc::c_char; 20usize],
 }
 impl ::std::default::Default for Struct__IO_FILE {
     fn default() -> Struct__IO_FILE { unsafe { ::std::mem::zeroed() } }
@@ -619,7 +619,7 @@ pub type pcap_handler =
                               (arg1: *mut u_char,
                                arg2: *const Struct_pcap_pkthdr,
                                arg3: *const u_char) -> ()>;
-pub type __builtin_va_list = [__va_list_tag; 1us];
+pub type __builtin_va_list = [__va_list_tag; 1usize];
 pub type __va_list_tag = Struct___va_list_tag;
 #[repr(C)]
 #[derive(Copy, Clone)]
