@@ -27,4 +27,6 @@ On Debian based Linux, install `libpcap-dev`.
 
 ## Mac OS X
 
-Currently not supported because I don't have OSX, let me know if you can help.
+libpcap should be installed on Mac OS X by default.
+
+**Note:** A timeout of zero may cause ```pcap::Capture::next``` to hang and never return (because it waits for the timeout to expire before returning). This can be fixed by using a non-zero timeout (as the libpcap manual recommends) and calling ```pcap::Capture::next``` in a loop.
