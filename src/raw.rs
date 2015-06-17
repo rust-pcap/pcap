@@ -979,4 +979,6 @@ extern {}
 #[link(name = "pcap")]
 extern {}
 
-// TODO: mac?
+#[cfg(target_os = "macos")]
+#[link(name = "pcap")]
+extern {}
