@@ -5,6 +5,7 @@ extern crate libc;
 use std::ptr::{self, Unique};
 use std::ffi::{CStr,CString};
 use std::default::Default;
+use std::path::Path;
 use std::slice;
 use std::str;
 use std::fmt;
@@ -139,7 +140,7 @@ impl AsRef<str> for Device {
 /// This is a builder for a `Capture` handle. It's useful when you want to specify certain
 /// parameters, like promiscuous mode, or buffer length, before opening.
 ///
-/// You can use `Capture::new()` instead of this builder, with less flexibility.
+/// You can use `Capture::from_device()` instead of this builder, with less flexibility.
 pub struct CaptureBuilder {
     buffer_size: i32,
     snaplen: i32,
@@ -226,14 +227,14 @@ impl CaptureBuilder {
     /// Set the snaplen size (the maximum length of a packet captured into the buffer).
     /// Useful if you only want certain headers, but not the entire packet.
     /// 
-    /// The default is 65536
+    /// The default is 65535
     pub fn snaplen(&mut self, to: i32) -> &mut CaptureBuilder {
         self.snaplen = to;
         self
     }
 }
 
-/// This represents an open capture handle attached to a device.
+/// This represents an open capture handle attached to a device or file.
 ///
 /// Internally it represents a `pcap_t`.
 pub struct Capture {
@@ -245,8 +246,27 @@ impl Capture {
     ///
     /// You can provide this a `Device` from `Devices::list_all()` or an `&str` name of
     /// the device such as "any" on Linux.
-    pub fn new<D: AsRef<str>>(device: D) -> Result<Capture, Error> {
+    pub fn from_device<D: AsRef<str>>(device: D) -> Result<Capture, Error> {
         CaptureBuilder::new().open(device)
+    }
+
+    /// Creates a capture handle from the specified file, or an error from pcap.
+    pub fn from_file<P: AsRef<Path>>(path: P) -> Result<Capture, Error> {
+        let name = CString::new(path.as_ref().to_str().unwrap()).unwrap();
+        let mut errbuf = [0i8; 256];
+
+        unsafe {
+            let handle = raw::pcap_open_offline(name.as_ptr(), errbuf.as_mut_ptr());
+            if handle.is_null() {
+                return Error::new(errbuf.as_ptr());
+            }
+
+            let cap = Capture {
+                handle: Unique::new(handle)
+            };
+
+            Ok(cap)
+        }
     }
 
     /// Blocks until a packet is returned from the capture handle or an error occurs.
