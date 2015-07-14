@@ -6,7 +6,7 @@ This is a **Rust language** crate for accessing the packet sniffing capabilities
 It is limited in functionality, so if you need anything feel free to post an issue or submit a pull request!
 
 * List devices
-* Open capture handle on a device
+* Open capture handle on a device or file
 * Configure some parameters like promiscuity and buffer length
 * Get packets from the capture handle
 
