@@ -1,8 +1,7 @@
-#![feature(libc, unique)]
-
 extern crate libc;
 
-use std::ptr::{self, Unique};
+use unique::Unique;
+use std::ptr::{self};
 use std::ffi::{CStr,CString};
 use std::default::Default;
 use std::path::Path;
@@ -11,6 +10,7 @@ use std::str;
 use std::fmt;
 use std::convert::From;
 mod raw;
+mod unique;
 
 use self::Error::*;
 
