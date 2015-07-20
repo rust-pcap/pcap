@@ -277,7 +277,7 @@ impl Capture {
             match raw::pcap_next_ex(*self.handle, &mut header, &mut packet) {
                 1 => {
                     // packet was read without issue
-                    Some(slice::from_raw_parts(packet, (*header).len as usize))
+                    Some(slice::from_raw_parts(packet, (*header).caplen as usize))
                 },
                 _ => {
                     None
