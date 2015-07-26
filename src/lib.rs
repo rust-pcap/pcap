@@ -131,6 +131,27 @@ pub struct Device {
     pub desc: Option<String>
 }
 
+impl Device {
+    /// Returns the default Device suitable for captures according to pcap_lookupdev,
+    /// or an error from pcap.
+    pub fn lookup() -> Result<Device, Error> {
+        let mut errbuf = [0i8; 256];
+
+        unsafe {
+            let default_name = raw::pcap_lookupdev(errbuf.as_mut_ptr());
+
+            if default_name.is_null() {
+                return Error::new(errbuf.as_ptr());
+            }
+
+            Ok(Device {
+                name: try!(cstr_to_string(default_name)),
+                desc: None
+            })
+        }
+    }
+}
+
 impl AsRef<str> for Device {
     fn as_ref(&self) -> &str {
         &*self.name

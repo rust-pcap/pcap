@@ -24,3 +24,8 @@ path = "examples/listenlocalhost.rs"
 [[example]]
 name = "getdevices"
 path = "examples/getdevices.rs"
+
+[[example]]
+name = "easylisten"
+path = "examples/easylisten.rs"
+
