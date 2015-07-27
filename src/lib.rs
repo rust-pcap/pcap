@@ -14,6 +14,8 @@ mod unique;
 
 use self::Error::*;
 
+const PCAP_ERROR_NOT_ACTIVATED: i32 = -3;
+
 /// An error received from pcap
 #[derive(Debug)]
 pub enum Error {
@@ -158,6 +160,25 @@ impl AsRef<str> for Device {
     }
 }
 
+/// This is a datalink link type returned from pcap.
+#[derive(Debug)]
+pub struct Linktype(i32);
+
+impl Linktype {
+    /// Gets the name of the link type, such as ETHERNET
+    pub fn get_name(&self) -> Result<String, Error> {
+        unsafe {
+            Ok(try!(cstr_to_string(raw::pcap_datalink_val_to_name(self.0))))
+        }
+    }
+
+    pub fn get_description(&self) -> Result<String, Error> {
+        unsafe {
+            Ok(try!(cstr_to_string(raw::pcap_datalink_val_to_description(self.0))))
+        }
+    }
+}
+
 /// This is a builder for a `Capture` handle. It's useful when you want to specify certain
 /// parameters, like promiscuous mode, or buffer length, before opening.
 ///
@@ -290,7 +311,62 @@ impl Capture {
         }
     }
 
+    /// List the datalink types that this captured device supports.
+    pub fn list_datalinks(&mut self) -> Result<Vec<Linktype>, Error> {
+        unsafe {
+            let mut links: *mut i32 = ptr::null_mut();
+
+            let num = raw::pcap_list_datalinks(*self.handle, &mut links);
+
+            if num == -3 {
+                raw::pcap_free_datalinks(links);
+                panic!("It should not be possible to run list_datalinks on a Capture that is not activated, please report this bug!")
+            } else if num < 0 {
+                raw::pcap_free_datalinks(links);
+                Error::new(raw::pcap_geterr(*self.handle))
+            } else {
+                let slice = slice::from_raw_parts(links, num as usize).iter().map(|&a| Linktype(a)).collect();
+                raw::pcap_free_datalinks(links);
+
+                Ok(slice)
+            }
+        }
+    }
+
+    /// Set the datalink type for the current capture handle.
+    pub fn set_datalink(&mut self, linktype: Linktype) -> Result<(), Error> {
+        unsafe {
+            match raw::pcap_set_datalink(*self.handle, linktype.0) {
+                0 => {
+                    Ok(())
+                },
+                _ => {
+                    Error::new(raw::pcap_geterr(*self.handle))
+                }
+            }
+        }
+    }
+
+    /// Get the current datalink type for this capture handle.
+    pub fn get_datalink(&mut self) -> Linktype {
+        unsafe {
+            match raw::pcap_datalink(*self.handle) {
+                PCAP_ERROR_NOT_ACTIVATED => {
+                    panic!("It should not be possible to run list_datalinks on a Capture that is not activated, please report this bug!");
+                },
+                lt => {
+                    Linktype(lt)
+                }
+            }
+        }
+    }
+
     /// Blocks until a packet is returned from the capture handle or an error occurs.
+    ///
+    /// pcap captures packets and places them into a buffer which this function reads
+    /// from. This buffer has a finite length, so if the buffer fills completely new
+    /// packets will be discarded temporarily. This means that in realtime situations,
+    /// you probably want to minimize the time between calls of this next() method.
     pub fn next<'a>(&'a mut self) -> Option<&'a [u8]> {
         unsafe {
             let mut header: *mut raw::Struct_pcap_pkthdr = ptr::null_mut();
