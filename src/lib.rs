@@ -165,13 +165,14 @@ impl AsRef<str> for Device {
 pub struct Linktype(i32);
 
 impl Linktype {
-    /// Gets the name of the link type, such as ETHERNET
+    /// Gets the name of the link type, such as EN10MB
     pub fn get_name(&self) -> Result<String, Error> {
         unsafe {
             Ok(try!(cstr_to_string(raw::pcap_datalink_val_to_name(self.0))))
         }
     }
 
+    /// Gets the description of a link type.
     pub fn get_description(&self) -> Result<String, Error> {
         unsafe {
             Ok(try!(cstr_to_string(raw::pcap_datalink_val_to_description(self.0))))

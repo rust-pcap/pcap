@@ -5,10 +5,13 @@
 This is a **Rust language** crate for accessing the packet sniffing capabilities of pcap (or wpcap on Windows).
 It is limited in functionality, so if you need anything feel free to post an issue or submit a pull request!
 
+## Features:
+
 * List devices
 * Open capture handle on a device or file
+* List/set/get datalink link types
 * Configure some parameters like promiscuity and buffer length
-* Get packets from the capture handle
+* Get packets from the capture handle, of course!
 
 See examples for usage.
 
