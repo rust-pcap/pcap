@@ -352,7 +352,7 @@ impl Capture {
         unsafe {
             match raw::pcap_datalink(*self.handle) {
                 PCAP_ERROR_NOT_ACTIVATED => {
-                    panic!("It should not be possible to run list_datalinks on a Capture that is not activated, please report this bug!");
+                    panic!("It should not be possible to run get_datalink on a Capture that is not activated, please report this bug!");
                 },
                 lt => {
                     Linktype(lt)
