@@ -318,7 +318,7 @@ impl Capture {
 
             let num = raw::pcap_list_datalinks(*self.handle, &mut links);
 
-            if num == -3 {
+            if num == PCAP_ERROR_NOT_ACTIVATED {
                 raw::pcap_free_datalinks(links);
                 panic!("It should not be possible to run list_datalinks on a Capture that is not activated, please report this bug!")
             } else if num < 0 {
