@@ -162,7 +162,7 @@ impl AsRef<str> for Device {
 
 /// This is a datalink link type returned from pcap.
 #[derive(Debug)]
-pub struct Linktype(i32);
+pub struct Linktype(pub i32);
 
 impl Linktype {
     /// Gets the name of the link type, such as EN10MB
