@@ -3,17 +3,15 @@ extern crate libc;
 use unique::Unique;
 use std::ptr::{self};
 use std::ffi::{CStr,CString};
-use std::default::Default;
 use std::path::Path;
 use std::slice;
 use std::ops::Deref;
 use std::str;
 use std::fmt;
-use std::convert::From;
+use self::Error::*;
+
 mod raw;
 mod unique;
-
-use self::Error::*;
 
 const PCAP_ERROR_NOT_ACTIVATED: i32 = -3;
 
@@ -209,7 +207,7 @@ impl CaptureBuilder {
     }
 
     /// Open a `Capture` with this `CaptureBuilder` with the given device. You can
-    /// provide a `Device` or an &str name of the device/source you would like to open.
+    /// provide a `Device` or an `&str` name of the device/source you would like to open.
     pub fn open<D: Into<Device>>(&self, device: D) -> Result<Capture, Error> {
         let device: Device = device.into();
         let name = CString::new(device.name).unwrap();
@@ -299,8 +297,8 @@ impl<'b> Deref for Packet<'b> {
     }
 }
 
-impl<'a> std::fmt::Debug for Packet<'a> {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> Result<(), std::fmt::Error> {
+impl<'a> fmt::Debug for Packet<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         self.deref().fmt(f)
     }
 }
