@@ -16,6 +16,7 @@ mod raw;
 mod unique;
 
 const PCAP_ERROR_NOT_ACTIVATED: i32 = -3;
+const PCAP_ERRBUF_SIZE: usize = 256;
 
 /// An error received from pcap
 #[derive(Debug)]
@@ -76,7 +77,7 @@ impl Device {
     /// Returns the default Device suitable for captures according to pcap_lookupdev,
     /// or an error from pcap.
     pub fn lookup() -> Result<Device, Error> {
-        let mut errbuf = [0i8; 256];
+        let mut errbuf = [0i8; PCAP_ERRBUF_SIZE];
 
         unsafe {
             let default_name = raw::pcap_lookupdev(errbuf.as_mut_ptr());
@@ -95,7 +96,7 @@ impl Device {
     /// Returns a vector of `Device`s known by pcap via pcap_findalldevs.
     pub fn list() -> Result<Vec<Device>, Error> {
         unsafe {
-            let mut errbuf = [0i8; 256];
+            let mut errbuf = [0i8; PCAP_ERRBUF_SIZE];
             let mut dev_buf: *mut raw::Struct_pcap_if = ptr::null_mut();
             let mut ret = vec![];
 
@@ -242,7 +243,7 @@ impl Capture<All> {
     pub fn from_device<D: Into<Device>>(device: D) -> Result<Capture<Inactive>, Error> {
         let device: Device = device.into();
         let name = CString::new(device.name).unwrap();
-        let mut errbuf = [0i8; 256];
+        let mut errbuf = [0i8; PCAP_ERRBUF_SIZE];
 
         unsafe {
             let handle = raw::pcap_create(name.as_ptr(), errbuf.as_mut_ptr());
@@ -260,7 +261,7 @@ impl Capture<All> {
     /// Opens an offline capture handle from a pcap dump file, given a path.
     pub fn from_file<P: AsRef<Path>>(path: P) -> Result<Capture<Offline>, Error> {
         let name = CString::new(path.as_ref().to_str().unwrap()).unwrap();
-        let mut errbuf = [0i8; 256];
+        let mut errbuf = [0i8; PCAP_ERRBUF_SIZE];
 
         unsafe {
             let handle = raw::pcap_open_offline(name.as_ptr(), errbuf.as_mut_ptr());
