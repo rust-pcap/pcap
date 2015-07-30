@@ -6,6 +6,7 @@ use std::ffi::{CStr,CString};
 use std::default::Default;
 use std::path::Path;
 use std::slice;
+use std::ops::Deref;
 use std::str;
 use std::fmt;
 use std::convert::From;
@@ -277,6 +278,29 @@ impl CaptureBuilder {
     }
 }
 
+/// Represents a packet returned from pcap. This can be dereferenced to access
+/// the underlying packet `[u8]` slice.
+pub struct Packet<'a> {
+    header: &'a raw::Struct_pcap_pkthdr,
+    data: &'a libc::c_uchar
+}
+
+impl<'b> Deref for Packet<'b> {
+    type Target = [u8];
+
+    fn deref<'a>(&'a self) -> &'a [u8] {
+        unsafe {
+            slice::from_raw_parts(self.data, self.header.caplen as usize)
+        }
+    }
+}
+
+impl<'a> std::fmt::Debug for Packet<'a> {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> Result<(), std::fmt::Error> {
+        self.deref().fmt(f)
+    }
+}
+
 /// This represents an open capture handle attached to a device or file.
 ///
 /// Internally it represents a `pcap_t`.
@@ -368,14 +392,17 @@ impl Capture {
     /// from. This buffer has a finite length, so if the buffer fills completely new
     /// packets will be discarded temporarily. This means that in realtime situations,
     /// you probably want to minimize the time between calls of this next() method.
-    pub fn next<'a>(&'a mut self) -> Option<&'a [u8]> {
+    pub fn next<'a>(&'a mut self) -> Option<Packet<'a>> {
         unsafe {
             let mut header: *mut raw::Struct_pcap_pkthdr = ptr::null_mut();
-            let mut packet: *const libc::c_uchar = ptr::null_mut();
+            let mut packet: *const libc::c_uchar = ptr::null();
             match raw::pcap_next_ex(*self.handle, &mut header, &mut packet) {
                 1 => {
                     // packet was read without issue
-                    Some(slice::from_raw_parts(packet, (*header).caplen as usize))
+                    Some(Packet {
+                        header: &*header,
+                        data: &*packet
+                    })
                 },
                 _ => {
                     None
