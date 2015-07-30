@@ -26,7 +26,7 @@ or `C:\Rust\bin\rustlib\i686-pc-windows-gnu\lib\` on 32 bit.
 
 ## Linux
 
-On Debian based Linux, install `libpcap-dev`.
+On Debian based Linux, install `libpcap-dev`. If not running as root, you need to set capabilities like so: ```sudo setcap cap_net_raw,cap_net_admin=eip path/to/bin```
 
 ## Mac OS X
 
