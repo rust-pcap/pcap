@@ -155,9 +155,12 @@ impl Device {
     }
 }
 
-impl AsRef<str> for Device {
-    fn as_ref(&self) -> &str {
-        &*self.name
+impl<'a> Into<Device> for &'a str {
+    fn into(self) -> Device {
+        Device {
+            name: self.into(),
+            desc: None
+        }
     }
 }
 
@@ -207,8 +210,9 @@ impl CaptureBuilder {
 
     /// Open a `Capture` with this `CaptureBuilder` with the given device. You can
     /// provide a `Device` or an &str name of the device/source you would like to open.
-    pub fn open<D: AsRef<str>>(&self, device: D) -> Result<Capture, Error> {
-        let name = CString::new(device.as_ref()).unwrap();
+    pub fn open<D: Into<Device>>(&self, device: D) -> Result<Capture, Error> {
+        let device: Device = device.into();
+        let name = CString::new(device.name).unwrap();
         // TODO: handle errors better throughout this library
         let mut errbuf = [0i8; 256];
 
@@ -313,7 +317,7 @@ impl Capture {
     ///
     /// You can provide this a `Device` from `Devices::list_all()` or an `&str` name of
     /// the device such as "any" on Linux.
-    pub fn from_device<D: AsRef<str>>(device: D) -> Result<Capture, Error> {
+    pub fn from_device<D: Into<Device>>(device: D) -> Result<Capture, Error> {
         CaptureBuilder::new().open(device)
     }
 
