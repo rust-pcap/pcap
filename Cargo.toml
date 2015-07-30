@@ -29,3 +29,7 @@ path = "examples/getdevices.rs"
 name = "easylisten"
 path = "examples/easylisten.rs"
 
+[[example]]
+name = "savefile"
+path = "examples/savefile.rs"
+

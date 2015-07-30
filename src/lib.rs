@@ -341,7 +341,7 @@ impl Capture<Inactive> {
 ///# Activated captures include `Capture<Active>` and `Capture<Offline>`.
 impl<T: Activated> Capture<T> {
     /// List the datalink types that this captured device supports.
-    pub fn list_datalinks(&mut self) -> Result<Vec<Linktype>, Error> {
+    pub fn list_datalinks(&self) -> Result<Vec<Linktype>, Error> {
         unsafe {
             let mut links: *mut i32 = ptr::null_mut();
 
@@ -377,7 +377,7 @@ impl<T: Activated> Capture<T> {
     }
 
     /// Get the current datalink type for this capture handle.
-    pub fn get_datalink(&mut self) -> Linktype {
+    pub fn get_datalink(&self) -> Linktype {
         unsafe {
             match raw::pcap_datalink(*self.handle) {
                 PCAP_ERROR_NOT_ACTIVATED => {
@@ -386,6 +386,23 @@ impl<T: Activated> Capture<T> {
                 lt => {
                     Linktype(lt)
                 }
+            }
+        }
+    }
+
+    /// Create a `Savefile` context for recording captured packets using this `Capture`'s
+    /// configurations.
+    pub fn savefile<P: AsRef<Path>>(&self, path: P) -> Result<Savefile, Error> {
+        let name = CString::new(path.as_ref().to_str().unwrap()).unwrap();
+        unsafe {
+            let handle = raw::pcap_dump_open(*self.handle, name.as_ptr());
+
+            if handle.is_null() {
+                Error::new(raw::pcap_geterr(*self.handle))
+            } else {
+                Ok(Savefile {
+                    handle: Unique::new(handle)
+                })
             }
         }
     }
@@ -444,6 +461,27 @@ impl<T> Drop for Capture<T> {
     fn drop(&mut self) {
         unsafe {
             raw::pcap_close(*self.handle)
+        }
+    }
+}
+
+/// Abstraction for writing pcap savefiles, which can be read afterwards via `Capture::from_file()`.
+pub struct Savefile {
+    handle: Unique<raw::pcap_dumper_t>
+}
+
+impl Savefile {
+    pub fn write<'a>(&mut self, packet: &'a Packet<'a>) {
+        unsafe {
+            raw::pcap_dump(*self.handle as *mut u8, packet.header, packet.data);
+        }
+    }
+}
+
+impl Drop for Savefile {
+    fn drop(&mut self) {
+        unsafe {
+            raw::pcap_dump_close(*self.handle);
         }
     }
 }
