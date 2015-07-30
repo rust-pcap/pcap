@@ -194,11 +194,6 @@ pub enum Active {}
 /// Implements `Activated`.
 pub enum Offline {}
 
-// we do this because we cannot do impl<T> Capture<T> and provide specific return results
-// without tripping up type ambiguities at the callsite.
-#[doc(hidden)]
-pub enum All {}
-
 trait Activated {}
 
 impl Activated for Active {}
@@ -237,7 +232,7 @@ pub struct Capture<T> {
     _marker: PhantomData<T>
 }
 
-impl Capture<All> {
+impl Capture<()> {
     /// Opens a capture handle for a device. The handle is inactive, but can be activated
     /// via `.open()`. You can pass a `Device` or an `&str` device name here.
     pub fn from_device<D: Into<Device>>(device: D) -> Result<Capture<Inactive>, Error> {
