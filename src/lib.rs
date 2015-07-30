@@ -215,6 +215,9 @@ pub enum Active {}
 /// Implements `Activated`.
 pub enum Offline {}
 
+#[doc(hidden)]
+pub enum All {}
+
 trait Activated {}
 
 impl Activated for Active {}
@@ -229,7 +232,7 @@ pub struct Capture<T> {
     _marker: PhantomData<T>
 }
 
-impl Capture<Inactive> {
+impl Capture<All> {
     /// Opens a capture handle for a device. The handle is inactive, but can be activated
     /// via `.open()`.
     pub fn from_device<D: Into<Device>>(device: D) -> Result<Capture<Inactive>, Error> {
@@ -250,6 +253,26 @@ impl Capture<Inactive> {
         }
     }
 
+    /// Opens an offline capture handle from a pcap dump file.
+    pub fn from_file<P: AsRef<Path>>(path: P) -> Result<Capture<Offline>, Error> {
+        let name = CString::new(path.as_ref().to_str().unwrap()).unwrap();
+        let mut errbuf = [0i8; 256];
+
+        unsafe {
+            let handle = raw::pcap_open_offline(name.as_ptr(), errbuf.as_mut_ptr());
+            if handle.is_null() {
+                return Error::new(errbuf.as_ptr());
+            }
+
+            Ok(Capture {
+                handle: Unique::new(handle),
+                _marker: PhantomData
+            })
+        }
+    }
+}
+
+impl Capture<Inactive> {
     /// Activates an inactive capture created from `Capture::from_device()` or returns
     /// an error.
     pub fn open(self) -> Result<Capture<Active>, Error> {
@@ -307,26 +330,6 @@ impl Capture<Inactive> {
         unsafe {
             raw::pcap_set_snaplen(*self.handle, to);
             self
-        }
-    }
-}
-
-impl Capture<Offline> {
-    /// Opens an offline capture handle from a pcap dump file.
-    pub fn from_file<P: AsRef<Path>>(path: P) -> Result<Capture<Offline>, Error> {
-        let name = CString::new(path.as_ref().to_str().unwrap()).unwrap();
-        let mut errbuf = [0i8; 256];
-
-        unsafe {
-            let handle = raw::pcap_open_offline(name.as_ptr(), errbuf.as_mut_ptr());
-            if handle.is_null() {
-                return Error::new(errbuf.as_ptr());
-            }
-
-            Ok(Capture {
-                handle: Unique::new(handle),
-                _marker: PhantomData
-            })
         }
     }
 }
