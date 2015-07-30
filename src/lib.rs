@@ -215,6 +215,8 @@ pub enum Active {}
 /// Implements `Activated`.
 pub enum Offline {}
 
+// we do this because we cannot do impl<T> Capture<T> and provide specific return results
+// without tripping up type ambiguities at the callsite.
 #[doc(hidden)]
 pub enum All {}
 
@@ -223,10 +225,34 @@ trait Activated {}
 impl Activated for Active {}
 impl Activated for Offline {}
 
-/// This is a capture handle which is internally represented by `pcap_t`. This handle uses
-/// a phantom type (Inactive, Active, Offline) to represent the kind of handle it is currently.
+/// This is a pcap capture handle which is an abstraction over the `pcap_t` provided by pcap.
+/// There are many ways to instantiate and interact with a pcap handle, so phantom types are
+/// used to express these behaviors.
 ///
-/// MORE DOCS HERE!
+/// **`Capture<Inactive>`** is created via `Capture::from_device()`. This handle is inactive,
+/// so you cannot (yet) obtain packets from it. However, you can configure things like the
+/// buffer size, snaplen, timeout, and promiscuity before you activate it.
+///
+/// **`Capture<Active>`** is created by calling `.open()` on a `Capture<Inactive>`. This
+/// activates the capture handle, allowing you to get packets with `.next()` or apply filters
+/// with `.filter()`.
+///
+/// **`Capture<Offline>`** is created via `Capture::from_file()`. This allows you to read a
+/// pcap format dump file as if you were opening an interface -- very useful for testing or 
+/// analysis.
+///
+/// # Example:
+///
+/// ```ignore
+/// let cap = Capture::from_device(Device::lookup().unwrap()) // open the "default" interface
+///               .unwrap() // assume the device exists and we are authorized to open it
+///               .open() // activate the handle
+///               .unwrap(); // assume activation worked
+///
+/// while let Some(packet) = cap.next() {
+///     println!("received packet! {:?}", packet);
+/// }
+/// ```
 pub struct Capture<T> {
     handle: Unique<raw::pcap_t>,
     _marker: PhantomData<T>
@@ -234,7 +260,7 @@ pub struct Capture<T> {
 
 impl Capture<All> {
     /// Opens a capture handle for a device. The handle is inactive, but can be activated
-    /// via `.open()`.
+    /// via `.open()`. You can pass a `Device` or an `&str` device name here.
     pub fn from_device<D: Into<Device>>(device: D) -> Result<Capture<Inactive>, Error> {
         let device: Device = device.into();
         let name = CString::new(device.name).unwrap();
@@ -253,7 +279,7 @@ impl Capture<All> {
         }
     }
 
-    /// Opens an offline capture handle from a pcap dump file.
+    /// Opens an offline capture handle from a pcap dump file, given a path.
     pub fn from_file<P: AsRef<Path>>(path: P) -> Result<Capture<Offline>, Error> {
         let name = CString::new(path.as_ref().to_str().unwrap()).unwrap();
         let mut errbuf = [0i8; 256];
@@ -334,7 +360,7 @@ impl Capture<Inactive> {
     }
 }
 
-////# Activated captures include `Capture<Active>` and `Capture<Offline>`.
+///# Activated captures include `Capture<Active>` and `Capture<Offline>`.
 impl<T: Activated> Capture<T> {
     /// List the datalink types that this captured device supports.
     pub fn list_datalinks(&mut self) -> Result<Vec<Linktype>, Error> {
