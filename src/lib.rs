@@ -1,3 +1,63 @@
+//! pcap is a packet capture library available on Linux, Windows and Mac. This
+//! crate supports creating and configuring capture contexts, sniffing packets,
+//! sending packets to interfaces, listing devices, and recording packet captures
+//! to pcap-format dump files.
+//!
+//! # Getting devices
+//! The first step to packet sniffing using pcap is picking which device you want
+//! to capture from. `Device::lookup()` returns a `Device` that contains the first
+//! non-loopback device pcap is aware of. You can also use `Device::list()` to 
+//! obtain a list of `Device`s for capturing.
+//!
+//! ```ignore
+//! use pcap::Device;
+//!
+//! fn main() {
+//!     let main_device = Device::lookup().unwrap();
+//!     println!("Device name: {}", main_device.name);
+//! }
+//! ```
+//!
+//! # Capturing packets
+//! The easiest way to open an active capture handle and begin sniffing is to
+//! use `.open()` on a `Device`.
+//!
+//! ```ignore
+//! use pcap::Device;
+//! 
+//! fn main() {
+//!     let mut cap = Device::lookup().unwrap().open().unwrap();
+//!     
+//!     while let Some(packet) = cap.next() {
+//!         println!("received packet! {:?}", packet);
+//!     }
+//! }
+//! ```
+//! 
+//! `Capture`'s `.next()` will produce a `Packet` which can be dereferenced to access the
+//! `&[u8]` packet contents.
+//!
+//! # Custom configuration
+//! 
+//! You may want to configure the `timeout`, `snaplen` or other parameters for the capture
+//! handle. In this case, use `Capture::from_device()` to obtain a `Capture<Inactive>`, and
+//! proceed to configure the capture handle. When you're finished, run `.open()` on it to
+//! turn it into a `Capture<Active>`.
+//!
+//! ```ignore
+//! use pcap::{Device,Capture};
+//! 
+//! fn main() {
+//!     let main_device = Device::lookup().unwrap();
+//!     let mut cap = Capture::from_device(main_device).unwrap()
+//!                       .promisc(true)
+//!                       .snaplen(5000)
+//!                       .open().unwrap();
+//!     
+//!     // ...
+//! }
+//! ```
+
 extern crate libc;
 
 use unique::Unique;
@@ -74,6 +134,11 @@ pub struct Device {
 }
 
 impl Device {
+    /// Opens a `Capture<Active>` on this device.
+    pub fn open(self) -> Result<Capture<Active>, Error> {
+        Ok(try!(try!(Capture::from_device(self)).open()))
+    }
+
     /// Returns the default Device suitable for captures according to pcap_lookupdev,
     /// or an error from pcap.
     pub fn lookup() -> Result<Device, Error> {
