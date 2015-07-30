@@ -457,6 +457,25 @@ impl<T: Activated> Capture<T> {
     }
 }
 
+impl Capture<Active> {
+    /// Sends a packet over this capture handle's interface, returning the number
+    /// of bytes written.
+    pub fn sendpacket<'a>(&mut self, buf: &'a [u8]) -> Result<usize, Error> {
+        unsafe {
+            let written = raw::pcap_inject(*self.handle, buf.as_ptr() as *const libc::types::common::c95::c_void, buf.len() as libc::types::os::arch::c95::size_t);
+
+            match written {
+                -1 => {
+                    return Error::new(raw::pcap_geterr(*self.handle));
+                },
+                _ => {
+                    Ok(written as usize)
+                }
+            }
+        }
+    }
+}
+
 impl<T> Drop for Capture<T> {
     fn drop(&mut self) {
         unsafe {
