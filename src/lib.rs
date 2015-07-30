@@ -65,68 +65,6 @@ impl From<str::Utf8Error> for Error {
     }
 }
 
-/// An iterator over devices that pcap is aware about on the system.
-pub struct Devices {
-    orig: Unique<raw::Struct_pcap_if>,
-    device: Unique<raw::Struct_pcap_if>
-}
-
-impl Devices {
-    /// Construct a new `Devices` iterator by internally using `pcap_findalldevs()`
-    pub fn list_all() -> Result<Devices, Error> {
-        unsafe {
-            let mut errbuf = [0i8; 256];
-            let mut dev_buf: *mut raw::Struct_pcap_if = ptr::null_mut();
-
-            match raw::pcap_findalldevs(&mut dev_buf, errbuf.as_mut_ptr()) {
-                0 => {
-                    Ok(Devices {
-                        orig: Unique::new(dev_buf),
-                        device: Unique::new(dev_buf)
-                    })
-                },
-                _ => {
-                    Error::new(errbuf.as_ptr())
-                }
-            }
-        }
-    }
-}
-
-impl Iterator for Devices {
-    type Item = Device;
-
-    fn next(&mut self) -> Option<Device> {
-        if self.device.is_null() {
-            None
-        } else {
-            unsafe {
-                let ret = Device {
-                    name: cstr_to_string(self.device.get().name).unwrap(),
-                    desc: {
-                        if !self.device.get().description.is_null() {
-                            Some(cstr_to_string(self.device.get().description).unwrap())
-                        } else {
-                            None
-                        }
-                    }
-                };
-                self.device = Unique::new(self.device.get().next);
-
-                Some(ret)
-            }
-        }
-    }
-}
-
-impl Drop for Devices {
-    fn drop(&mut self) {
-        unsafe {
-            raw::pcap_freealldevs(*self.orig);
-        }
-    }
-}
-
 #[derive(Debug)]
 /// A network device as returned from `Devices::list_all()`.
 pub struct Device {
@@ -151,6 +89,43 @@ impl Device {
                 name: try!(cstr_to_string(default_name)),
                 desc: None
             })
+        }
+    }
+
+    /// Returns a vector of `Device`s known by pcap.
+    pub fn list() -> Result<Vec<Device>, Error> {
+        unsafe {
+            let mut errbuf = [0i8; 256];
+            let mut dev_buf: *mut raw::Struct_pcap_if = ptr::null_mut();
+            let mut ret = vec![];
+
+            match raw::pcap_findalldevs(&mut dev_buf, errbuf.as_mut_ptr()) {
+                0 => {
+                    let mut cur = dev_buf;
+
+                    while !cur.is_null() {
+                        ret.push(Device {
+                            name: cstr_to_string((&*cur).name).unwrap(),
+                            desc: {
+                                if !(&*cur).description.is_null() {
+                                    Some(cstr_to_string((&*cur).description).unwrap())
+                                } else {
+                                    None
+                                }
+                            }
+                        });
+
+                        cur = (&*cur).next;
+                    }
+
+                    raw::pcap_freealldevs(dev_buf);
+
+                    Ok(ret)
+                },
+                _ => {
+                    Error::new(errbuf.as_ptr())
+                }
+            }
         }
     }
 }
