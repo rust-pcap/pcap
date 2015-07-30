@@ -6,7 +6,7 @@ fn main() {
         println!("Found device! {:?}", device);
 
         // now you can create a Capture with this Device if you want.
-        let mut cap = pcap::Capture::from_device(device).unwrap();
+        let mut cap = pcap::Capture::from_device(device).unwrap().open().unwrap();
 
         // get a packet from this capture
         {

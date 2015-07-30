@@ -1,11 +1,13 @@
 extern crate libc;
 
 use unique::Unique;
+use std::marker::PhantomData;
 use std::ptr::{self};
 use std::ffi::{CStr,CString};
 use std::path::Path;
 use std::slice;
 use std::ops::Deref;
+use std::mem::transmute;
 use std::str;
 use std::fmt;
 use self::Error::*;
@@ -182,104 +184,6 @@ impl Linktype {
     }
 }
 
-/// This is a builder for a `Capture` handle. It's useful when you want to specify certain
-/// parameters, like promiscuous mode, or buffer length, before opening.
-///
-/// You can use `Capture::from_device()` instead of this builder, with less flexibility.
-pub struct CaptureBuilder {
-    buffer_size: i32,
-    snaplen: i32,
-    promisc: i32,
-    rfmon: Option<i32>,
-    timeout: i32,
-}
-
-impl CaptureBuilder {
-    /// Creates a `CaptureBuilder` with sensible defaults.
-    pub fn new() -> CaptureBuilder {
-        CaptureBuilder {
-            buffer_size: 1000000,
-            snaplen: 65535,
-            promisc: 0,
-            rfmon: None,
-            timeout: 0
-        }
-    }
-
-    /// Open a `Capture` with this `CaptureBuilder` with the given device. You can
-    /// provide a `Device` or an `&str` name of the device/source you would like to open.
-    pub fn open<D: Into<Device>>(&self, device: D) -> Result<Capture, Error> {
-        let device: Device = device.into();
-        let name = CString::new(device.name).unwrap();
-        // TODO: handle errors better throughout this library
-        let mut errbuf = [0i8; 256];
-
-        unsafe {
-            let handle = raw::pcap_create(name.as_ptr(), errbuf.as_mut_ptr());
-            if handle.is_null() {
-                return Error::new(errbuf.as_ptr());
-            }
-
-            let cap = Capture {
-                handle: Unique::new(handle)
-            };
-
-            raw::pcap_set_snaplen(handle, self.snaplen);
-            raw::pcap_set_buffer_size(handle, self.buffer_size);
-            raw::pcap_set_promisc(handle, self.promisc);
-            match self.rfmon {
-                Some(rfmon) => {
-                    raw::pcap_set_rfmon(handle, rfmon);
-                },
-                None => {}
-            };
-            raw::pcap_set_timeout(handle, self.timeout);
-
-            if 0 != raw::pcap_activate(handle) {
-                return Error::new(raw::pcap_geterr(handle));
-            }
-
-            Ok(cap)
-        }
-    }
-
-    /// Set the read timeout for the Capture. By default, this is 0, so it will block
-    /// indefinitely.
-    pub fn timeout(&mut self, ms: i32) -> &mut CaptureBuilder {
-        self.timeout = ms;
-        self
-    }
-
-    /// Set promiscuous mode on or off. By default, this is off.
-    pub fn promisc(&mut self, to: bool) -> &mut CaptureBuilder {
-        self.promisc = if to {1} else {0};
-        self
-    }
-
-    /// Set rfmon mode on or off. The default is maintained by pcap.
-    pub fn rfmon(&mut self, to: bool) -> &mut CaptureBuilder {
-        self.rfmon = Some(if to {1} else {0});
-        self
-    }
-
-    /// Set the buffer size for incoming packet data.
-    ///
-    /// The default is 1000000. This should always be larger than the snaplen.
-    pub fn buffer_size(&mut self, to: i32) -> &mut CaptureBuilder {
-        self.buffer_size = to;
-        self
-    }
-
-    /// Set the snaplen size (the maximum length of a packet captured into the buffer).
-    /// Useful if you only want certain headers, but not the entire packet.
-    /// 
-    /// The default is 65535
-    pub fn snaplen(&mut self, to: i32) -> &mut CaptureBuilder {
-        self.snaplen = to;
-        self
-    }
-}
-
 /// Represents a packet returned from pcap. This can be dereferenced to access
 /// the underlying packet `[u8]` slice.
 pub struct Packet<'a> {
@@ -303,24 +207,113 @@ impl<'a> fmt::Debug for Packet<'a> {
     }
 }
 
-/// This represents an open capture handle attached to a device or file.
+/// Phantom type representing an inactive capture handle.
+pub enum Inactive {}
+/// Phantom type representing an active capture handle. Implements `Activated`.
+pub enum Active {}
+/// Phantom type representing an offline capture handle, from a pcap dump file.
+/// Implements `Activated`.
+pub enum Offline {}
+
+trait Activated {}
+
+impl Activated for Active {}
+impl Activated for Offline {}
+
+/// This is a capture handle which is internally represented by `pcap_t`. This handle uses
+/// a phantom type (Inactive, Active, Offline) to represent the kind of handle it is currently.
 ///
-/// Internally it represents a `pcap_t`.
-pub struct Capture {
-    handle: Unique<raw::pcap_t>
+/// MORE DOCS HERE!
+pub struct Capture<T> {
+    handle: Unique<raw::pcap_t>,
+    _marker: PhantomData<T>
 }
 
-impl Capture {
-    /// Creates a capture handle from the specified device, or an error from pcap.
-    ///
-    /// You can provide this a `Device` from `Devices::list_all()` or an `&str` name of
-    /// the device such as "any" on Linux.
-    pub fn from_device<D: Into<Device>>(device: D) -> Result<Capture, Error> {
-        CaptureBuilder::new().open(device)
+impl Capture<Inactive> {
+    /// Opens a capture handle for a device. The handle is inactive, but can be activated
+    /// via `.open()`.
+    pub fn from_device<D: Into<Device>>(device: D) -> Result<Capture<Inactive>, Error> {
+        let device: Device = device.into();
+        let name = CString::new(device.name).unwrap();
+        let mut errbuf = [0i8; 256];
+
+        unsafe {
+            let handle = raw::pcap_create(name.as_ptr(), errbuf.as_mut_ptr());
+            if handle.is_null() {
+                return Error::new(errbuf.as_ptr());
+            }
+
+            Ok(Capture {
+                handle: Unique::new(handle),
+                _marker: PhantomData
+            })
+        }
     }
 
-    /// Creates a capture handle from the specified file, or an error from pcap.
-    pub fn from_file<P: AsRef<Path>>(path: P) -> Result<Capture, Error> {
+    /// Activates an inactive capture created from `Capture::from_device()` or returns
+    /// an error.
+    pub fn open(self) -> Result<Capture<Active>, Error> {
+        unsafe {
+            let cap = transmute::<Capture<Inactive>, Capture<Active>>(self);
+
+            if 0 != raw::pcap_activate(*cap.handle) {
+                return Error::new(raw::pcap_geterr(*cap.handle));
+            }
+
+            Ok(cap)
+        }
+    }
+
+    /// Set the read timeout for the Capture. By default, this is 0, so it will block
+    /// indefinitely.
+    pub fn timeout(self, ms: i32) -> Capture<Inactive> {
+        unsafe {
+            raw::pcap_set_timeout(*self.handle, ms);
+            self
+        }
+    }
+
+    /// Set promiscuous mode on or off. By default, this is off.
+    pub fn promisc(self, to: bool) -> Capture<Inactive> {
+        unsafe {
+            raw::pcap_set_promisc(*self.handle, if to {1} else {0});
+            self
+        }
+    }
+
+    /// Set rfmon mode on or off. The default is maintained by pcap.
+    pub fn rfmon(self, to: bool) -> Capture<Inactive> {
+        unsafe {
+            raw::pcap_set_rfmon(*self.handle, if to {1} else {0});
+            self
+        }
+    }
+
+    /// Set the buffer size for incoming packet data.
+    ///
+    /// The default is 1000000. This should always be larger than the snaplen.
+    pub fn buffer_size(self, to: i32) -> Capture<Inactive> {
+        unsafe {
+            raw::pcap_set_buffer_size(*self.handle, to);
+            self
+        }
+    }
+
+    /// Set the snaplen size (the maximum length of a packet captured into the buffer).
+    /// Useful if you only want certain headers, but not the entire packet.
+    /// 
+    /// The default is 65535
+    pub fn snaplen(self, to: i32) -> Capture<Inactive> {
+        unsafe {
+            raw::pcap_set_snaplen(*self.handle, to);
+            self
+        }
+    }
+}
+
+impl Capture<Offline> {
+    /// Opens an offline capture handle from a pcap dump file.
+    pub fn from_file<P: AsRef<Path>>(path: P) -> Result<Capture<Offline>, Error> {
         let name = CString::new(path.as_ref().to_str().unwrap()).unwrap();
         let mut errbuf = [0i8; 256];
 
@@ -330,14 +323,16 @@ impl Capture {
                 return Error::new(errbuf.as_ptr());
             }
 
-            let cap = Capture {
-                handle: Unique::new(handle)
-            };
-
-            Ok(cap)
+            Ok(Capture {
+                handle: Unique::new(handle),
+                _marker: PhantomData
+            })
         }
     }
+}
 
+////# Activated captures include `Capture<Active>` and `Capture<Offline>`.
+impl<T: Activated> Capture<T> {
     /// List the datalink types that this captured device supports.
     pub fn list_datalinks(&mut self) -> Result<Vec<Linktype>, Error> {
         unsafe {
@@ -438,7 +433,7 @@ impl Capture {
     }
 }
 
-impl Drop for Capture {
+impl<T> Drop for Capture<T> {
     fn drop(&mut self) {
         unsafe {
             raw::pcap_close(*self.handle)
