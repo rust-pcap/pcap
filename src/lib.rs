@@ -2,7 +2,7 @@ extern crate libc;
 
 use unique::Unique;
 use std::marker::PhantomData;
-use std::ptr::{self};
+use std::ptr;
 use std::ffi::{CStr,CString};
 use std::path::Path;
 use std::slice;
@@ -66,7 +66,7 @@ impl From<str::Utf8Error> for Error {
 }
 
 #[derive(Debug)]
-/// A network device as returned from `Devices::list_all()`.
+/// A network device name and (potentially) pcap's description of it.
 pub struct Device {
     pub name: String,
     pub desc: Option<String>
@@ -92,7 +92,7 @@ impl Device {
         }
     }
 
-    /// Returns a vector of `Device`s known by pcap.
+    /// Returns a vector of `Device`s known by pcap via pcap_findalldevs.
     pub fn list() -> Result<Vec<Device>, Error> {
         unsafe {
             let mut errbuf = [0i8; 256];
@@ -139,7 +139,10 @@ impl<'a> Into<Device> for &'a str {
     }
 }
 
-/// This is a datalink link type returned from pcap.
+/// This is a datalink link type.
+///
+/// As an example, `Linktype(1)` is ethernet. A full list of linktypes is available
+/// [here](http://www.tcpdump.org/linktypes.html).
 #[derive(Debug)]
 pub struct Linktype(pub i32);
 
