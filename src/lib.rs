@@ -253,16 +253,28 @@ impl<'a> fmt::Debug for Packet<'a> {
 
 /// Phantom type representing an inactive capture handle.
 pub enum Inactive {}
-/// Phantom type representing an active capture handle. Implements `Activated`.
+/// Phantom type representing an active capture handle. Implements `Activated` because
+/// you can do pretty much all of the same things with it that you can do with a live
+/// capture.
 pub enum Active {}
 /// Phantom type representing an offline capture handle, from a pcap dump file.
 /// Implements `Activated`.
 pub enum Offline {}
 
-trait Activated {}
+pub trait Activated: State {}
 
 impl Activated for Active {}
 impl Activated for Offline {}
+
+/// `Capture`s can be in different states at different times, and in these states they
+/// may or may not have particular capabilities. This trait is implemented by phantom
+/// types which allows us to punt these invariants to the type system to avoid runtime
+/// errors.
+pub trait State {}
+
+impl State for Inactive {}
+impl State for Active {}
+impl State for Offline {}
 
 /// This is a pcap capture handle which is an abstraction over the `pcap_t` provided by pcap.
 /// There are many ways to instantiate and interact with a pcap handle, so phantom types are
@@ -292,32 +304,12 @@ impl Activated for Offline {}
 ///     println!("received packet! {:?}", packet);
 /// }
 /// ```
-pub struct Capture<T> {
+pub struct Capture<T: State> {
     handle: Unique<raw::pcap_t>,
     _marker: PhantomData<T>
 }
 
-impl Capture<()> {
-    /// Opens a capture handle for a device. The handle is inactive, but can be activated
-    /// via `.open()`. You can pass a `Device` or an `&str` device name here.
-    pub fn from_device<D: Into<Device>>(device: D) -> Result<Capture<Inactive>, Error> {
-        let device: Device = device.into();
-        let name = CString::new(device.name).unwrap();
-        let mut errbuf = [0i8; PCAP_ERRBUF_SIZE];
-
-        unsafe {
-            let handle = raw::pcap_create(name.as_ptr(), errbuf.as_mut_ptr());
-            if handle.is_null() {
-                return Error::new(errbuf.as_ptr());
-            }
-
-            Ok(Capture {
-                handle: Unique::new(handle),
-                _marker: PhantomData
-            })
-        }
-    }
-
+impl Capture<Offline> {
     /// Opens an offline capture handle from a pcap dump file, given a path.
     pub fn from_file<P: AsRef<Path>>(path: P) -> Result<Capture<Offline>, Error> {
         let name = CString::new(path.as_ref().to_str().unwrap()).unwrap();
@@ -338,6 +330,26 @@ impl Capture<()> {
 }
 
 impl Capture<Inactive> {
+    /// Opens a capture handle for a device. You can pass a `Device` or an `&str` device
+    /// name here. The handle is inactive, but can be activated via `.open()`.
+    pub fn from_device<D: Into<Device>>(device: D) -> Result<Capture<Inactive>, Error> {
+        let device: Device = device.into();
+        let name = CString::new(device.name).unwrap();
+        let mut errbuf = [0i8; PCAP_ERRBUF_SIZE];
+
+        unsafe {
+            let handle = raw::pcap_create(name.as_ptr(), errbuf.as_mut_ptr());
+            if handle.is_null() {
+                return Error::new(errbuf.as_ptr());
+            }
+
+            Ok(Capture {
+                handle: Unique::new(handle),
+                _marker: PhantomData
+            })
+        }
+    }
+
     /// Activates an inactive capture created from `Capture::from_device()` or returns
     /// an error.
     pub fn open(self) -> Result<Capture<Active>, Error> {
@@ -537,7 +549,7 @@ impl Capture<Active> {
     }
 }
 
-impl<T> Drop for Capture<T> {
+impl<T: State> Drop for Capture<T> {
     fn drop(&mut self) {
         unsafe {
             raw::pcap_close(*self.handle)
