@@ -1,6 +1,6 @@
 extern crate pcap;
 
-use pcap::Capture;
+use pcap::{Offline, Capture};
 use std::path::Path;
 
 #[test]
@@ -15,7 +15,7 @@ fn read_packet_with_truncated_data() {
     assert_eq!(capture.next().unwrap().len(), 20);
 }
 
-fn capture_from_test_file(file_name: &str) -> Capture {
+fn capture_from_test_file(file_name: &str) -> Capture<Offline> {
     let path = Path::new("tests/data/").join(file_name);
     Capture::from_file(path).unwrap()
 }
