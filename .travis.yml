@@ -1,9 +1,5 @@
 language: rust
 
-env:
-  global:
-    - secure: MeobhQbmhxubpyCpx3iKIH/IsqfYeF0BXZqrm6svp/XKa1HiNjX4WGnIDU6B349sZ63mda3T62zjPIpa1HuPcuTs9Ek2/YIa+4Xm7xWfWRaG+jNfMxWTb7RNbyyd9+V04YTolAJPHXHcTKAlc6KQhCEpbWYnsTxuSoKgK9CQjNI=
-
 before_install:
   - sudo apt-get install libpcap0.8 libpcap0.8-dev
 
@@ -11,7 +7,4 @@ script:
   - cargo build --verbose
   - cargo test --verbose
   - cargo doc
-
-after_script:
-  - mv target/doc . && curl http://www.rust-ci.org/artifacts/put?t=$RUSTCI_TOKEN | sh
 
