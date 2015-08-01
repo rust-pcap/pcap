@@ -238,7 +238,7 @@ pub struct Packet<'a> {
 impl<'b> Deref for Packet<'b> {
     type Target = [u8];
 
-    fn deref<'a>(&'a self) -> &'a [u8] {
+    fn deref(&self) -> &[u8] {
         unsafe {
             slice::from_raw_parts(self.data, self.header.caplen as usize)
         }
@@ -579,5 +579,5 @@ impl Drop for Savefile {
 }
 
 fn cstr_to_string(ptr: *const libc::c_char) -> Result<String, str::Utf8Error> {
-    Ok(try!(str::from_utf8(unsafe{CStr::from_ptr(ptr)}.to_bytes())).to_string())
+    Ok(try!(str::from_utf8(unsafe{CStr::from_ptr(ptr)}.to_bytes())).into())
 }
