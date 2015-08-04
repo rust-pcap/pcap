@@ -209,7 +209,7 @@ impl<'a> Into<Device> for &'a str {
 ///
 /// As an example, `Linktype(1)` is ethernet. A full list of linktypes is available
 /// [here](http://www.tcpdump.org/linktypes.html).
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub struct Linktype(pub i32);
 
 impl Linktype {
