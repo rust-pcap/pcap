@@ -82,6 +82,7 @@ const PCAP_ERRBUF_SIZE: usize = 256;
 #[derive(Debug)]
 pub enum Error {
     MalformedError(str::Utf8Error),
+    InvalidString,
     PcapError(String),
     InvalidLinktype
 }
@@ -98,6 +99,9 @@ impl fmt::Display for Error {
             MalformedError(e) => {
                 write!(f, "pcap returned a string that was not encoded properly: {}", e)
             },
+            InvalidString => {
+                write!(f, "pcap returned an invalid (null) string")
+            },
             PcapError(ref e) => {
                 write!(f, "pcap error: {}", e)
             },
@@ -113,6 +117,7 @@ impl std::error::Error for Error {
         match *self {
             MalformedError(..) => "message from pcap is not encoded properly",
             PcapError(..) => "pcap FFI error",
+            InvalidString => "pcap returned an invalid (null) string",
             InvalidLinktype => "invalid or unknown linktype"
         }
     }
@@ -595,6 +600,11 @@ impl Drop for Savefile {
     }
 }
 
-fn cstr_to_string(ptr: *const libc::c_char) -> Result<String, str::Utf8Error> {
-    Ok(try!(str::from_utf8(unsafe{CStr::from_ptr(ptr)}.to_bytes())).into())
+#[inline]
+fn cstr_to_string(ptr: *const libc::c_char) -> Result<String, Error> {
+    if ptr.is_null() {
+        Err(InvalidString)
+    } else {
+        Ok(try!(str::from_utf8(unsafe{CStr::from_ptr(ptr)}.to_bytes())).into())
+    }
 }
