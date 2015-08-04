@@ -82,7 +82,8 @@ const PCAP_ERRBUF_SIZE: usize = 256;
 #[derive(Debug)]
 pub enum Error {
     MalformedError(str::Utf8Error),
-    PcapError(String)
+    PcapError(String),
+    InvalidLinktype
 }
 
 impl Error {
@@ -95,10 +96,13 @@ impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
             MalformedError(e) => {
-                write!(f, "pcap returned an error that was not encoded properly: {}", e)
+                write!(f, "pcap returned a string that was not encoded properly: {}", e)
             },
             PcapError(ref e) => {
                 write!(f, "pcap error: {}", e)
+            },
+            InvalidLinktype => {
+                write!(f, "invalid or unknown linktype")
             }
         }
     }
@@ -107,8 +111,9 @@ impl fmt::Display for Error {
 impl std::error::Error for Error {
     fn description(&self) -> &str {
         match *self {
-            MalformedError(..) => "error message from pcap is invalid",
-            PcapError(..) => "pcap FFI error"
+            MalformedError(..) => "message from pcap is not encoded properly",
+            PcapError(..) => "pcap FFI error",
+            InvalidLinktype => "invalid or unknown linktype"
         }
     }
 
@@ -216,14 +221,26 @@ impl Linktype {
     /// Gets the name of the link type, such as EN10MB
     pub fn get_name(&self) -> Result<String, Error> {
         unsafe {
-            Ok(try!(cstr_to_string(raw::pcap_datalink_val_to_name(self.0))))
+            let name = raw::pcap_datalink_val_to_name(self.0);
+
+            if name.is_null() {
+                return Err(InvalidLinktype)
+            } else {
+                Ok(try!(cstr_to_string(name)))
+            }
         }
     }
 
     /// Gets the description of a link type.
     pub fn get_description(&self) -> Result<String, Error> {
         unsafe {
-            Ok(try!(cstr_to_string(raw::pcap_datalink_val_to_description(self.0))))
+            let description = raw::pcap_datalink_val_to_description(self.0);
+
+            if description.is_null() {
+                return Err(InvalidLinktype)
+            } else {
+                Ok(try!(cstr_to_string(description)))
+            }
         }
     }
 }
