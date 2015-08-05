@@ -253,8 +253,8 @@ impl Linktype {
 /// Represents a packet returned from pcap. This can be dereferenced to access
 /// the underlying packet `[u8]` slice.
 pub struct Packet<'a> {
-    header: &'a raw::Struct_pcap_pkthdr,
-    data: &'a libc::c_uchar
+    pub header: &'a raw::Struct_pcap_pkthdr,
+    pub data: &'a libc::c_uchar
 }
 
 impl<'b> Deref for Packet<'b> {
