@@ -275,12 +275,10 @@ impl<'a> fmt::Debug for Packet<'a> {
 
 /// Phantom type representing an inactive capture handle.
 pub enum Inactive {}
-/// Phantom type representing an active capture handle. Implements `Activated` because
-/// you can do pretty much all of the same things with it that you can do with a live
-/// capture.
+/// Phantom type representing an active capture handle.
 pub enum Active {}
 /// Phantom type representing an offline capture handle, from a pcap dump file.
-/// Implements `Activated`.
+/// Implements `Activated` because it behaves nearly the same as a live handle.
 pub enum Offline {}
 
 pub trait Activated: State {}
