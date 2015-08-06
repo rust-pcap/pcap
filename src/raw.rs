@@ -582,6 +582,7 @@ impl ::std::default::Default for Struct_pcap_pkthdr {
 
 #[repr(C)]
 #[derive(Copy, Clone)]
+/// Represents a packet header provided by pcap, including the timeval, caplen and len.
 pub struct PacketHeader {
     pub ts: ::libc::types::os::common::posix01::timeval,
     pub caplen: u32,
