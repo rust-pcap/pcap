@@ -579,6 +579,22 @@ pub struct Struct_pcap_pkthdr {
 impl ::std::default::Default for Struct_pcap_pkthdr {
     fn default() -> Struct_pcap_pkthdr { unsafe { ::std::mem::zeroed() } }
 }
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct PacketHeader {
+    pub ts: ::libc::types::os::common::posix01::timeval,
+    pub caplen: u32,
+    pub len: u32,
+}
+
+#[test]
+fn packet_hdr_eq() {
+    use std::mem::size_of;
+
+    assert_eq!(size_of::<PacketHeader>(), size_of::<Struct_pcap_pkthdr>())
+}
+
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct Struct_pcap_stat {

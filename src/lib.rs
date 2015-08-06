@@ -72,6 +72,8 @@ use std::str;
 use std::fmt;
 use self::Error::*;
 
+pub use raw::PacketHeader;
+
 mod raw;
 mod unique;
 
@@ -250,26 +252,23 @@ impl Linktype {
     }
 }
 
-/// Represents a packet returned from pcap. This can be dereferenced to access
-/// the underlying packet `[u8]` slice.
+/// Represents a packet returned from pcap.
 pub struct Packet<'a> {
-    header: &'a raw::Struct_pcap_pkthdr,
-    data: &'a libc::c_uchar
+    pub header: &'a PacketHeader,
+    pub data: &'a [u8]
 }
 
 impl<'b> Deref for Packet<'b> {
-    type Target = [u8];
+   type Target = [u8];
 
     fn deref(&self) -> &[u8] {
-        unsafe {
-            slice::from_raw_parts(self.data, self.header.caplen as usize)
-        }
+        self.data
     }
 }
 
 impl<'a> fmt::Debug for Packet<'a> {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
-        self.deref().fmt(f)
+        self.data.fmt(f)
     }
 }
 
@@ -514,8 +513,8 @@ impl<T: Activated> Capture<T> {
                 1 => {
                     // packet was read without issue
                     Some(Packet {
-                        header: &*header,
-                        data: &*packet
+                        header: transmute(&*header),
+                        data: slice::from_raw_parts(packet, (&*header).caplen as usize)
                     })
                 },
                 _ => {
@@ -585,7 +584,7 @@ pub struct Savefile {
 impl Savefile {
     pub fn write<'a>(&mut self, packet: &'a Packet<'a>) {
         unsafe {
-            raw::pcap_dump(*self.handle as *mut u8, packet.header, packet.data);
+            raw::pcap_dump(*self.handle as *mut u8, transmute::<_, &raw::Struct_pcap_pkthdr>(packet.header), packet.data.as_ptr());
         }
     }
 }
