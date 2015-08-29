@@ -3,24 +3,10 @@
 //! sending packets to interfaces, listing devices, and recording packet captures
 //! to pcap-format dump files.
 //!
-//! # Getting devices
-//! The first step to packet sniffing using pcap is picking which device you want
-//! to capture from. `Device::lookup()` returns a `Device` that contains the first
-//! non-loopback device pcap is aware of. You can also use `Device::list()` to 
-//! obtain a list of `Device`s for capturing.
-//!
-//! ```ignore
-//! use pcap::Device;
-//!
-//! fn main() {
-//!     let main_device = Device::lookup().unwrap();
-//!     println!("Device name: {}", main_device.name);
-//! }
-//! ```
-//!
 //! # Capturing packets
 //! The easiest way to open an active capture handle and begin sniffing is to
-//! use `.open()` on a `Device`.
+//! use `.open()` on a `Device`. You can obtain the "default" device using
+//! `Device::lookup()`, or you can obtain the device(s) you need via `Device::list_all()`.
 //!
 //! ```ignore
 //! use pcap::Device;
@@ -54,7 +40,9 @@
 //!                       .snaplen(5000)
 //!                       .open().unwrap();
 //!     
-//!     // ...
+//!     while let Some(packet) = cap.next() {
+//!         println!("received packet! {:?}", packet);
+//!     }
 //! }
 //! ```
 
