@@ -241,6 +241,7 @@ impl Linktype {
 }
 
 /// Represents a packet returned from pcap.
+#[derive(Debug)]
 pub struct Packet<'a> {
     pub header: &'a PacketHeader,
     pub data: &'a [u8]
@@ -251,12 +252,6 @@ impl<'b> Deref for Packet<'b> {
 
     fn deref(&self) -> &[u8] {
         self.data
-    }
-}
-
-impl<'a> fmt::Debug for Packet<'a> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
-        self.data.fmt(f)
     }
 }
 

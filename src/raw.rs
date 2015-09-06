@@ -589,6 +589,13 @@ pub struct PacketHeader {
     pub len: u32,
 }
 
+impl ::std::fmt::Debug for PacketHeader {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+        write!(f, "PacketHeader {{ ts: {}.{:06}, caplen: {}, len: {} }}",
+               self.ts.tv_sec, self.ts.tv_usec, self.caplen, self.len)
+    }
+}
+
 #[test]
 fn packet_hdr_eq() {
     use std::mem::size_of;
