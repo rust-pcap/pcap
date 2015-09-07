@@ -389,6 +389,9 @@ impl Capture<Inactive> {
     }
 
     /// Set rfmon mode on or off. The default is maintained by pcap.
+    ///
+    /// **This is not available on Windows.**
+    #[cfg(not(target_os = "windows"))]
     pub fn rfmon(self, to: bool) -> Capture<Inactive> {
         unsafe {
             raw::pcap_set_rfmon(*self.handle, if to {1} else {0});
@@ -540,6 +543,9 @@ impl<T: Activated> Capture<T> {
 impl Capture<Active> {
     /// Sends a packet over this capture handle's interface, returning the number
     /// of bytes written.
+    ///
+    /// **This is not available on Windows.**
+    #[cfg(not(target_os = "windows"))]
     pub fn sendpacket<'a>(&mut self, buf: &'a [u8]) -> Result<usize, Error> {
         unsafe {
             let written = raw::pcap_inject(*self.handle, buf.as_ptr() as *const libc::types::common::c95::c_void, buf.len() as libc::types::os::arch::c95::size_t);

@@ -90,7 +90,7 @@ pub type clock_t = __clock_t;
 pub type time_t = __time_t;
 pub type clockid_t = __clockid_t;
 pub type timer_t = __timer_t;
-pub type size_t = ::libc::c_ulong;
+pub type size_t = ::libc::size_t;
 pub type ulong = ::libc::c_ulong;
 pub type ushort = ::libc::c_ushort;
 pub type _uint = ::libc::c_uint;
@@ -662,8 +662,6 @@ extern "C" {
     pub fn pcap_set_promisc(arg1: *mut pcap_t, arg2: ::libc::c_int)
      -> ::libc::c_int;
     // pub fn pcap_can_set_rfmon(arg1: *mut pcap_t) -> ::libc::c_int;
-    pub fn pcap_set_rfmon(arg1: *mut pcap_t, arg2: ::libc::c_int)
-     -> ::libc::c_int;
     pub fn pcap_set_timeout(arg1: *mut pcap_t, arg2: ::libc::c_int)
      -> ::libc::c_int;
     // pub fn pcap_set_tstamp_type(arg1: *mut pcap_t, arg2: ::libc::c_int)
@@ -728,8 +726,6 @@ extern "C" {
     //  -> ::libc::c_int;
     // pub fn pcap_setnonblock(arg1: *mut pcap_t, arg2: ::libc::c_int,
     //                         arg3: *mut ::libc::c_char) -> ::libc::c_int;
-    pub fn pcap_inject(arg1: *mut pcap_t, arg2: *const ::libc::c_void,
-                       arg3: size_t) -> ::libc::c_int;
     // pub fn pcap_sendpacket(arg1: *mut pcap_t, arg2: *const u_char,
     //                        arg3: ::libc::c_int) -> ::libc::c_int;
     // pub fn pcap_statustostr(arg1: ::libc::c_int) -> *const ::libc::c_char;
@@ -798,5 +794,11 @@ extern {}
 
 #[cfg(not(target_os = "windows"))]
 #[link(name = "pcap")]
-extern {}
+extern {
+    pub fn pcap_inject(arg1: *mut pcap_t, arg2: *const ::libc::c_void,
+                       arg3: size_t) -> ::libc::c_int;
+
+    pub fn pcap_set_rfmon(arg1: *mut pcap_t, arg2: ::libc::c_int)
+     -> ::libc::c_int;
+}
 
