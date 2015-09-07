@@ -90,7 +90,7 @@ pub type clock_t = __clock_t;
 pub type time_t = __time_t;
 pub type clockid_t = __clockid_t;
 pub type timer_t = __timer_t;
-pub type size_t = ::libc::c_ulong;
+pub type size_t = ::libc::size_t;
 pub type ulong = ::libc::c_ulong;
 pub type ushort = ::libc::c_ushort;
 pub type _uint = ::libc::c_uint;
@@ -658,338 +658,138 @@ impl ::std::default::Default for Struct___va_list_tag {
 }
 
 extern "C" {
-    pub static mut _IO_2_1_stdin_: Struct__IO_FILE_plus;
-    pub static mut _IO_2_1_stdout_: Struct__IO_FILE_plus;
-    pub static mut _IO_2_1_stderr_: Struct__IO_FILE_plus;
-    pub static mut stdin: *mut Struct__IO_FILE;
-    pub static mut stdout: *mut Struct__IO_FILE;
-    pub static mut stderr: *mut Struct__IO_FILE;
-    pub static mut sys_nerr: ::libc::c_int;
-    pub static mut sys_errlist: *const *const ::libc::c_char;
-}
-
-extern "C" {
-    pub fn select(__nfds: ::libc::c_int, __readfds: *mut fd_set,
-                  __writefds: *mut fd_set, __exceptfds: *mut fd_set,
-                  __timeout: *mut Struct_timeval) -> ::libc::c_int;
-    pub fn pselect(__nfds: ::libc::c_int, __readfds: *mut fd_set,
-                   __writefds: *mut fd_set, __exceptfds: *mut fd_set,
-                   __timeout: *const Struct_timespec,
-                   __sigmask: *const __sigset_t) -> ::libc::c_int;
-    pub fn gnu_dev_major(__dev: ::libc::c_ulonglong) -> ::libc::c_uint;
-    pub fn gnu_dev_minor(__dev: ::libc::c_ulonglong) -> ::libc::c_uint;
-    pub fn gnu_dev_makedev(__major: ::libc::c_uint, __minor: ::libc::c_uint)
-     -> ::libc::c_ulonglong;
-    pub fn gettimeofday(__tv: *mut Struct_timeval, __tz: __timezone_ptr_t)
-     -> ::libc::c_int;
-    pub fn settimeofday(__tv: *const Struct_timeval,
-                        __tz: *const Struct_timezone) -> ::libc::c_int;
-    pub fn adjtime(__delta: *const Struct_timeval,
-                   __olddelta: *mut Struct_timeval) -> ::libc::c_int;
-    pub fn getitimer(__which: __itimer_which_t,
-                     __value: *mut Struct_itimerval) -> ::libc::c_int;
-    pub fn setitimer(__which: __itimer_which_t,
-                     __new: *const Struct_itimerval,
-                     __old: *mut Struct_itimerval) -> ::libc::c_int;
-    pub fn utimes(__file: *const ::libc::c_char, __tvp: *mut Struct_timeval)
-     -> ::libc::c_int;
-    pub fn lutimes(__file: *const ::libc::c_char, __tvp: *mut Struct_timeval)
-     -> ::libc::c_int;
-    pub fn futimes(__fd: ::libc::c_int, __tvp: *mut Struct_timeval)
-     -> ::libc::c_int;
-    pub fn bpf_validate(f: *const Struct_bpf_insn, len: ::libc::c_int)
-     -> ::libc::c_int;
-    pub fn bpf_filter(arg1: *const Struct_bpf_insn, arg2: *const u_char,
-                      arg3: u_int, arg4: u_int) -> u_int;
-    pub fn __underflow(arg1: *mut _IO_FILE) -> ::libc::c_int;
-    pub fn __uflow(arg1: *mut _IO_FILE) -> ::libc::c_int;
-    pub fn __overflow(arg1: *mut _IO_FILE, arg2: ::libc::c_int)
-     -> ::libc::c_int;
-    pub fn _IO_getc(__fp: *mut _IO_FILE) -> ::libc::c_int;
-    pub fn _IO_putc(__c: ::libc::c_int, __fp: *mut _IO_FILE) -> ::libc::c_int;
-    pub fn _IO_feof(__fp: *mut _IO_FILE) -> ::libc::c_int;
-    pub fn _IO_ferror(__fp: *mut _IO_FILE) -> ::libc::c_int;
-    pub fn _IO_peekc_locked(__fp: *mut _IO_FILE) -> ::libc::c_int;
-    pub fn _IO_flockfile(arg1: *mut _IO_FILE) -> ();
-    pub fn _IO_funlockfile(arg1: *mut _IO_FILE) -> ();
-    pub fn _IO_ftrylockfile(arg1: *mut _IO_FILE) -> ::libc::c_int;
-    pub fn _IO_vfscanf(arg1: *mut _IO_FILE, arg2: *const ::libc::c_char,
-                       arg3: __gnuc_va_list, arg4: *mut ::libc::c_int)
-     -> ::libc::c_int;
-    pub fn _IO_vfprintf(arg1: *mut _IO_FILE, arg2: *const ::libc::c_char,
-                        arg3: __gnuc_va_list) -> ::libc::c_int;
-    pub fn _IO_padn(arg1: *mut _IO_FILE, arg2: ::libc::c_int, arg3: __ssize_t)
-     -> __ssize_t;
-    pub fn _IO_sgetn(arg1: *mut _IO_FILE, arg2: *mut ::libc::c_void,
-                     arg3: size_t) -> size_t;
-    pub fn _IO_seekoff(arg1: *mut _IO_FILE, arg2: __off64_t,
-                       arg3: ::libc::c_int, arg4: ::libc::c_int) -> __off64_t;
-    pub fn _IO_seekpos(arg1: *mut _IO_FILE, arg2: __off64_t,
-                       arg3: ::libc::c_int) -> __off64_t;
-    pub fn _IO_free_backup_area(arg1: *mut _IO_FILE) -> ();
-    pub fn remove(__filename: *const ::libc::c_char) -> ::libc::c_int;
-    pub fn rename(__old: *const ::libc::c_char, __new: *const ::libc::c_char)
-     -> ::libc::c_int;
-    pub fn renameat(__oldfd: ::libc::c_int, __old: *const ::libc::c_char,
-                    __newfd: ::libc::c_int, __new: *const ::libc::c_char)
-     -> ::libc::c_int;
-    pub fn tmpfile() -> *mut FILE;
-    pub fn tmpnam(__s: *mut ::libc::c_char) -> *mut ::libc::c_char;
-    pub fn tmpnam_r(__s: *mut ::libc::c_char) -> *mut ::libc::c_char;
-    pub fn tempnam(__dir: *const ::libc::c_char, __pfx: *const ::libc::c_char)
-     -> *mut ::libc::c_char;
-    pub fn fclose(__stream: *mut FILE) -> ::libc::c_int;
-    pub fn fflush(__stream: *mut FILE) -> ::libc::c_int;
-    pub fn fflush_unlocked(__stream: *mut FILE) -> ::libc::c_int;
-    pub fn fopen(__filename: *const ::libc::c_char,
-                 __modes: *const ::libc::c_char) -> *mut FILE;
-    pub fn freopen(__filename: *const ::libc::c_char,
-                   __modes: *const ::libc::c_char, __stream: *mut FILE)
-     -> *mut FILE;
-    pub fn fdopen(__fd: ::libc::c_int, __modes: *const ::libc::c_char)
-     -> *mut FILE;
-    pub fn fmemopen(__s: *mut ::libc::c_void, __len: size_t,
-                    __modes: *const ::libc::c_char) -> *mut FILE;
-    pub fn open_memstream(__bufloc: *mut *mut ::libc::c_char,
-                          __sizeloc: *mut size_t) -> *mut FILE;
-    pub fn setbuf(__stream: *mut FILE, __buf: *mut ::libc::c_char) -> ();
-    pub fn setvbuf(__stream: *mut FILE, __buf: *mut ::libc::c_char,
-                   __modes: ::libc::c_int, __n: size_t) -> ::libc::c_int;
-    pub fn setbuffer(__stream: *mut FILE, __buf: *mut ::libc::c_char,
-                     __size: size_t) -> ();
-    pub fn setlinebuf(__stream: *mut FILE) -> ();
-    pub fn fprintf(__stream: *mut FILE, __format: *const ::libc::c_char, ...)
-     -> ::libc::c_int;
-    pub fn printf(__format: *const ::libc::c_char, ...) -> ::libc::c_int;
-    pub fn sprintf(__s: *mut ::libc::c_char,
-                   __format: *const ::libc::c_char, ...) -> ::libc::c_int;
-    pub fn vfprintf(__s: *mut FILE, __format: *const ::libc::c_char,
-                    __arg: __gnuc_va_list) -> ::libc::c_int;
-    pub fn vprintf(__format: *const ::libc::c_char, __arg: __gnuc_va_list)
-     -> ::libc::c_int;
-    pub fn vsprintf(__s: *mut ::libc::c_char, __format: *const ::libc::c_char,
-                    __arg: __gnuc_va_list) -> ::libc::c_int;
-    pub fn snprintf(__s: *mut ::libc::c_char, __maxlen: size_t,
-                    __format: *const ::libc::c_char, ...) -> ::libc::c_int;
-    pub fn vsnprintf(__s: *mut ::libc::c_char, __maxlen: size_t,
-                     __format: *const ::libc::c_char, __arg: __gnuc_va_list)
-     -> ::libc::c_int;
-    pub fn vdprintf(__fd: ::libc::c_int, __fmt: *const ::libc::c_char,
-                    __arg: __gnuc_va_list) -> ::libc::c_int;
-    pub fn dprintf(__fd: ::libc::c_int, __fmt: *const ::libc::c_char, ...)
-     -> ::libc::c_int;
-    pub fn fscanf(__stream: *mut FILE, __format: *const ::libc::c_char, ...)
-     -> ::libc::c_int;
-    pub fn scanf(__format: *const ::libc::c_char, ...) -> ::libc::c_int;
-    pub fn sscanf(__s: *const ::libc::c_char,
-                  __format: *const ::libc::c_char, ...) -> ::libc::c_int;
-    pub fn vfscanf(__s: *mut FILE, __format: *const ::libc::c_char,
-                   __arg: __gnuc_va_list) -> ::libc::c_int;
-    pub fn vscanf(__format: *const ::libc::c_char, __arg: __gnuc_va_list)
-     -> ::libc::c_int;
-    pub fn vsscanf(__s: *const ::libc::c_char,
-                   __format: *const ::libc::c_char, __arg: __gnuc_va_list)
-     -> ::libc::c_int;
-    pub fn fgetc(__stream: *mut FILE) -> ::libc::c_int;
-    pub fn getc(__stream: *mut FILE) -> ::libc::c_int;
-    pub fn getchar() -> ::libc::c_int;
-    pub fn getc_unlocked(__stream: *mut FILE) -> ::libc::c_int;
-    pub fn getchar_unlocked() -> ::libc::c_int;
-    pub fn fgetc_unlocked(__stream: *mut FILE) -> ::libc::c_int;
-    pub fn fputc(__c: ::libc::c_int, __stream: *mut FILE) -> ::libc::c_int;
-    pub fn putc(__c: ::libc::c_int, __stream: *mut FILE) -> ::libc::c_int;
-    pub fn putchar(__c: ::libc::c_int) -> ::libc::c_int;
-    pub fn fputc_unlocked(__c: ::libc::c_int, __stream: *mut FILE)
-     -> ::libc::c_int;
-    pub fn putc_unlocked(__c: ::libc::c_int, __stream: *mut FILE)
-     -> ::libc::c_int;
-    pub fn putchar_unlocked(__c: ::libc::c_int) -> ::libc::c_int;
-    pub fn getw(__stream: *mut FILE) -> ::libc::c_int;
-    pub fn putw(__w: ::libc::c_int, __stream: *mut FILE) -> ::libc::c_int;
-    pub fn fgets(__s: *mut ::libc::c_char, __n: ::libc::c_int,
-                 __stream: *mut FILE) -> *mut ::libc::c_char;
-    pub fn __getdelim(__lineptr: *mut *mut ::libc::c_char, __n: *mut size_t,
-                      __delimiter: ::libc::c_int, __stream: *mut FILE)
-     -> __ssize_t;
-    pub fn getdelim(__lineptr: *mut *mut ::libc::c_char, __n: *mut size_t,
-                    __delimiter: ::libc::c_int, __stream: *mut FILE)
-     -> __ssize_t;
-    pub fn getline(__lineptr: *mut *mut ::libc::c_char, __n: *mut size_t,
-                   __stream: *mut FILE) -> __ssize_t;
-    pub fn fputs(__s: *const ::libc::c_char, __stream: *mut FILE)
-     -> ::libc::c_int;
-    pub fn puts(__s: *const ::libc::c_char) -> ::libc::c_int;
-    pub fn ungetc(__c: ::libc::c_int, __stream: *mut FILE) -> ::libc::c_int;
-    pub fn fread(__ptr: *mut ::libc::c_void, __size: size_t, __n: size_t,
-                 __stream: *mut FILE) -> size_t;
-    pub fn fwrite(__ptr: *const ::libc::c_void, __size: size_t, __n: size_t,
-                  __s: *mut FILE) -> size_t;
-    pub fn fread_unlocked(__ptr: *mut ::libc::c_void, __size: size_t,
-                          __n: size_t, __stream: *mut FILE) -> size_t;
-    pub fn fwrite_unlocked(__ptr: *const ::libc::c_void, __size: size_t,
-                           __n: size_t, __stream: *mut FILE) -> size_t;
-    pub fn fseek(__stream: *mut FILE, __off: ::libc::c_long,
-                 __whence: ::libc::c_int) -> ::libc::c_int;
-    pub fn ftell(__stream: *mut FILE) -> ::libc::c_long;
-    pub fn rewind(__stream: *mut FILE) -> ();
-    pub fn fseeko(__stream: *mut FILE, __off: __off_t,
-                  __whence: ::libc::c_int) -> ::libc::c_int;
-    pub fn ftello(__stream: *mut FILE) -> __off_t;
-    pub fn fgetpos(__stream: *mut FILE, __pos: *mut fpos_t) -> ::libc::c_int;
-    pub fn fsetpos(__stream: *mut FILE, __pos: *const fpos_t)
-     -> ::libc::c_int;
-    pub fn clearerr(__stream: *mut FILE) -> ();
-    pub fn feof(__stream: *mut FILE) -> ::libc::c_int;
-    pub fn ferror(__stream: *mut FILE) -> ::libc::c_int;
-    pub fn clearerr_unlocked(__stream: *mut FILE) -> ();
-    pub fn feof_unlocked(__stream: *mut FILE) -> ::libc::c_int;
-    pub fn ferror_unlocked(__stream: *mut FILE) -> ::libc::c_int;
-    pub fn perror(__s: *const ::libc::c_char) -> ();
-    pub fn fileno(__stream: *mut FILE) -> ::libc::c_int;
-    pub fn fileno_unlocked(__stream: *mut FILE) -> ::libc::c_int;
-    pub fn popen(__command: *const ::libc::c_char,
-                 __modes: *const ::libc::c_char) -> *mut FILE;
-    pub fn pclose(__stream: *mut FILE) -> ::libc::c_int;
-    pub fn ctermid(__s: *mut ::libc::c_char) -> *mut ::libc::c_char;
-    pub fn flockfile(__stream: *mut FILE) -> ();
-    pub fn ftrylockfile(__stream: *mut FILE) -> ::libc::c_int;
-    pub fn funlockfile(__stream: *mut FILE) -> ();
     pub fn pcap_lookupdev(arg1: *mut ::libc::c_char) -> *mut ::libc::c_char;
-    pub fn pcap_lookupnet(arg1: *const ::libc::c_char, arg2: *mut bpf_u_int32,
-                          arg3: *mut bpf_u_int32, arg4: *mut ::libc::c_char)
-     -> ::libc::c_int;
+    // pub fn pcap_lookupnet(arg1: *const ::libc::c_char, arg2: *mut bpf_u_int32,
+    //                       arg3: *mut bpf_u_int32, arg4: *mut ::libc::c_char)
+    //  -> ::libc::c_int;
     pub fn pcap_create(arg1: *const ::libc::c_char, arg2: *mut ::libc::c_char)
      -> *mut pcap_t;
     pub fn pcap_set_snaplen(arg1: *mut pcap_t, arg2: ::libc::c_int)
      -> ::libc::c_int;
     pub fn pcap_set_promisc(arg1: *mut pcap_t, arg2: ::libc::c_int)
      -> ::libc::c_int;
-    pub fn pcap_can_set_rfmon(arg1: *mut pcap_t) -> ::libc::c_int;
-    pub fn pcap_set_rfmon(arg1: *mut pcap_t, arg2: ::libc::c_int)
-     -> ::libc::c_int;
+    // pub fn pcap_can_set_rfmon(arg1: *mut pcap_t) -> ::libc::c_int;
     pub fn pcap_set_timeout(arg1: *mut pcap_t, arg2: ::libc::c_int)
      -> ::libc::c_int;
-    pub fn pcap_set_tstamp_type(arg1: *mut pcap_t, arg2: ::libc::c_int)
-     -> ::libc::c_int;
-    pub fn pcap_set_immediate_mode(arg1: *mut pcap_t, arg2: ::libc::c_int)
-     -> ::libc::c_int;
+    // pub fn pcap_set_tstamp_type(arg1: *mut pcap_t, arg2: ::libc::c_int)
+    //  -> ::libc::c_int;
+    // pub fn pcap_set_immediate_mode(arg1: *mut pcap_t, arg2: ::libc::c_int)
+    //  -> ::libc::c_int;
     pub fn pcap_set_buffer_size(arg1: *mut pcap_t, arg2: ::libc::c_int)
      -> ::libc::c_int;
-    pub fn pcap_set_tstamp_precision(arg1: *mut pcap_t, arg2: ::libc::c_int)
-     -> ::libc::c_int;
-    pub fn pcap_get_tstamp_precision(arg1: *mut pcap_t) -> ::libc::c_int;
+    // pub fn pcap_set_tstamp_precision(arg1: *mut pcap_t, arg2: ::libc::c_int)
+    //  -> ::libc::c_int;
+    // pub fn pcap_get_tstamp_precision(arg1: *mut pcap_t) -> ::libc::c_int;
     pub fn pcap_activate(arg1: *mut pcap_t) -> ::libc::c_int;
-    pub fn pcap_list_tstamp_types(arg1: *mut pcap_t,
-                                  arg2: *mut *mut ::libc::c_int)
-     -> ::libc::c_int;
-    pub fn pcap_free_tstamp_types(arg1: *mut ::libc::c_int) -> ();
-    pub fn pcap_tstamp_type_name_to_val(arg1: *const ::libc::c_char)
-     -> ::libc::c_int;
-    pub fn pcap_tstamp_type_val_to_name(arg1: ::libc::c_int)
-     -> *const ::libc::c_char;
-    pub fn pcap_tstamp_type_val_to_description(arg1: ::libc::c_int)
-     -> *const ::libc::c_char;
-    pub fn pcap_open_live(arg1: *const ::libc::c_char, arg2: ::libc::c_int,
-                          arg3: ::libc::c_int, arg4: ::libc::c_int,
-                          arg5: *mut ::libc::c_char) -> *mut pcap_t;
-    pub fn pcap_open_dead(arg1: ::libc::c_int, arg2: ::libc::c_int)
-     -> *mut pcap_t;
-    pub fn pcap_open_dead_with_tstamp_precision(arg1: ::libc::c_int,
-                                                arg2: ::libc::c_int,
-                                                arg3: u_int) -> *mut pcap_t;
-    pub fn pcap_open_offline_with_tstamp_precision(arg1:
-                                                       *const ::libc::c_char,
-                                                   arg2: u_int,
-                                                   arg3: *mut ::libc::c_char)
-     -> *mut pcap_t;
+    // pub fn pcap_list_tstamp_types(arg1: *mut pcap_t,
+    //                               arg2: *mut *mut ::libc::c_int)
+    //  -> ::libc::c_int;
+    // pub fn pcap_free_tstamp_types(arg1: *mut ::libc::c_int) -> ();
+    // pub fn pcap_tstamp_type_name_to_val(arg1: *const ::libc::c_char)
+    //  -> ::libc::c_int;
+    // pub fn pcap_tstamp_type_val_to_name(arg1: ::libc::c_int)
+    //  -> *const ::libc::c_char;
+    // pub fn pcap_tstamp_type_val_to_description(arg1: ::libc::c_int)
+    //  -> *const ::libc::c_char;
+    // pub fn pcap_open_live(arg1: *const ::libc::c_char, arg2: ::libc::c_int,
+    //                       arg3: ::libc::c_int, arg4: ::libc::c_int,
+    //                       arg5: *mut ::libc::c_char) -> *mut pcap_t;
+    // pub fn pcap_open_dead(arg1: ::libc::c_int, arg2: ::libc::c_int)
+    //  -> *mut pcap_t;
+    // pub fn pcap_open_dead_with_tstamp_precision(arg1: ::libc::c_int,
+    //                                             arg2: ::libc::c_int,
+    //                                             arg3: u_int) -> *mut pcap_t;
+    // pub fn pcap_open_offline_with_tstamp_precision(arg1:
+    //                                                    *const ::libc::c_char,
+    //                                                arg2: u_int,
+    //                                                arg3: *mut ::libc::c_char)
+    //  -> *mut pcap_t;
     pub fn pcap_open_offline(arg1: *const ::libc::c_char,
                              arg2: *mut ::libc::c_char) -> *mut pcap_t;
-    pub fn pcap_fopen_offline_with_tstamp_precision(arg1: *mut FILE,
-                                                    arg2: u_int,
-                                                    arg3: *mut ::libc::c_char)
-     -> *mut pcap_t;
-    pub fn pcap_fopen_offline(arg1: *mut FILE, arg2: *mut ::libc::c_char)
-     -> *mut pcap_t;
+    // pub fn pcap_fopen_offline_with_tstamp_precision(arg1: *mut FILE,
+    //                                                 arg2: u_int,
+    //                                                 arg3: *mut ::libc::c_char)
+    //  -> *mut pcap_t;
+    // pub fn pcap_fopen_offline(arg1: *mut FILE, arg2: *mut ::libc::c_char)
+    //  -> *mut pcap_t;
     pub fn pcap_close(arg1: *mut pcap_t) -> ();
-    pub fn pcap_loop(arg1: *mut pcap_t, arg2: ::libc::c_int,
-                     arg3: pcap_handler, arg4: *mut u_char) -> ::libc::c_int;
-    pub fn pcap_dispatch(arg1: *mut pcap_t, arg2: ::libc::c_int,
-                         arg3: pcap_handler, arg4: *mut u_char)
-     -> ::libc::c_int;
-    pub fn pcap_next(arg1: *mut pcap_t, arg2: *mut Struct_pcap_pkthdr)
-     -> *const u_char;
+    // pub fn pcap_loop(arg1: *mut pcap_t, arg2: ::libc::c_int,
+    //                  arg3: pcap_handler, arg4: *mut u_char) -> ::libc::c_int;
+    // pub fn pcap_dispatch(arg1: *mut pcap_t, arg2: ::libc::c_int,
+    //                      arg3: pcap_handler, arg4: *mut u_char)
+    //  -> ::libc::c_int;
+    // pub fn pcap_next(arg1: *mut pcap_t, arg2: *mut Struct_pcap_pkthdr)
+    //  -> *const u_char;
     pub fn pcap_next_ex(arg1: *mut pcap_t, arg2: *mut *mut Struct_pcap_pkthdr,
                         arg3: *mut *const u_char) -> ::libc::c_int;
-    pub fn pcap_breakloop(arg1: *mut pcap_t) -> ();
-    pub fn pcap_stats(arg1: *mut pcap_t, arg2: *mut Struct_pcap_stat)
-     -> ::libc::c_int;
+    // pub fn pcap_breakloop(arg1: *mut pcap_t) -> ();
+    // pub fn pcap_stats(arg1: *mut pcap_t, arg2: *mut Struct_pcap_stat)
+    //  -> ::libc::c_int;
     pub fn pcap_setfilter(arg1: *mut pcap_t, arg2: *mut Struct_bpf_program)
      -> ::libc::c_int;
-    pub fn pcap_setdirection(arg1: *mut pcap_t, arg2: pcap_direction_t)
-     -> ::libc::c_int;
-    pub fn pcap_getnonblock(arg1: *mut pcap_t, arg2: *mut ::libc::c_char)
-     -> ::libc::c_int;
-    pub fn pcap_setnonblock(arg1: *mut pcap_t, arg2: ::libc::c_int,
-                            arg3: *mut ::libc::c_char) -> ::libc::c_int;
-    pub fn pcap_inject(arg1: *mut pcap_t, arg2: *const ::libc::c_void,
-                       arg3: size_t) -> ::libc::c_int;
-    pub fn pcap_sendpacket(arg1: *mut pcap_t, arg2: *const u_char,
-                           arg3: ::libc::c_int) -> ::libc::c_int;
-    pub fn pcap_statustostr(arg1: ::libc::c_int) -> *const ::libc::c_char;
-    pub fn pcap_strerror(arg1: ::libc::c_int) -> *const ::libc::c_char;
+    // pub fn pcap_setdirection(arg1: *mut pcap_t, arg2: pcap_direction_t)
+    //  -> ::libc::c_int;
+    // pub fn pcap_getnonblock(arg1: *mut pcap_t, arg2: *mut ::libc::c_char)
+    //  -> ::libc::c_int;
+    // pub fn pcap_setnonblock(arg1: *mut pcap_t, arg2: ::libc::c_int,
+    //                         arg3: *mut ::libc::c_char) -> ::libc::c_int;
+    // pub fn pcap_sendpacket(arg1: *mut pcap_t, arg2: *const u_char,
+    //                        arg3: ::libc::c_int) -> ::libc::c_int;
+    // pub fn pcap_statustostr(arg1: ::libc::c_int) -> *const ::libc::c_char;
+    // pub fn pcap_strerror(arg1: ::libc::c_int) -> *const ::libc::c_char;
     pub fn pcap_geterr(arg1: *mut pcap_t) -> *mut ::libc::c_char;
-    pub fn pcap_perror(arg1: *mut pcap_t, arg2: *mut ::libc::c_char) -> ();
+    // pub fn pcap_perror(arg1: *mut pcap_t, arg2: *mut ::libc::c_char) -> ();
     pub fn pcap_compile(arg1: *mut pcap_t, arg2: *mut Struct_bpf_program,
                         arg3: *const ::libc::c_char, arg4: ::libc::c_int,
                         arg5: bpf_u_int32) -> ::libc::c_int;
-    pub fn pcap_compile_nopcap(arg1: ::libc::c_int, arg2: ::libc::c_int,
-                               arg3: *mut Struct_bpf_program,
-                               arg4: *const ::libc::c_char,
-                               arg5: ::libc::c_int, arg6: bpf_u_int32)
-     -> ::libc::c_int;
+    // pub fn pcap_compile_nopcap(arg1: ::libc::c_int, arg2: ::libc::c_int,
+    //                            arg3: *mut Struct_bpf_program,
+    //                            arg4: *const ::libc::c_char,
+    //                            arg5: ::libc::c_int, arg6: bpf_u_int32)
+    //  -> ::libc::c_int;
     pub fn pcap_freecode(arg1: *mut Struct_bpf_program) -> ();
-    pub fn pcap_offline_filter(arg1: *const Struct_bpf_program,
-                               arg2: *const Struct_pcap_pkthdr,
-                               arg3: *const u_char) -> ::libc::c_int;
+    // pub fn pcap_offline_filter(arg1: *const Struct_bpf_program,
+    //                            arg2: *const Struct_pcap_pkthdr,
+    //                            arg3: *const u_char) -> ::libc::c_int;
     pub fn pcap_datalink(arg1: *mut pcap_t) -> ::libc::c_int;
-    pub fn pcap_datalink_ext(arg1: *mut pcap_t) -> ::libc::c_int;
+    // pub fn pcap_datalink_ext(arg1: *mut pcap_t) -> ::libc::c_int;
     pub fn pcap_list_datalinks(arg1: *mut pcap_t,
                                arg2: *mut *mut ::libc::c_int)
      -> ::libc::c_int;
     pub fn pcap_set_datalink(arg1: *mut pcap_t, arg2: ::libc::c_int)
      -> ::libc::c_int;
     pub fn pcap_free_datalinks(arg1: *mut ::libc::c_int) -> ();
-    pub fn pcap_datalink_name_to_val(arg1: *const ::libc::c_char)
-     -> ::libc::c_int;
+    // pub fn pcap_datalink_name_to_val(arg1: *const ::libc::c_char)
+    //  -> ::libc::c_int;
     pub fn pcap_datalink_val_to_name(arg1: ::libc::c_int)
      -> *const ::libc::c_char;
     pub fn pcap_datalink_val_to_description(arg1: ::libc::c_int)
      -> *const ::libc::c_char;
-    pub fn pcap_snapshot(arg1: *mut pcap_t) -> ::libc::c_int;
-    pub fn pcap_is_swapped(arg1: *mut pcap_t) -> ::libc::c_int;
-    pub fn pcap_major_version(arg1: *mut pcap_t) -> ::libc::c_int;
-    pub fn pcap_minor_version(arg1: *mut pcap_t) -> ::libc::c_int;
-    pub fn pcap_file(arg1: *mut pcap_t) -> *mut FILE;
-    pub fn pcap_fileno(arg1: *mut pcap_t) -> ::libc::c_int;
+    // pub fn pcap_snapshot(arg1: *mut pcap_t) -> ::libc::c_int;
+    // pub fn pcap_is_swapped(arg1: *mut pcap_t) -> ::libc::c_int;
+    // pub fn pcap_major_version(arg1: *mut pcap_t) -> ::libc::c_int;
+    // pub fn pcap_minor_version(arg1: *mut pcap_t) -> ::libc::c_int;
+    // pub fn pcap_file(arg1: *mut pcap_t) -> *mut FILE;
+    // pub fn pcap_fileno(arg1: *mut pcap_t) -> ::libc::c_int;
     pub fn pcap_dump_open(arg1: *mut pcap_t, arg2: *const ::libc::c_char)
      -> *mut pcap_dumper_t;
-    pub fn pcap_dump_fopen(arg1: *mut pcap_t, fp: *mut FILE)
-     -> *mut pcap_dumper_t;
-    pub fn pcap_dump_file(arg1: *mut pcap_dumper_t) -> *mut FILE;
-    pub fn pcap_dump_ftell(arg1: *mut pcap_dumper_t) -> ::libc::c_long;
-    pub fn pcap_dump_flush(arg1: *mut pcap_dumper_t) -> ::libc::c_int;
+    // pub fn pcap_dump_fopen(arg1: *mut pcap_t, fp: *mut FILE)
+    //  -> *mut pcap_dumper_t;
+    // pub fn pcap_dump_file(arg1: *mut pcap_dumper_t) -> *mut FILE;
+    // pub fn pcap_dump_ftell(arg1: *mut pcap_dumper_t) -> ::libc::c_long;
+    // pub fn pcap_dump_flush(arg1: *mut pcap_dumper_t) -> ::libc::c_int;
     pub fn pcap_dump_close(arg1: *mut pcap_dumper_t) -> ();
     pub fn pcap_dump(arg1: *mut u_char, arg2: *const Struct_pcap_pkthdr,
                      arg3: *const u_char) -> ();
     pub fn pcap_findalldevs(arg1: *mut *mut pcap_if_t,
-                            arg2: *mut ::libc::c_char) -> ::libc::c_int;
+                             arg2: *mut ::libc::c_char) -> ::libc::c_int;
     pub fn pcap_freealldevs(arg1: *mut pcap_if_t) -> ();
-    pub fn pcap_lib_version() -> *const ::libc::c_char;
-    pub fn bpf_image(arg1: *const Struct_bpf_insn, arg2: ::libc::c_int)
-     -> *mut ::libc::c_char;
-    pub fn bpf_dump(arg1: *const Struct_bpf_program, arg2: ::libc::c_int)
-     -> ();
-    pub fn pcap_get_selectable_fd(arg1: *mut pcap_t) -> ::libc::c_int;
+    // pub fn pcap_lib_version() -> *const ::libc::c_char;
+    // pub fn bpf_image(arg1: *const Struct_bpf_insn, arg2: ::libc::c_int)
+    //  -> *mut ::libc::c_char;
+    // pub fn bpf_dump(arg1: *const Struct_bpf_program, arg2: ::libc::c_int)
+    //  -> ();
+    // pub fn pcap_get_selectable_fd(arg1: *mut pcap_t) -> ::libc::c_int;
 }
 
 
@@ -999,10 +799,13 @@ extern "C" {
 #[link(name = "wpcap")]
 extern {}
 
-#[cfg(target_os = "linux")]
+#[cfg(not(target_os = "windows"))]
 #[link(name = "pcap")]
-extern {}
+extern {
+    pub fn pcap_inject(arg1: *mut pcap_t, arg2: *const ::libc::c_void,
+                       arg3: size_t) -> ::libc::c_int;
 
-#[cfg(target_os = "macos")]
-#[link(name = "pcap")]
-extern {}
+    pub fn pcap_set_rfmon(arg1: *mut pcap_t, arg2: ::libc::c_int)
+     -> ::libc::c_int;
+}
+
