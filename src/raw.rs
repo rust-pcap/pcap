@@ -733,8 +733,8 @@ extern "C" {
     //  -> ::libc::c_int;
     // pub fn pcap_setnonblock(arg1: *mut pcap_t, arg2: ::libc::c_int,
     //                         arg3: *mut ::libc::c_char) -> ::libc::c_int;
-    // pub fn pcap_sendpacket(arg1: *mut pcap_t, arg2: *const u_char,
-    //                        arg3: ::libc::c_int) -> ::libc::c_int;
+    pub fn pcap_sendpacket(arg1: *mut pcap_t, arg2: *const u_char,
+                           arg3: ::libc::c_int) -> ::libc::c_int;
     // pub fn pcap_statustostr(arg1: ::libc::c_int) -> *const ::libc::c_char;
     // pub fn pcap_strerror(arg1: ::libc::c_int) -> *const ::libc::c_char;
     pub fn pcap_geterr(arg1: *mut pcap_t) -> *mut ::libc::c_char;
@@ -802,8 +802,8 @@ extern {}
 #[cfg(not(target_os = "windows"))]
 #[link(name = "pcap")]
 extern {
-    pub fn pcap_inject(arg1: *mut pcap_t, arg2: *const ::libc::c_void,
-                       arg3: size_t) -> ::libc::c_int;
+    // pub fn pcap_inject(arg1: *mut pcap_t, arg2: *const ::libc::c_void,
+    //                    arg3: size_t) -> ::libc::c_int;
 
     pub fn pcap_set_rfmon(arg1: *mut pcap_t, arg2: ::libc::c_int)
      -> ::libc::c_int;

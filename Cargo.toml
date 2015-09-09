@@ -12,7 +12,7 @@ documentation = "https://ebfull.github.io/pcap/"
 license = "MIT"
 
 [dependencies]
-libc = "0.1.10"
+libc = "0.1.*"
 
 [lib]
 name = "pcap"
