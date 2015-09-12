@@ -1,6 +1,6 @@
 extern crate pcap;
 
-use pcap::{Offline, Capture};
+use pcap::{Active, Activated, Offline, Capture};
 use std::path::Path;
 
 #[test]
@@ -18,4 +18,25 @@ fn read_packet_with_truncated_data() {
 fn capture_from_test_file(file_name: &str) -> Capture<Offline> {
     let path = Path::new("tests/data/").join(file_name);
     Capture::from_file(path).unwrap()
+}
+
+
+#[test]
+fn unify_activated() {
+	#![allow(dead_code)]
+	fn test1() -> Capture<Active> {
+		loop{}
+	}
+
+	fn test2() -> Capture<Offline> {
+		loop{}
+	}
+
+	fn maybe(a: bool) -> Capture<Activated> {
+		if a {
+			test1().into()
+		} else {
+			test2().into()
+		}
+	}
 }

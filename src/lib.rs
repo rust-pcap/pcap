@@ -263,20 +263,20 @@ pub enum Active {}
 /// Implements `Activated` because it behaves nearly the same as a live handle.
 pub enum Offline {}
 
-pub trait Activated: State {}
+pub unsafe trait Activated: State {}
 
-impl Activated for Active {}
-impl Activated for Offline {}
+unsafe impl Activated for Active {}
+unsafe impl Activated for Offline {}
 
 /// `Capture`s can be in different states at different times, and in these states they
 /// may or may not have particular capabilities. This trait is implemented by phantom
 /// types which allows us to punt these invariants to the type system to avoid runtime
 /// errors.
-pub trait State {}
+pub unsafe trait State {}
 
-impl State for Inactive {}
-impl State for Active {}
-impl State for Offline {}
+unsafe impl State for Inactive {}
+unsafe impl State for Active {}
+unsafe impl State for Offline {}
 
 /// This is a pcap capture handle which is an abstraction over the `pcap_t` provided by pcap.
 /// There are many ways to instantiate and interact with a pcap handle, so phantom types are
@@ -306,7 +306,7 @@ impl State for Offline {}
 ///     println!("received packet! {:?}", packet);
 /// }
 /// ```
-pub struct Capture<T: State> {
+pub struct Capture<T: State + ?Sized> {
     handle: Unique<raw::pcap_t>,
     _marker: PhantomData<T>
 }
@@ -553,11 +553,17 @@ impl Capture<Active> {
     }
 }
 
-impl<T: State> Drop for Capture<T> {
+impl<T: State + ?Sized> Drop for Capture<T> {
     fn drop(&mut self) {
         unsafe {
             raw::pcap_close(*self.handle)
         }
+    }
+}
+
+impl<T: Activated> From<Capture<T>> for Capture<Activated> {
+    fn from(cap: Capture<T>) -> Capture<Activated> {
+        unsafe { transmute(cap) }
     }
 }
 
