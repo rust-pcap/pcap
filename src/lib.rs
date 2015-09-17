@@ -417,7 +417,7 @@ impl Capture<Inactive> {
 }
 
 ///# Activated captures include `Capture<Active>` and `Capture<Offline>`.
-impl<T: Activated> Capture<T> {
+impl<T: Activated + ?Sized> Capture<T> {
     /// List the datalink types that this captured device supports.
     pub fn list_datalinks(&self) -> Result<Vec<Linktype>, Error> {
         unsafe {

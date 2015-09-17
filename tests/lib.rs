@@ -39,4 +39,8 @@ fn unify_activated() {
 			test2().into()
 		}
 	}
+
+	fn also_maybe(a: &mut Capture<Activated>) {
+		a.filter("whatever filter string, this won't be run anyway").unwrap();
+	}
 }
