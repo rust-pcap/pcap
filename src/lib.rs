@@ -10,21 +10,21 @@
 //!
 //! ```ignore
 //! use pcap::Device;
-//! 
+//!
 //! fn main() {
 //!     let mut cap = Device::lookup().unwrap().open().unwrap();
-//!     
+//!
 //!     while let Some(packet) = cap.next() {
 //!         println!("received packet! {:?}", packet);
 //!     }
 //! }
 //! ```
-//! 
+//!
 //! `Capture`'s `.next()` will produce a `Packet` which can be dereferenced to access the
 //! `&[u8]` packet contents.
 //!
 //! # Custom configuration
-//! 
+//!
 //! You may want to configure the `timeout`, `snaplen` or other parameters for the capture
 //! handle. In this case, use `Capture::from_device()` to obtain a `Capture<Inactive>`, and
 //! proceed to configure the capture handle. When you're finished, run `.open()` on it to
@@ -32,14 +32,14 @@
 //!
 //! ```ignore
 //! use pcap::{Device,Capture};
-//! 
+//!
 //! fn main() {
 //!     let main_device = Device::lookup().unwrap();
 //!     let mut cap = Capture::from_device(main_device).unwrap()
 //!                       .promisc(true)
 //!                       .snaplen(5000)
 //!                       .open().unwrap();
-//!     
+//!
 //!     while let Some(packet) = cap.next() {
 //!         println!("received packet! {:?}", packet);
 //!     }
@@ -74,7 +74,9 @@ pub enum Error {
     MalformedError(str::Utf8Error),
     InvalidString,
     PcapError(String),
-    InvalidLinktype
+    InvalidLinktype,
+    TimeoutExpired,
+    NoMorePackets,
 }
 
 impl Error {
@@ -97,7 +99,13 @@ impl fmt::Display for Error {
             },
             InvalidLinktype => {
                 write!(f, "invalid or unknown linktype")
-            }
+            },
+            TimeoutExpired => {
+               write!(f, "timeout expired")
+            },
+            NoMorePackets => {
+               write!(f, "no more packets to read from the file")
+            },
         }
     }
 }
@@ -108,7 +116,9 @@ impl std::error::Error for Error {
             MalformedError(..) => "message from pcap is not encoded properly",
             PcapError(..) => "pcap FFI error",
             InvalidString => "pcap returned an invalid (null) string",
-            InvalidLinktype => "invalid or unknown linktype"
+            InvalidLinktype => "invalid or unknown linktype",
+            TimeoutExpired => "pcap was reading from a live capture and the timeout expired",
+            NoMorePackets => "pcap was reading from a file and there were no more packets to read",
         }
     }
 
@@ -291,7 +301,7 @@ unsafe impl State for Offline {}
 /// with `.filter()`.
 ///
 /// **`Capture<Offline>`** is created via `Capture::from_file()`. This allows you to read a
-/// pcap format dump file as if you were opening an interface -- very useful for testing or 
+/// pcap format dump file as if you were opening an interface -- very useful for testing or
 /// analysis.
 ///
 /// # Example:
@@ -302,7 +312,7 @@ unsafe impl State for Offline {}
 ///               .open() // activate the handle
 ///               .unwrap(); // assume activation worked
 ///
-/// while let Some(packet) = cap.next() {
+/// while let Ok(packet) = cap.next() {
 ///     println!("received packet! {:?}", packet);
 /// }
 /// ```
@@ -406,7 +416,7 @@ impl Capture<Inactive> {
 
     /// Set the snaplen size (the maximum length of a packet captured into the buffer).
     /// Useful if you only want certain headers, but not the entire packet.
-    /// 
+    ///
     /// The default is 65535
     pub fn snaplen(self, to: i32) -> Capture<Inactive> {
         unsafe {
@@ -491,20 +501,35 @@ impl<T: Activated + ?Sized> Capture<T> {
     /// from. This buffer has a finite length, so if the buffer fills completely new
     /// packets will be discarded temporarily. This means that in realtime situations,
     /// you probably want to minimize the time between calls of this next() method.
-    pub fn next<'a>(&'a mut self) -> Option<Packet<'a>> {
+    pub fn next<'a>(&'a mut self) -> Result<Packet<'a>, Error> {
         unsafe {
             let mut header: *mut raw::Struct_pcap_pkthdr = ptr::null_mut();
             let mut packet: *const libc::c_uchar = ptr::null();
             match raw::pcap_next_ex(*self.handle, &mut header, &mut packet) {
                 1 => {
                     // packet was read without issue
-                    Some(Packet {
+                    Ok(Packet {
                         header: transmute(&*header),
                         data: slice::from_raw_parts(packet, (&*header).caplen as usize)
                     })
                 },
+                0 => {
+                    // packets are being read from a live capture and the
+                    // timeout expired
+                    Err(TimeoutExpired)
+                },
+                -1 => {
+                    // an error occured while reading the packet
+                    Error::new(raw::pcap_geterr(*self.handle))
+                },
+                -2 => {
+                    // packets are being read from a "savefile" and there are no
+                    // more packets to read
+                    Err(NoMorePackets)
+                },
                 _ => {
-                    None
+                    // libpcap only defines codes 1, 0, -1, and -2
+                    unreachable!()
                 }
             }
         }
