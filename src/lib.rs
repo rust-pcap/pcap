@@ -265,7 +265,7 @@ impl<'b> Deref for Packet<'b> {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct Stat {
     received: u32,
     dropped: u32,
