@@ -723,8 +723,8 @@ extern "C" {
     pub fn pcap_next_ex(arg1: *mut pcap_t, arg2: *mut *mut Struct_pcap_pkthdr,
                         arg3: *mut *const u_char) -> ::libc::c_int;
     // pub fn pcap_breakloop(arg1: *mut pcap_t) -> ();
-    // pub fn pcap_stats(arg1: *mut pcap_t, arg2: *mut Struct_pcap_stat)
-    //  -> ::libc::c_int;
+    pub fn pcap_stats(arg1: *mut pcap_t, arg2: *mut Struct_pcap_stat)
+     -> ::libc::c_int;
     pub fn pcap_setfilter(arg1: *mut pcap_t, arg2: *mut Struct_bpf_program)
      -> ::libc::c_int;
     // pub fn pcap_setdirection(arg1: *mut pcap_t, arg2: pcap_direction_t)
@@ -808,4 +808,3 @@ extern {
     pub fn pcap_set_rfmon(arg1: *mut pcap_t, arg2: ::libc::c_int)
      -> ::libc::c_int;
 }
-

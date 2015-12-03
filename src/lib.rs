@@ -265,6 +265,13 @@ impl<'b> Deref for Packet<'b> {
     }
 }
 
+#[derive(Debug, Clone, Copy)]
+pub struct Stat {
+    received: u32,
+    dropped: u32,
+    if_dropped: u32
+}
+
 /// Phantom type representing an inactive capture handle.
 pub enum Inactive {}
 /// Phantom type representing an active capture handle.
@@ -556,6 +563,23 @@ impl<T: Activated + ?Sized> Capture<T> {
 
             raw::pcap_freecode(&mut bpf_program);
             Ok(())
+        }
+    }
+
+    pub fn stats(&mut self) -> Result<Stat, Error> {
+        unsafe {
+            let mut stats: raw::Struct_pcap_stat =
+                raw::Struct_pcap_stat {ps_recv: 0, ps_drop: 0, ps_ifdrop: 0};
+
+            if -1 == raw::pcap_stats(*self.handle, &mut stats) {
+                return Error::new(raw::pcap_geterr(*self.handle));
+            }
+
+            Ok(Stat {
+                received: stats.ps_recv,
+                dropped: stats.ps_drop,
+                if_dropped: stats.ps_ifdrop
+            })
         }
     }
 }
