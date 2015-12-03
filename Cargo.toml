@@ -33,3 +33,6 @@ path = "examples/easylisten.rs"
 name = "savefile"
 path = "examples/savefile.rs"
 
+[[example]]
+name = "getstatistics"
+path = "examples/getstatistics.rs"
