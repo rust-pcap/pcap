@@ -8,5 +8,6 @@ fn main() {
     for _ in 0..10 {
       cap.next().ok();
     }
-    println!("{:?}", cap.stats());
+    let stats = cap.stats().unwrap();
+    println!("Received: {}, dropped: {}, if_dropped: {}", stats.received, stats.dropped, stats.if_dropped);
 }

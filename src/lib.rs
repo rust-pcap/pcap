@@ -267,9 +267,9 @@ impl<'b> Deref for Packet<'b> {
 
 #[derive(Debug, Clone, Copy)]
 pub struct Stat {
-    received: u32,
-    dropped: u32,
-    if_dropped: u32
+    pub received: u32,
+    pub dropped: u32,
+    pub if_dropped: u32
 }
 
 /// Phantom type representing an inactive capture handle.
