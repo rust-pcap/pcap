@@ -9,7 +9,7 @@ readme = "README.md"
 homepage = "https://github.com/ebfull/pcap"
 repository = "https://github.com/ebfull/pcap"
 documentation = "https://ebfull.github.io/pcap/"
-license = "MIT"
+license = "MIT OR Apache-2.0"
 
 [dependencies]
 libc = "0.1.*"
