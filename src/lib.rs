@@ -6,7 +6,7 @@
 //! # Capturing packets
 //! The easiest way to open an active capture handle and begin sniffing is to
 //! use `.open()` on a `Device`. You can obtain the "default" device using
-//! `Device::lookup()`, or you can obtain the device(s) you need via `Device::list_all()`.
+//! `Device::lookup()`, or you can obtain the device(s) you need via `Device::list()`.
 //!
 //! ```ignore
 //! use pcap::Device;
@@ -14,7 +14,7 @@
 //! fn main() {
 //!     let mut cap = Device::lookup().unwrap().open().unwrap();
 //!
-//!     while let Some(packet) = cap.next() {
+//!     while let Ok(packet) = cap.next() {
 //!         println!("received packet! {:?}", packet);
 //!     }
 //! }
@@ -40,7 +40,7 @@
 //!                       .snaplen(5000)
 //!                       .open().unwrap();
 //!
-//!     while let Some(packet) = cap.next() {
+//!     while let Ok(packet) = cap.next() {
 //!         println!("received packet! {:?}", packet);
 //!     }
 //! }
