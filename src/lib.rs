@@ -155,10 +155,10 @@ impl Device {
         let mut errbuf = [0i8; PCAP_ERRBUF_SIZE];
 
         unsafe {
-            let default_name = raw::pcap_lookupdev(errbuf.as_mut_ptr());
+            let default_name = raw::pcap_lookupdev(errbuf.as_mut_ptr() as *mut _);
 
             if default_name.is_null() {
-                return Error::new(errbuf.as_ptr());
+                return Error::new(errbuf.as_ptr() as *const _);
             }
 
             Ok(Device {
@@ -175,7 +175,7 @@ impl Device {
             let mut dev_buf: *mut raw::Struct_pcap_if = ptr::null_mut();
             let mut ret = vec![];
 
-            match raw::pcap_findalldevs(&mut dev_buf, errbuf.as_mut_ptr()) {
+            match raw::pcap_findalldevs(&mut dev_buf, errbuf.as_mut_ptr() as *mut _) {
                 0 => {
                     let mut cur = dev_buf;
 
@@ -199,7 +199,7 @@ impl Device {
                     Ok(ret)
                 },
                 _ => {
-                    Error::new(errbuf.as_ptr())
+                    Error::new(errbuf.as_ptr() as *mut _)
                 }
             }
         }
@@ -335,9 +335,9 @@ impl Capture<Offline> {
         let mut errbuf = [0i8; PCAP_ERRBUF_SIZE];
 
         unsafe {
-            let handle = raw::pcap_open_offline(name.as_ptr(), errbuf.as_mut_ptr());
+            let handle = raw::pcap_open_offline(name.as_ptr(), errbuf.as_mut_ptr() as *mut _);
             if handle.is_null() {
-                return Error::new(errbuf.as_ptr());
+                return Error::new(errbuf.as_ptr() as *mut _);
             }
 
             Ok(Capture {
@@ -357,9 +357,9 @@ impl Capture<Inactive> {
         let mut errbuf = [0i8; PCAP_ERRBUF_SIZE];
 
         unsafe {
-            let handle = raw::pcap_create(name.as_ptr(), errbuf.as_mut_ptr());
+            let handle = raw::pcap_create(name.as_ptr(), errbuf.as_mut_ptr() as *mut _);
             if handle.is_null() {
-                return Error::new(errbuf.as_ptr());
+                return Error::new(errbuf.as_ptr() as *const _);
             }
 
             Ok(Capture {
