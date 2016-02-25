@@ -59,6 +59,7 @@ use std::mem::transmute;
 use std::str;
 use std::fmt;
 use self::Error::*;
+use std::os::unix::io::{RawFd, AsRawFd};
 
 pub use raw::PacketHeader;
 
@@ -596,6 +597,23 @@ impl Capture<Active> {
                 },
                 _ => {
                     Ok(())
+                }
+            }
+        }
+    }
+}
+
+impl AsRawFd for Capture<Active> {
+    fn as_raw_fd(&self) -> RawFd {
+        unsafe {
+            let fd = raw::pcap_fileno(*self.handle);
+
+            match fd {
+                -1 => {
+                    panic!("Unable to get file descriptor for live capture");
+                },
+                fd => {
+                    fd
                 }
             }
         }
