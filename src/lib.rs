@@ -350,6 +350,12 @@ impl Capture<Offline> {
     }
 }
 
+pub enum Direction {
+    InOut,
+    In,
+    Out,
+}
+
 impl Capture<Inactive> {
     /// Opens a capture handle for a device. You can pass a `Device` or an `&str` device
     /// name here. The handle is inactive, but can be activated via `.open()`.
@@ -501,6 +507,22 @@ impl<T: Activated + ?Sized> Capture<T> {
                     handle: Unique::new(handle)
                 })
             }
+        }
+    }
+
+    /// Set the direction of the capture
+    pub fn direction(&self, direction: Direction) -> Result<(), Error> {
+        let result = unsafe {
+            raw::pcap_setdirection(*self.handle, match direction {
+                Direction::InOut => raw::PCAP_D_INOUT,
+                Direction::In => raw::PCAP_D_IN,
+                Direction::Out => raw::PCAP_D_OUT,
+            })
+        };
+        if result == 0 {
+            Ok(())
+        } else {
+            Error::new( unsafe { raw::pcap_geterr(*self.handle) })
         }
     }
 
