@@ -726,8 +726,8 @@ extern "C" {
      -> ::libc::c_int;
     pub fn pcap_setfilter(arg1: *mut pcap_t, arg2: *mut Struct_bpf_program)
      -> ::libc::c_int;
-    // pub fn pcap_setdirection(arg1: *mut pcap_t, arg2: pcap_direction_t)
-    //  -> ::libc::c_int;
+    pub fn pcap_setdirection(arg1: *mut pcap_t, arg2: pcap_direction_t)
+     -> ::libc::c_int;
     // pub fn pcap_getnonblock(arg1: *mut pcap_t, arg2: *mut ::libc::c_char)
     //  -> ::libc::c_int;
     // pub fn pcap_setnonblock(arg1: *mut pcap_t, arg2: ::libc::c_int,
