@@ -670,8 +670,8 @@ extern "C" {
     // pub fn pcap_can_set_rfmon(arg1: *mut pcap_t) -> ::libc::c_int;
     pub fn pcap_set_timeout(arg1: *mut pcap_t, arg2: ::libc::c_int)
      -> ::libc::c_int;
-    // pub fn pcap_set_tstamp_type(arg1: *mut pcap_t, arg2: ::libc::c_int)
-    //  -> ::libc::c_int;
+    pub fn pcap_set_tstamp_type(arg1: *mut pcap_t, arg2: ::libc::c_int)
+     -> ::libc::c_int;
     // pub fn pcap_set_immediate_mode(arg1: *mut pcap_t, arg2: ::libc::c_int)
     //  -> ::libc::c_int;
     pub fn pcap_set_buffer_size(arg1: *mut pcap_t, arg2: ::libc::c_int)

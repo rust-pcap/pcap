@@ -350,6 +350,14 @@ impl Capture<Offline> {
     }
 }
 
+pub enum TstampType {
+    Host,
+    HostLowPrec,
+    HostHighPrec,
+    Adapter,
+    AdapterUnsynced,
+}
+
 pub enum Direction {
     InOut,
     In,
@@ -396,6 +404,20 @@ impl Capture<Inactive> {
     pub fn timeout(self, ms: i32) -> Capture<Inactive> {
         unsafe {
             raw::pcap_set_timeout(*self.handle, ms);
+            self
+        }
+    }
+
+    /// Set the time stamp type to be used by a capture device.
+    pub fn tstamp_type(self, t: TstampType) -> Capture<Inactive> {
+        unsafe {
+            raw::pcap_set_tstamp_type(*self.handle, match t {
+                TstampType::Host => 0,
+                TstampType::HostLowPrec => 1,
+                TstampType::HostHighPrec => 2,
+                TstampType::Adapter => 3,
+                TstampType::AdapterUnsynced => 4,
+            });
             self
         }
     }
