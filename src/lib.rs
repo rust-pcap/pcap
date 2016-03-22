@@ -274,6 +274,11 @@ pub struct Stat {
     pub if_dropped: u32
 }
 
+pub enum Precision {
+    Micro,
+    Nano,
+}
+
 /// Phantom type representing an inactive capture handle.
 pub enum Inactive {}
 /// Phantom type representing an active capture handle.
@@ -340,6 +345,28 @@ impl Capture<Offline> {
             let handle = raw::pcap_open_offline(name.as_ptr(), errbuf.as_mut_ptr() as *mut _);
             if handle.is_null() {
                 return Error::new(errbuf.as_ptr() as *mut _);
+            }
+
+            Ok(Capture {
+                handle: Unique::new(handle),
+                _marker: PhantomData
+            })
+        }
+    }
+
+    /// Opens an offline capture handle from a pcap dump file, given a path.
+    /// Takes an additional precision argument specifying the time stamp precision desired.
+    pub fn from_file_with_precision<P: AsRef<Path>>(path: P, precision: Precision) -> Result<Capture<Offline>, Error> {
+        let name = CString::new(path.as_ref().to_str().unwrap()).unwrap();
+        let mut errbuf = [0i8; PCAP_ERRBUF_SIZE];
+
+        unsafe {
+            let handle = raw::pcap_open_offline_with_tstamp_precision(name.as_ptr(), match precision {
+                Precision::Micro => 0,
+                Precision::Nano => 1,
+            }, errbuf.as_mut_ptr());
+            if handle.is_null() {
+                return Error::new(errbuf.as_ptr());
             }
 
             Ok(Capture {
@@ -447,6 +474,17 @@ impl Capture<Inactive> {
     pub fn buffer_size(self, to: i32) -> Capture<Inactive> {
         unsafe {
             raw::pcap_set_buffer_size(*self.handle, to);
+            self
+        }
+    }
+
+    /// Set the time stamp precision returned in captures.
+    pub fn precision(self, precision: Precision) -> Capture<Inactive> {
+        unsafe {
+            raw::pcap_set_tstamp_precision(*self.handle, match precision {
+                Precision::Micro => 0,
+                Precision::Nano => 1,
+            });
             self
         }
     }

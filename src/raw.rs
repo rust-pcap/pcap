@@ -676,8 +676,8 @@ extern "C" {
     //  -> ::libc::c_int;
     pub fn pcap_set_buffer_size(arg1: *mut pcap_t, arg2: ::libc::c_int)
      -> ::libc::c_int;
-    // pub fn pcap_set_tstamp_precision(arg1: *mut pcap_t, arg2: ::libc::c_int)
-    //  -> ::libc::c_int;
+    pub fn pcap_set_tstamp_precision(arg1: *mut pcap_t, arg2: ::libc::c_int)
+     -> ::libc::c_int;
     // pub fn pcap_get_tstamp_precision(arg1: *mut pcap_t) -> ::libc::c_int;
     pub fn pcap_activate(arg1: *mut pcap_t) -> ::libc::c_int;
     // pub fn pcap_list_tstamp_types(arg1: *mut pcap_t,
@@ -698,11 +698,11 @@ extern "C" {
     // pub fn pcap_open_dead_with_tstamp_precision(arg1: ::libc::c_int,
     //                                             arg2: ::libc::c_int,
     //                                             arg3: u_int) -> *mut pcap_t;
-    // pub fn pcap_open_offline_with_tstamp_precision(arg1:
-    //                                                    *const ::libc::c_char,
-    //                                                arg2: u_int,
-    //                                                arg3: *mut ::libc::c_char)
-    //  -> *mut pcap_t;
+    pub fn pcap_open_offline_with_tstamp_precision(arg1:
+                                                       *const ::libc::c_char,
+                                                   arg2: u_int,
+                                                   arg3: *mut ::libc::c_char)
+     -> *mut pcap_t;
     pub fn pcap_open_offline(arg1: *const ::libc::c_char,
                              arg2: *mut ::libc::c_char) -> *mut pcap_t;
     // pub fn pcap_fopen_offline_with_tstamp_precision(arg1: *mut FILE,
