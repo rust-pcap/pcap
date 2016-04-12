@@ -715,26 +715,6 @@ impl Capture<Dead> {
             })
         }
     }
-
-    /// Creates a "fake" capture handle for the given link type.  Takes an additional
-    /// precision argument specifying the time stamp precision desired.
-    pub fn dead_with_precision(linktype: Linktype, precision: Precision) -> Result<Capture<Dead>, Error> {
-        unsafe {
-            let handle = raw::pcap_open_dead_with_tstamp_precision(linktype.0, 65535, match precision {
-                Precision::Micro => 0,
-                Precision::Nano => 1,
-            });
-
-            if handle.is_null() {
-                return Err(Error::InsufficientMemory);
-            }
-
-            Ok(Capture {
-                handle: Unique::new(handle),
-                _marker: PhantomData
-            })
-        }
-    }
 }
 
 #[cfg(not(windows))]

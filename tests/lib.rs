@@ -1,7 +1,7 @@
 extern crate pcap;
 extern crate libc;
 
-use pcap::{Active, Activated, Offline, Capture, Packet, PacketHeader, Precision};
+use pcap::{Active, Activated, Offline, Capture, Packet, PacketHeader};
 use std::env;
 use std::fs;
 use std::path::Path;
@@ -94,65 +94,6 @@ fn capture_dead_savefile() {
 			let orig_packet = &packets[idx];
 			assert_eq!(orig_packet.header.ts.tv_sec, packet.header.ts.tv_sec);
 			assert_eq!(orig_packet.header.ts.tv_usec, packet.header.ts.tv_usec);
-			assert_eq!(orig_packet.header.caplen, packet.header.caplen);
-			assert_eq!(orig_packet.header.len, packet.header.len);
-			assert_eq!(orig_packet.data, packet.data);
-
-			idx += 1;
-		}
-	}
-
-	fs::remove_file(&tmp_file).unwrap();
-}
-#[test]
-fn capture_dead_with_precision_savefile() {
-	let p1_header = PacketHeader {
-		ts: libc::timeval {
-			tv_sec: 1460408319,
-			tv_usec: 1234000,
-		},
-		caplen: 1,
-		len: 1,
-	};
-	let p1_data = vec![1u8];
-
-	let p2_header = PacketHeader {
-		ts: libc::timeval {
-			tv_sec: 1460408320,
-			tv_usec: 4321000,
-		},
-		caplen: 1,
-		len: 1,
-	};
-	let p2_data = vec![2u8];
-
-	let mut packets = vec![];
-	packets.push(Packet { header: &p1_header, data: &p1_data });
-	packets.push(Packet { header: &p2_header, data: &p2_data });
-
-	let mut tmp_file = env::temp_dir();
-	tmp_file.push("pcap_dead_prec_savefile_test.pcap");
-
-	{
-		// Scope for dead capture
-		let dead_cap = pcap::Capture::dead_with_precision(
-			pcap::Linktype(1),
-			Precision::Nano,
-		).unwrap();
-		let mut dead_save = dead_cap.savefile(&tmp_file).unwrap();
-		for packet in &packets {
-			dead_save.write(&packet);
-		}
-	}
-
-	{
-		// Scope for offline capture
-		let mut offline_cap = pcap::Capture::from_file(&tmp_file).unwrap();
-		let mut idx = 0;
-		while let Ok(packet) = offline_cap.next() {
-			let orig_packet = &packets[idx];
-			assert_eq!(orig_packet.header.ts.tv_sec, packet.header.ts.tv_sec);
-			assert_eq!(orig_packet.header.ts.tv_usec/1000, packet.header.ts.tv_usec);
 			assert_eq!(orig_packet.header.caplen, packet.header.caplen);
 			assert_eq!(orig_packet.header.len, packet.header.len);
 			assert_eq!(orig_packet.data, packet.data);
