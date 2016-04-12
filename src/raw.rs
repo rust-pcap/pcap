@@ -693,11 +693,11 @@ extern "C" {
     // pub fn pcap_open_live(arg1: *const ::libc::c_char, arg2: ::libc::c_int,
     //                       arg3: ::libc::c_int, arg4: ::libc::c_int,
     //                       arg5: *mut ::libc::c_char) -> *mut pcap_t;
-    // pub fn pcap_open_dead(arg1: ::libc::c_int, arg2: ::libc::c_int)
-    //  -> *mut pcap_t;
-    // pub fn pcap_open_dead_with_tstamp_precision(arg1: ::libc::c_int,
-    //                                             arg2: ::libc::c_int,
-    //                                             arg3: u_int) -> *mut pcap_t;
+    pub fn pcap_open_dead(arg1: ::libc::c_int, arg2: ::libc::c_int)
+      -> *mut pcap_t;
+    pub fn pcap_open_dead_with_tstamp_precision(arg1: ::libc::c_int,
+                                                 arg2: ::libc::c_int,
+                                                 arg3: u_int) -> *mut pcap_t;
     pub fn pcap_open_offline_with_tstamp_precision(arg1:
                                                        *const ::libc::c_char,
                                                    arg2: u_int,

@@ -79,6 +79,7 @@ pub enum Error {
     InvalidLinktype,
     TimeoutExpired,
     NoMorePackets,
+    InsufficientMemory,
 }
 
 impl Error {
@@ -108,6 +109,9 @@ impl fmt::Display for Error {
             NoMorePackets => {
                write!(f, "no more packets to read from the file")
             },
+            InsufficientMemory => {
+                write!(f, "insufficient memory")
+            },
         }
     }
 }
@@ -121,6 +125,7 @@ impl std::error::Error for Error {
             InvalidLinktype => "invalid or unknown linktype",
             TimeoutExpired => "pcap was reading from a live capture and the timeout expired",
             NoMorePackets => "pcap was reading from a file and there were no more packets to read",
+            InsufficientMemory => "insufficient memory",
         }
     }
 
@@ -286,11 +291,16 @@ pub enum Active {}
 /// Phantom type representing an offline capture handle, from a pcap dump file.
 /// Implements `Activated` because it behaves nearly the same as a live handle.
 pub enum Offline {}
+/// Phantom type representing a dead capture handle.  This can be use to create
+/// new save files that are not generated from an active capture.
+/// Implements `Activated` because it behaves nearly the same as a live handle.
+pub enum Dead {}
 
 pub unsafe trait Activated: State {}
 
 unsafe impl Activated for Active {}
 unsafe impl Activated for Offline {}
+unsafe impl Activated for Dead {}
 
 /// `Capture`s can be in different states at different times, and in these states they
 /// may or may not have particular capabilities. This trait is implemented by phantom
@@ -301,6 +311,7 @@ pub unsafe trait State {}
 unsafe impl State for Inactive {}
 unsafe impl State for Active {}
 unsafe impl State for Offline {}
+unsafe impl State for Dead {}
 
 /// This is a pcap capture handle which is an abstraction over the `pcap_t` provided by pcap.
 /// There are many ways to instantiate and interact with a pcap handle, so phantom types are
@@ -317,6 +328,9 @@ unsafe impl State for Offline {}
 /// **`Capture<Offline>`** is created via `Capture::from_file()`. This allows you to read a
 /// pcap format dump file as if you were opening an interface -- very useful for testing or
 /// analysis.
+///
+/// **`Capture<Dead>`** is created via `Capture::dead()`. This allows you to create a pcap
+/// format dump file without needing an active capture.
 ///
 /// # Example:
 ///
@@ -682,6 +696,23 @@ impl Capture<Active> {
                     Ok(())
                 }
             }
+        }
+    }
+}
+
+impl Capture<Dead> {
+    /// Creates a "fake" capture handle for the given link type.
+    pub fn dead(linktype: Linktype) -> Result<Capture<Dead>, Error> {
+        unsafe {
+            let handle = raw::pcap_open_dead(linktype.0, 65535);
+            if handle.is_null() {
+                return Err(Error::InsufficientMemory);
+            }
+
+            Ok(Capture {
+                handle: Unique::new(handle),
+                _marker: PhantomData
+            })
         }
     }
 }
