@@ -47,8 +47,10 @@
 //! ```
 
 extern crate libc;
+extern crate rand;
 
 use unique::Unique;
+use rand::Rng;
 use std::marker::PhantomData;
 use std::ptr;
 use std::ffi::{CStr,CString};
@@ -71,7 +73,7 @@ const PCAP_ERROR_NOT_ACTIVATED: i32 = -3;
 const PCAP_ERRBUF_SIZE: usize = 256;
 
 /// An error received from pcap
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum Error {
     MalformedError(str::Utf8Error),
     InvalidString,
@@ -80,6 +82,7 @@ pub enum Error {
     TimeoutExpired,
     NoMorePackets,
     InsufficientMemory,
+    General(String),
 }
 
 impl Error {
@@ -112,6 +115,9 @@ impl fmt::Display for Error {
             InsufficientMemory => {
                 write!(f, "insufficient memory")
             },
+            General(ref s) => {
+                write!(f, "general error: {}", s)
+            }
         }
     }
 }
@@ -126,6 +132,7 @@ impl std::error::Error for Error {
             TimeoutExpired => "pcap was reading from a live capture and the timeout expired",
             NoMorePackets => "pcap was reading from a file and there were no more packets to read",
             InsufficientMemory => "insufficient memory",
+            General(ref s) => &s,
         }
     }
 
@@ -584,6 +591,14 @@ impl<T: Activated + ?Sized> Capture<T> {
         }
     }
 
+    /// Create a `Savememory` context for recording captures packets using this `Capture`'s
+    /// configurations.  This is similar to `savefile()` except it uses memory instead of a file.
+    /// This is not available on Windows
+    #[cfg(not(windows))]
+    pub fn savememory(&self) -> Result<Savememory, Error> {
+        Savememory::new(*self.handle)
+    }
+
     /// Set the direction of the capture
     pub fn direction(&self, direction: Direction) -> Result<(), Error> {
         let result = unsafe {
@@ -766,6 +781,121 @@ impl Drop for Savefile {
     fn drop(&mut self) {
         unsafe {
             raw::pcap_dump_close(*self.handle);
+        }
+    }
+}
+
+/// Abstraction for writing pcap savefiles in memory.  The `dump()` function can be used
+/// to retrieve a clone of the data currently in the savefile.
+#[cfg(not(windows))]
+pub struct Savememory {
+    handle: Unique<raw::pcap_dumper_t>,
+    shm_fd: libc::c_int,
+    shm_file: *mut libc::FILE,
+}
+
+#[cfg(not(windows))]
+impl Savememory {
+    /// Creates a new in-memory pcap file for the given pcap handle.
+    fn new(pcap_handle: *mut raw::pcap_t) -> Result<Savememory, Error> {
+        // Generate a random name so we don't collide
+        let mut name = vec![];
+        let mut name_rng = rand::thread_rng();
+        let mut name_gen = name_rng.gen_ascii_chars();
+        for _ in 0..20 {
+            match name_gen.next() {
+                Some(c) => name.push(c as u8),
+                None => return Err(Error::InsufficientMemory),
+            }
+        }
+        let c_name = match CString::new(name) {
+            Ok(s) => s,
+            Err(_) => return Err(Error::InsufficientMemory),
+        };
+        unsafe {
+            let shm_fd = match libc::shm_open(
+                c_name.as_ptr(), libc::O_RDWR | libc::O_CREAT | libc::O_EXCL, 0700
+            ) {
+                res if res >= 0 => res,
+                _ => {
+                    return Err(Error::General(String::from("Unable to open file in memory")));
+                },
+            };
+
+            let file_mode = match CString::new("wb+") {
+                Ok(s) => s,
+                Err(_) => {
+                    libc::close(shm_fd);
+                    return Err(Error::InsufficientMemory)
+                },
+            };
+            let shm_file = libc::fdopen(shm_fd, file_mode.as_ptr());
+            if shm_file.is_null() {
+                libc::close(shm_fd);
+                return Err(Error::InsufficientMemory);
+            }
+
+            let dump_handle = raw::pcap_dump_fopen(pcap_handle, shm_file as *mut raw::Struct__IO_FILE);
+            if dump_handle.is_null() {
+                return Error::new(raw::pcap_geterr(pcap_handle))
+            }
+
+            Ok(Savememory {
+                handle: Unique::new(dump_handle),
+                shm_fd: shm_fd,
+                shm_file: shm_file,
+            })
+        }
+    }
+
+    /// Writes the provided packet to the pcap file in memory.
+    pub fn write<'a>(&mut self, packet: &'a Packet<'a>) {
+        unsafe {
+            raw::pcap_dump(*self.handle as *mut u8, transmute::<_, &raw::Struct_pcap_pkthdr>(packet.header), packet.data.as_ptr());
+        }
+    }
+
+    /// Reads the current contents of the dumped packets from memory and returns
+    /// a clone of the pcap data.
+    pub fn dump(&mut self) -> Result<Vec<u8>, Error> {
+        const BUFFER_SIZE: usize = 4096;
+
+        let mut res = vec![];
+        unsafe {
+            if libc::fflush(self.shm_file) != 0 {
+                return Err(Error::General(String::from("Unable to flush Savememory file")));
+            }
+            if libc::fseek(self.shm_file, 0, libc::SEEK_SET) != 0 {
+                return Err(Error::General(String::from("Unable to seek in Savememory file")));
+            }
+            let mut buf = [0u8; BUFFER_SIZE];
+            loop {
+                let amt_read = libc::fread(
+                    buf.as_mut_ptr() as *mut libc::c_void,
+                    1, BUFFER_SIZE, self.shm_file
+                );
+                for idx in 0..amt_read {
+                    res.push(buf[idx]);
+                }
+                if amt_read < BUFFER_SIZE {
+                    if libc::feof(self.shm_file) == 1 {
+                        break;
+                    } else {
+                        return Err(Error::General(String::from("Error reading Savememory file")));
+                    }
+                }
+            }
+        }
+        Ok(res)
+    }
+}
+
+#[cfg(not(windows))]
+impl Drop for Savememory {
+    fn drop(&mut self) {
+        unsafe {
+            libc::fclose(self.shm_file);
+            libc::close(self.shm_fd);
         }
     }
 }
