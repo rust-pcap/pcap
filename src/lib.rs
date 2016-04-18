@@ -593,8 +593,8 @@ impl<T: Activated + ?Sized> Capture<T> {
 
     /// Create a `Savememory` context for recording captures packets using this `Capture`'s
     /// configurations.  This is similar to `savefile()` except it uses memory instead of a file.
-    /// This is not available on Windows
-    #[cfg(not(windows))]
+    /// This is not available on Windows or OS X.
+    #[cfg(not(any(windows, macos)))]
     pub fn savememory(&self) -> Result<Savememory, Error> {
         Savememory::new(*self.handle)
     }
@@ -787,14 +787,14 @@ impl Drop for Savefile {
 
 /// Abstraction for writing pcap savefiles in memory.  The `dump()` function can be used
 /// to retrieve a clone of the data currently in the savefile.
-#[cfg(not(windows))]
+#[cfg(not(any(windows, macos)))]
 pub struct Savememory {
     handle: Unique<raw::pcap_dumper_t>,
     shm_fd: libc::c_int,
     shm_file: *mut libc::FILE,
 }
 
-#[cfg(not(windows))]
+#[cfg(not(any(windows, macos)))]
 impl Savememory {
     /// Creates a new in-memory pcap file for the given pcap handle.
     fn new(pcap_handle: *mut raw::pcap_t) -> Result<Savememory, Error> {
@@ -862,9 +862,6 @@ impl Savememory {
 
         let mut res = vec![];
         unsafe {
-            if libc::fflush(self.shm_file) != 0 {
-                return Err(Error::General(String::from("Unable to flush Savememory file")));
-            }
             if libc::fseek(self.shm_file, 0, libc::SEEK_SET) != 0 {
                 return Err(Error::General(String::from("Unable to seek in Savememory file")));
             }
