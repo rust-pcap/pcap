@@ -772,8 +772,8 @@ extern "C" {
     pub fn pcap_fileno(arg1: *mut pcap_t) -> ::libc::c_int;
     pub fn pcap_dump_open(arg1: *mut pcap_t, arg2: *const ::libc::c_char)
      -> *mut pcap_dumper_t;
-    // pub fn pcap_dump_fopen(arg1: *mut pcap_t, fp: *mut FILE)
-    //  -> *mut pcap_dumper_t;
+    pub fn pcap_dump_fopen(arg1: *mut pcap_t, fp: *mut FILE)
+     -> *mut pcap_dumper_t;
     // pub fn pcap_dump_file(arg1: *mut pcap_dumper_t) -> *mut FILE;
     // pub fn pcap_dump_ftell(arg1: *mut pcap_dumper_t) -> ::libc::c_long;
     // pub fn pcap_dump_flush(arg1: *mut pcap_dumper_t) -> ::libc::c_int;

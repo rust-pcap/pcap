@@ -3,6 +3,7 @@ extern crate libc;
 
 use pcap::{Active, Activated, Offline, Capture, Packet, PacketHeader};
 use std::env;
+use std::io::Write;
 use std::fs;
 use std::path::Path;
 
@@ -46,6 +47,68 @@ fn unify_activated() {
 	fn also_maybe(a: &mut Capture<Activated>) {
 		a.filter("whatever filter string, this won't be run anyway").unwrap();
 	}
+}
+
+#[test]
+#[cfg(not(any(windows, target_os="macos")))]
+fn capture_dead_savememory() {
+	let p1_header = PacketHeader {
+		ts: libc::timeval {
+			tv_sec: 1460408319,
+			tv_usec: 1234,
+		},
+		caplen: 1,
+		len: 1,
+	};
+	let p1_data = vec![1u8];
+
+	let p2_header = PacketHeader {
+		ts: libc::timeval {
+			tv_sec: 1460408320,
+			tv_usec: 4321,
+		},
+		caplen: 1,
+		len: 1,
+	};
+	let p2_data = vec![2u8];
+
+	let mut packets = vec![];
+	packets.push(Packet { header: &p1_header, data: &p1_data });
+	packets.push(Packet { header: &p2_header, data: &p2_data });
+
+	let mut tmp_file = env::temp_dir();
+	tmp_file.push("pcap_dead_savememory_test.pcap");
+
+	{
+		// Scope for dead capture
+		let dead_cap = pcap::Capture::dead(pcap::Linktype(1)).unwrap();
+		let mut dead_save = dead_cap.savememory().unwrap();
+		for packet in &packets {
+			dead_save.write(&packet);
+		}
+		let contents = dead_save.dump().unwrap();
+
+		let mut file = fs::File::create(&tmp_file).unwrap();
+		file.write_all(&contents).unwrap();
+	}
+
+	{
+		// Scope for offline capture
+		let mut offline_cap = pcap::Capture::from_file(&tmp_file).unwrap();
+		let mut idx = 0;
+		while let Ok(packet) = offline_cap.next() {
+			let orig_packet = &packets[idx];
+			assert_eq!(orig_packet.header.ts.tv_sec, packet.header.ts.tv_sec);
+			assert_eq!(orig_packet.header.ts.tv_usec, packet.header.ts.tv_usec);
+			assert_eq!(orig_packet.header.caplen, packet.header.caplen);
+			assert_eq!(orig_packet.header.len, packet.header.len);
+			assert_eq!(orig_packet.data, packet.data);
+
+			idx += 1;
+		}
+	}
+
+	fs::remove_file(&tmp_file).unwrap();
 }
 
 #[test]
