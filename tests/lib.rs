@@ -50,7 +50,7 @@ fn unify_activated() {
 }
 
 #[test]
-#[cfg(not(windows))]
+#[cfg(not(any(windows, target_os="macos")))]
 fn capture_dead_savememory() {
 	let p1_header = PacketHeader {
 		ts: libc::timeval {
