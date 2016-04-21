@@ -378,9 +378,9 @@ impl Capture<Offline> {
             let handle = raw::pcap_open_offline_with_tstamp_precision(name.as_ptr(), match precision {
                 Precision::Micro => 0,
                 Precision::Nano => 1,
-            }, errbuf.as_mut_ptr());
+            }, errbuf.as_mut_ptr() as *mut _);
             if handle.is_null() {
-                return Error::new(errbuf.as_ptr());
+                return Error::new(errbuf.as_ptr() as *const _);
             }
 
             Ok(Capture {
