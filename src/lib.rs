@@ -450,6 +450,7 @@ impl Capture<Inactive> {
     }
 
     /// Set the time stamp type to be used by a capture device.
+    #[cfg(not(windows))]
     pub fn tstamp_type(self, t: TstampType) -> Capture<Inactive> {
         unsafe {
             raw::pcap_set_tstamp_type(*self.handle, match t {
@@ -493,6 +494,7 @@ impl Capture<Inactive> {
     }
 
     /// Set the time stamp precision returned in captures.
+    #[cfg(not(windows))]
     pub fn precision(self, precision: Precision) -> Capture<Inactive> {
         unsafe {
             raw::pcap_set_tstamp_precision(*self.handle, match precision {
