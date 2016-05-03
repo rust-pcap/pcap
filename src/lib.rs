@@ -613,7 +613,7 @@ impl<T: Activated + ?Sized> Capture<T> {
             let mut header: *mut raw::Struct_pcap_pkthdr = ptr::null_mut();
             let mut packet: *const libc::c_uchar = ptr::null();
             match raw::pcap_next_ex(*self.handle, &mut header, &mut packet) {
-                1 => {
+                i if i >= 1 => {
                     // packet was read without issue
                     Ok(Packet {
                         header: transmute(&*header),
@@ -635,7 +635,7 @@ impl<T: Activated + ?Sized> Capture<T> {
                     Err(NoMorePackets)
                 },
                 _ => {
-                    // libpcap only defines codes 1, 0, -1, and -2
+                    // libpcap only defines codes >=1, 0, -1, and -2
                     unreachable!()
                 }
             }
