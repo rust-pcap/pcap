@@ -815,3 +815,5 @@ impl Drop for BpfProgram {
         unsafe { raw::pcap_freecode(&mut self.0) }
     }
 }
+
+unsafe impl Send for BpfProgram {}
