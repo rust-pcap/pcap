@@ -675,17 +675,6 @@ impl<T: Activated + ?Sized> Capture<T> {
         }
     }
 
-    pub fn offline_match(prog: &BpfProgram, buf: &[u8]) -> bool {
-        let header: raw::Struct_pcap_pkthdr = raw::Struct_pcap_pkthdr {
-            ts: Default::default(),
-            caplen: buf.len() as u32,
-            len: buf.len() as u32,
-        };
-        unsafe {
-            raw::pcap_offline_filter(&prog.0, &header, buf.as_ptr()) > 0
-        }
-    }
-
     pub fn compile(&self, program: &str) -> Result<BpfProgram, Error> {
         let program = CString::new(program).unwrap();
 
@@ -811,5 +800,16 @@ fn cstr_to_string(ptr: *const libc::c_char) -> Result<String, Error> {
         Err(InvalidString)
     } else {
         Ok(try!(str::from_utf8(unsafe{CStr::from_ptr(ptr)}.to_bytes())).into())
+    }
+}
+
+pub fn offline_match(prog: &BpfProgram, buf: &[u8]) -> bool {
+    let header: raw::Struct_pcap_pkthdr = raw::Struct_pcap_pkthdr {
+        ts: Default::default(),
+        caplen: buf.len() as u32,
+        len: buf.len() as u32,
+    };
+    unsafe {
+        raw::pcap_offline_filter(&prog.0, &header, buf.as_ptr()) > 0
     }
 }
