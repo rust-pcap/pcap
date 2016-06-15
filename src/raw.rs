@@ -749,9 +749,9 @@ extern "C" {
     //                            arg5: ::libc::c_int, arg6: bpf_u_int32)
     //  -> ::libc::c_int;
     pub fn pcap_freecode(arg1: *mut Struct_bpf_program) -> ();
-    // pub fn pcap_offline_filter(arg1: *const Struct_bpf_program,
-    //                            arg2: *const Struct_pcap_pkthdr,
-    //                            arg3: *const u_char) -> ::libc::c_int;
+    pub fn pcap_offline_filter(arg1: *const Struct_bpf_program,
+                               arg2: *const Struct_pcap_pkthdr,
+                               arg3: *const u_char) -> ::libc::c_int;
     pub fn pcap_datalink(arg1: *mut pcap_t) -> ::libc::c_int;
     // pub fn pcap_datalink_ext(arg1: *mut pcap_t) -> ::libc::c_int;
     pub fn pcap_list_datalinks(arg1: *mut pcap_t,

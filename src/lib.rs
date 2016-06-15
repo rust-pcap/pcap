@@ -67,6 +67,15 @@ pub use raw::PacketHeader;
 mod raw;
 mod unique;
 
+#[derive(Clone)]
+pub struct BpfProgram(raw::Struct_bpf_program);
+
+impl Drop for BpfProgram {
+   fn drop(&mut self) {
+     unsafe { raw::pcap_freecode(&mut self.0) }
+   }
+}
+
 const PCAP_ERROR_NOT_ACTIVATED: i32 = -3;
 const PCAP_ERRBUF_SIZE: usize = 256;
 
@@ -663,6 +672,30 @@ impl<T: Activated + ?Sized> Capture<T> {
 
             raw::pcap_freecode(&mut bpf_program);
             Ok(())
+        }
+    }
+
+    pub fn offline_match(prog: &BpfProgram, buf: &[u8]) -> bool {
+        let header: raw::Struct_pcap_pkthdr = raw::Struct_pcap_pkthdr {
+            ts: Default::default(),
+            caplen: buf.len() as u32,
+            len: buf.len() as u32,
+        };
+        unsafe {
+            raw::pcap_offline_filter(&prog.0, &header, buf.as_ptr()) > 0
+        }
+    }
+
+    pub fn compile(&self, program: &str) -> Result<BpfProgram, Error> {
+        let program = CString::new(program).unwrap();
+
+        unsafe {
+            let mut bpf_program: raw::Struct_bpf_program = Default::default();
+
+            if -1 == raw::pcap_compile(*self.handle, &mut bpf_program, program.as_ptr(), 0, 0) {
+                return Error::new(raw::pcap_geterr(*self.handle));
+            }
+            Ok(BpfProgram(bpf_program))
         }
     }
 
