@@ -794,7 +794,6 @@ fn cstr_to_string(ptr: *const libc::c_char) -> Result<String, Error> {
     }
 }
 
-#[derive(Clone)]
 pub struct BpfProgram(raw::Struct_bpf_program);
 
 impl BpfProgram {
@@ -808,6 +807,25 @@ impl BpfProgram {
             raw::pcap_offline_filter(&self.0, &header, buf.as_ptr()) > 0
         }
     }
+}
+
+impl Clone for BpfProgram {
+   // make a deep copy of the underlying program
+   fn clone(&self) -> Self {
+      use std::mem;
+      use std::ptr;
+      let len = self.0.bf_len as usize;
+      let size = len * mem::size_of::<raw::Struct_bpf_insn>();
+      let storage = unsafe {
+         let storage = libc::malloc(size) as *mut raw::Struct_bpf_insn;
+         ptr::copy_nonoverlapping(self.0.bf_insns, storage, len);
+         storage
+      };
+      BpfProgram(raw::Struct_bpf_program {
+            bf_len: self.0.bf_len,
+            bf_insns: storage,
+      })
+   }
 }
 
 impl Drop for BpfProgram {
