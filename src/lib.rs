@@ -794,6 +794,7 @@ fn cstr_to_string(ptr: *const libc::c_char) -> Result<String, Error> {
     }
 }
 
+pub struct BpfInstruction(raw::Struct_bpf_insn);
 pub struct BpfProgram(raw::Struct_bpf_program);
 
 impl BpfProgram {
@@ -805,6 +806,15 @@ impl BpfProgram {
         };
         unsafe {
             raw::pcap_offline_filter(&self.0, &header, buf.as_ptr()) > 0
+        }
+    }
+
+    pub fn get_instructions(&self) -> &[BpfInstruction] {
+        use std::slice;
+        use std::mem;
+        unsafe {
+            slice::from_raw_parts(mem::transmute(self.0.bf_insns),
+                 self.0.bf_len as usize)
         }
     }
 }
