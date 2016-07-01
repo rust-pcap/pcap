@@ -745,6 +745,38 @@ impl Capture<Active> {
             Ok(self)
         })
     }
+
+    /// Set immediate mode on or off for a not-yet-activated capture handle.
+    /// Separate implementations are required for Windows, Mac, and Linux.
+    // TODO: This may need to be on Capture<Inactive> for Linux. Not ideal.
+    //#[cfg(linux)]
+    //pub fn immediate_mode(self, to: bool) -> Capture<Inactive> {
+    //    unsafe {
+    //        raw::pcap_set_immediate_mode(*self.handle, if to {1} else {0});
+    //        self
+    //    }
+    //}
+
+    /// Set immediate mode on or off for a not-yet-activated capture handle.
+    /// Separate implementations are required for Windows, Mac, and Linux.
+    /// OSX doesn't support pcap_set_immediate.
+    // Idea: If Win and Linux are both set on Inactive Capture,
+    //       have the OS X method set a flag that is checked for when the
+    //       capture is activated which actually sets the immediate mode
+    //       in order to keep the API consistent.
+    // Question: Do BSD's use BIOCIMMEDIATE or pcap_set_immediate_mode?
+    //           This guard should be updated if the former.
+    #[cfg(target_os = "macos")]
+    pub fn immediate_mode(self, to: bool) -> Capture<Active> {
+        unsafe {
+            let i: libc::c_uint = if to {1} else {0};
+            // See /usr/include/sys/ioccom.h for the steps
+            // required to derive BIOCIMMEDIATE.
+            const BIOCIMMEDIATE: libc::c_ulong = 0x80044270;
+            libc::ioctl(raw::pcap_fileno(*self.handle), BIOCIMMEDIATE, &i);
+            self
+        }
+    }
 }
 
 impl Capture<Dead> {
