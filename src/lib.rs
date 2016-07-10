@@ -557,6 +557,32 @@ impl Capture<Inactive> {
         self
     }
 
+    /// Set immediate mode on or off for a not-yet-activated capture handle.
+    /// Separate implementations are required for Windows, Mac, and Linux.
+    /// Windows and Mac do not support pcap_set_immediate.
+    //
+    // Linux must be set on an Inactive Capture. Mac requires an Active Capture.
+    // Currently unsure if Windows cares (It definitely works with an Active Capture).
+    //
+    // Question 1:
+    //   Context: It's my understanding that determining the installed version of libpcap
+    //            is problematic. Thus, checking for feature support is difficult.
+    //   * Should we change this guard to Not Win + Not Mac and rely on Issues to find
+    //     find out where this fails?
+    //   * Or, should we whitelist OS's as they're needed? (I'm leaning toward the former)
+    //
+    // Question 2:
+    //   * pcap_set_immediate_mode returns PCAP_ERROR_ACTIVATED if called on an
+    //     activated capture handle. Since this is defined on Capture<Inactive>,
+    //     we can safely ignore this right?
+    #[cfg(target_os = "linux")]
+    pub fn immediate_mode(self, to: bool) -> Capture<Inactive> {
+        unsafe {
+            raw::pcap_set_immediate_mode(*self.handle, if to {1} else {0});
+            self
+        }
+    }
+
     /// Set the time stamp precision returned in captures.
     #[cfg(not(windows))]
     pub fn precision(self, precision: Precision) -> Capture<Inactive> {
@@ -749,21 +775,9 @@ impl Capture<Active> {
     /// Set immediate mode on or off for a not-yet-activated capture handle.
     /// Separate implementations are required for Windows, Mac, and Linux.
     /// Windows and Mac do not support pcap_set_immediate.
-    // TODO: This may need to be on Capture<Inactive> for Linux. Not ideal.
-    //#[cfg(linux)]
-    //pub fn immediate_mode(self, to: bool) -> Capture<Inactive> {
-    //    unsafe {
-    //        raw::pcap_set_immediate_mode(*self.handle, if to {1} else {0});
-    //        self
-    //    }
-    //}
-
-    /// Set immediate mode on or off for a not-yet-activated capture handle.
-    /// Separate implementations are required for Windows, Mac, and Linux.
-    /// Windows and Mac do not support pcap_set_immediate.
-    // Idea: If Linux is set on Inactive Capture,
+    // Idea: Since Linux is set on Inactive Capture, should we
     //       have the OS X method set a flag that is checked for when the
-    //       capture is activated which actually sets the immediate mode
+    //       capture is activated which actually enables immediate mode
     //       in order to keep the API consistent.
     // Question 1: Do BSD's use BIOCIMMEDIATE or pcap_set_immediate_mode?
     //             This guard should be updated if the former.
