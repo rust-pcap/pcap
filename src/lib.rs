@@ -666,6 +666,7 @@ impl<T: Activated + ?Sized> Capture<T> {
         }
     }
 
+    /// Compiles the string into a filter program using `pcap_compile`.
     pub fn compile(&self, program: &str) -> Result<BpfProgram, Error> {
         let program = CString::new(program).unwrap();
 
@@ -798,6 +799,7 @@ pub struct BpfInstruction(raw::Struct_bpf_insn);
 pub struct BpfProgram(raw::Struct_bpf_program);
 
 impl BpfProgram {
+    /// checks whether a filter matches a packet
     pub fn filter(&self, buf: &[u8]) -> bool {
         let header: raw::Struct_pcap_pkthdr = raw::Struct_pcap_pkthdr {
             ts: Default::default(),
