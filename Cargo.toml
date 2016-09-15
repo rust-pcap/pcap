@@ -14,6 +14,12 @@ license = "MIT OR Apache-2.0"
 [dependencies]
 libc = "0.2.7"
 
+[features]
+# This feature enables access to the function Capture::savefile_append.
+# This is disabled by default, because it depends on a relatively recent
+# version of libpcap (1.7.2).
+pcap-savefile-append = []
+
 [lib]
 name = "pcap"
 

@@ -106,6 +106,7 @@ fn capture_dead_savefile() {
 }
 
 #[test]
+#[cfg(feature = "pcap-savefile-append")]
 fn capture_dead_savefile_append() {
 	let p1_header = PacketHeader {
 		ts: libc::timeval {

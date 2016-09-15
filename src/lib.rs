@@ -592,6 +592,7 @@ impl<T: Activated + ?Sized> Capture<T> {
     /// byte order as the host opening the file, and has the same time stamp precision,
     /// link-layer header type,  and  snapshot length as p, it will write new packets
     /// at the end of the file.
+    #[cfg(feature = "pcap-savefile-append")]
     pub fn savefile_append<P: AsRef<Path>>(&self, path: P) -> Result<Savefile, Error> {
         let name = CString::new(path.as_ref().to_str().unwrap()).unwrap();
         unsafe {
