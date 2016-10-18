@@ -37,6 +37,15 @@ libpcap should be installed on Mac OS X by default.
 
 **Note:** A timeout of zero may cause ```pcap::Capture::next``` to hang and never return (because it waits for the timeout to expire before returning). This can be fixed by using a non-zero timeout (as the libpcap manual recommends) and calling ```pcap::Capture::next``` in a loop.
 
+## Optional Features
+
+To get access to the `Capture::savefile_append` function (which allows appending
+to an existing pcap file) you have to depend on the `pcap-savefile-append`
+feature flag. It requires at least libpcap version 1.7.2.
+
+    [dependencies]
+    pcap = { version = "*", features = "pcap-savefile-append" }
+
 ## License
 
 Licensed under either of

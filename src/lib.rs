@@ -258,7 +258,7 @@ impl Linktype {
 }
 
 /// Represents a packet returned from pcap.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Packet<'a> {
     pub header: &'a PacketHeader,
     pub data: &'a [u8]
@@ -575,6 +575,28 @@ impl<T: Activated + ?Sized> Capture<T> {
         let name = CString::new(path.as_ref().to_str().unwrap()).unwrap();
         unsafe {
             let handle = raw::pcap_dump_open(*self.handle, name.as_ptr());
+
+            if handle.is_null() {
+                Error::new(raw::pcap_geterr(*self.handle))
+            } else {
+                Ok(Savefile {
+                    handle: Unique::new(handle)
+                })
+            }
+        }
+    }
+
+    /// Reopen a `Savefile` context for recording captured packets using this `Capture`'s
+    /// configurations. This is similar to `savefile()` but does not create the file if it
+    /// does  not exist and, if it does already exist, and is a pcap file with the same
+    /// byte order as the host opening the file, and has the same time stamp precision,
+    /// link-layer header type,  and  snapshot length as p, it will write new packets
+    /// at the end of the file.
+    #[cfg(feature = "pcap-savefile-append")]
+    pub fn savefile_append<P: AsRef<Path>>(&self, path: P) -> Result<Savefile, Error> {
+        let name = CString::new(path.as_ref().to_str().unwrap()).unwrap();
+        unsafe {
+            let handle = raw::pcap_dump_open_append(*self.handle, name.as_ptr());
 
             if handle.is_null() {
                 Error::new(raw::pcap_geterr(*self.handle))
