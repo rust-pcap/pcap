@@ -37,6 +37,10 @@ libpcap should be installed on Mac OS X by default.
 
 **Note:** A timeout of zero may cause ```pcap::Capture::next``` to hang and never return (because it waits for the timeout to expire before returning). This can be fixed by using a non-zero timeout (as the libpcap manual recommends) and calling ```pcap::Capture::next``` in a loop.
 
+## Specifying library folder
+
+If `PCAP_LIBDIR` environment variable is set when building the crate, it will be added to the linker search path - this allows linking against a specific `libpcap`.
+
 ## Optional Features
 
 To get access to the `Capture::savefile_append` function (which allows appending
