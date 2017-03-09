@@ -258,7 +258,7 @@ impl Linktype {
 }
 
 /// Represents a packet returned from pcap.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Packet<'a> {
     pub header: &'a PacketHeader,
     pub data: &'a [u8]
