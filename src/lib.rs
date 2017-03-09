@@ -759,6 +759,11 @@ impl AsRawFd for Capture<Active> {
     }
 }
 
+impl<T: State + ?Sized> Capture<T> {
+    /// Closes the capture handle.
+    pub fn close(self) {}
+}
+
 impl<T: State + ?Sized> Drop for Capture<T> {
     fn drop(&mut self) {
         unsafe {
@@ -784,6 +789,9 @@ impl Savefile {
             raw::pcap_dump(*self.handle as *mut u8, transmute::<_, &raw::Struct_pcap_pkthdr>(packet.header), packet.data.as_ptr());
         }
     }
+
+    /// Closes the savefile.
+    pub fn close(self) {}
 }
 
 impl Drop for Savefile {
