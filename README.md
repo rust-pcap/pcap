@@ -44,7 +44,7 @@ to an existing pcap file) you have to depend on the `pcap-savefile-append`
 feature flag. It requires at least libpcap version 1.7.2.
 
     [dependencies]
-    pcap = { version = "*", features = "pcap-savefile-append" }
+    pcap = { version = "*", features = ["pcap-savefile-append"] }
 
 ## License
 
