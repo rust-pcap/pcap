@@ -648,6 +648,31 @@ impl<T: Activated + ?Sized> Capture<T> {
         }
     }
 
+    /// Create a `Savefile` context for recording captured packets using this `Capture`'s
+    /// configurations. The output is written to a raw file descriptor which is opened
+    // in `"w"` mode.
+    #[cfg(not(windows))]
+    pub fn savefile_raw_fd(&self, fd: RawFd) -> Result<Savefile, Error> {
+        const MODE: [u8; 2] = [b'w', 0];
+
+        unsafe {
+            // File handle will be closed by libpcap.
+            let file: *mut _ = libc::fdopen(fd, MODE.as_ptr() as *const _);
+            if file.is_null() {
+                return Err(Error::InvalidRawFd);
+            }
+
+            let handle = raw::pcap_dump_fopen(*self.handle, file);
+            if handle.is_null() {
+                Error::new(raw::pcap_geterr(*self.handle))
+            } else {
+                Ok(Savefile {
+                    handle: Unique::new(handle)
+                })
+            }
+        }
+    }
+
     /// Reopen a `Savefile` context for recording captured packets using this `Capture`'s
     /// configurations. This is similar to `savefile()` but does not create the file if it
     /// does  not exist and, if it does already exist, and is a pcap file with the same

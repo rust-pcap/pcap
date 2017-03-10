@@ -782,8 +782,8 @@ extern "C" {
     pub fn pcap_fileno(arg1: *mut pcap_t) -> ::libc::c_int;
     pub fn pcap_dump_open(arg1: *mut pcap_t, arg2: *const ::libc::c_char)
      -> *mut pcap_dumper_t;
-    // pub fn pcap_dump_fopen(arg1: *mut pcap_t, fp: *mut ::libc::FILE)
-    //  -> *mut pcap_dumper_t;
+    pub fn pcap_dump_fopen(arg1: *mut pcap_t, fp: *mut ::libc::FILE)
+     -> *mut pcap_dumper_t;
     #[cfg(feature = "pcap-savefile-append")]
     pub fn pcap_dump_open_append(arg1: *mut pcap_t, arg2: *const ::libc::c_char)
      -> *mut pcap_dumper_t;
