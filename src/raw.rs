@@ -595,6 +595,15 @@ impl ::std::fmt::Debug for PacketHeader {
     }
 }
 
+impl PartialEq for PacketHeader {
+    fn eq(&self, rhs: &PacketHeader) -> bool {
+        self.ts.tv_sec == rhs.ts.tv_sec && self.ts.tv_usec == rhs.ts.tv_usec &&
+            self.caplen == rhs.caplen && self.len == rhs.len
+    }
+}
+
+impl Eq for PacketHeader {}
+
 #[test]
 fn packet_hdr_eq() {
     use std::mem::size_of;
