@@ -150,6 +150,7 @@ fn capture_dead_savefile_append() {
 fn test_raw_fd_api() {
     use std::fs::File;
     use std::thread;
+    use std::io::prelude::*;
     #[cfg(not(windows))]
     use std::os::unix::io::{RawFd, FromRawFd};
 
@@ -178,6 +179,37 @@ fn test_raw_fd_api() {
         assert_eq!(Capture::from_raw_fd_with_precision(-999, Precision::Micro).err().unwrap(),
                    Error::InvalidRawFd);
     }
+    assert_eq!(cap.savefile_raw_fd(-999).err().unwrap(),
+               Error::InvalidRawFd);
+
+    // Create an unnamed pipe
+    let mut pipe = [0 as libc::c_int; 2];
+    assert_eq!(unsafe { libc::pipe(pipe.as_mut_ptr()) }, 0);
+    let (fd_in, fd_out) = (pipe[0], pipe[1]);
+
+    let filename = dir.path().join("test2.pcap");
+    let packets_c = packets.clone();
+    thread::spawn(move || {
+        // Write all packets to the pipe
+        let cap = Capture::dead(Linktype(1)).unwrap();
+        let mut save = cap.savefile_raw_fd(fd_out).unwrap();
+        packets_c.foreach(|p| save.write(p));
+        // fd_out will be closed by savefile destructor
+    });
+
+    // Save the pcap from pipe in a separate thread.
+    // Hypothetically, we could do any sort of processing here,
+    // like encoding to a gzip stream.
+    let mut file_in = unsafe { File::from_raw_fd(fd_in) };
+    let mut file_out = File::create(&filename).unwrap();
+    io::copy(&mut file_in, &mut file_out).unwrap();
+
+    // Verify that the contents match
+    let filename = dir.path().join("test2.pcap");
+    let (mut v1, mut v2) = (vec![], vec![]);
+    File::open(&tmpfile).unwrap().read_to_end(&mut v1).unwrap();
+    File::open(&filename).unwrap().read_to_end(&mut v2).unwrap();
+    assert_eq!(v1, v2);
 
     #[cfg(feature = "pcap-fopen-offline-precision")]
     fn from_raw_fd_with_precision(fd: RawFd, precision: Precision) -> Capture<Offline> {
