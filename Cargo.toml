@@ -24,6 +24,13 @@ tempdir = "0.3"
 # version of libpcap (1.7.2).
 pcap-savefile-append = []
 
+# This feature enables access to the function Capture::from_raw_fd_with_precision.
+# This is disabled by default, because it requires libpcap >= 1.5.0.
+pcap-fopen-offline-precision = []
+
+# A shortcut to enable all features.
+full = ["pcap-savefile-append", "pcap-fopen-offline-precision"]
+
 [lib]
 name = "pcap"
 

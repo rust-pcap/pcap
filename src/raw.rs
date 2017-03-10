@@ -421,8 +421,6 @@ pub struct Struct_bpf_insn {
 impl ::std::default::Default for Struct_bpf_insn {
     fn default() -> Struct_bpf_insn { unsafe { ::std::mem::zeroed() } }
 }
-pub type FILE = Struct__IO_FILE;
-pub type __FILE = Struct__IO_FILE;
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct Struct_Unnamed14 {
@@ -716,12 +714,13 @@ extern "C" {
      -> *mut pcap_t;
     pub fn pcap_open_offline(arg1: *const ::libc::c_char,
                              arg2: *mut ::libc::c_char) -> *mut pcap_t;
-    // pub fn pcap_fopen_offline_with_tstamp_precision(arg1: *mut FILE,
-    //                                                 arg2: u_int,
-    //                                                 arg3: *mut ::libc::c_char)
-    //  -> *mut pcap_t;
-    // pub fn pcap_fopen_offline(arg1: *mut FILE, arg2: *mut ::libc::c_char)
-    //  -> *mut pcap_t;
+    #[cfg(feature = "pcap-fopen-offline-precision")]
+    pub fn pcap_fopen_offline_with_tstamp_precision(arg1: *mut ::libc::FILE,
+                                                    arg2: u_int,
+                                                    arg3: *mut ::libc::c_char)
+     -> *mut pcap_t;
+    pub fn pcap_fopen_offline(arg1: *mut ::libc::FILE, arg2: *mut ::libc::c_char)
+     -> *mut pcap_t;
     pub fn pcap_close(arg1: *mut pcap_t) -> ();
     // pub fn pcap_loop(arg1: *mut pcap_t, arg2: ::libc::c_int,
     //                  arg3: pcap_handler, arg4: *mut u_char) -> ::libc::c_int;
@@ -779,16 +778,16 @@ extern "C" {
     // pub fn pcap_is_swapped(arg1: *mut pcap_t) -> ::libc::c_int;
     // pub fn pcap_major_version(arg1: *mut pcap_t) -> ::libc::c_int;
     // pub fn pcap_minor_version(arg1: *mut pcap_t) -> ::libc::c_int;
-    // pub fn pcap_file(arg1: *mut pcap_t) -> *mut FILE;
+    // pub fn pcap_file(arg1: *mut pcap_t) -> *mut ::libc::FILE;
     pub fn pcap_fileno(arg1: *mut pcap_t) -> ::libc::c_int;
     pub fn pcap_dump_open(arg1: *mut pcap_t, arg2: *const ::libc::c_char)
      -> *mut pcap_dumper_t;
-    // pub fn pcap_dump_fopen(arg1: *mut pcap_t, fp: *mut FILE)
+    // pub fn pcap_dump_fopen(arg1: *mut pcap_t, fp: *mut ::libc::FILE)
     //  -> *mut pcap_dumper_t;
     #[cfg(feature = "pcap-savefile-append")]
     pub fn pcap_dump_open_append(arg1: *mut pcap_t, arg2: *const ::libc::c_char)
      -> *mut pcap_dumper_t;
-    // pub fn pcap_dump_file(arg1: *mut pcap_dumper_t) -> *mut FILE;
+    // pub fn pcap_dump_file(arg1: *mut pcap_dumper_t) -> *mut ::libc::FILE;
     // pub fn pcap_dump_ftell(arg1: *mut pcap_dumper_t) -> ::libc::c_long;
     // pub fn pcap_dump_flush(arg1: *mut pcap_dumper_t) -> ::libc::c_int;
     pub fn pcap_dump_close(arg1: *mut pcap_dumper_t) -> ();
