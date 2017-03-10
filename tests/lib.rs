@@ -2,11 +2,13 @@ extern crate pcap;
 extern crate libc;
 extern crate tempdir;
 
+use std::io;
 use std::ops::Add;
 use std::path::Path;
 use tempdir::TempDir;
 
-use pcap::{Active, Activated, Offline, Capture, Packet, PacketHeader, Linktype};
+use pcap::{Active, Activated, Offline, Capture, Packet,
+           PacketHeader, Linktype, Precision, Error};
 
 #[test]
 fn read_packet_with_full_data() {
@@ -141,4 +143,77 @@ fn capture_dead_savefile_append() {
 
     let mut cap = Capture::from_file(&tmpfile).unwrap();
     packets.verify(&mut cap);
+}
+
+#[test]
+#[cfg(not(windows))]
+fn test_raw_fd_api() {
+    use std::fs::File;
+    use std::thread;
+    #[cfg(not(windows))]
+    use std::os::unix::io::{RawFd, FromRawFd};
+
+    // Create a total of more than 64K data (> max pipe buf size)
+    const N_PACKETS: usize = 64;
+    let data: Vec<u8> = (0..191).cycle().take(N_PACKETS * 1024).collect();
+    let mut packets = Packets::new();
+    for i in 0..N_PACKETS {
+        packets.push(1460408319 + i as libc::time_t,
+                     1000 + i as libc::suseconds_t, 1024, 1024,
+                     &data[i * 1024..(i + 1) * 1024]);
+    }
+
+    let dir = TempDir::new("pcap").unwrap();
+    let tmpfile = dir.path().join("test.pcap");
+
+    // Write all packets to test.pcap savefile
+    let cap = Capture::dead(Linktype(1)).unwrap();
+    let mut save = cap.savefile(&tmpfile).unwrap();
+    packets.foreach(|p| save.write(p));
+    drop(save);
+
+    assert_eq!(Capture::from_raw_fd(-999).err().unwrap(),
+               Error::InvalidRawFd);
+    #[cfg(feature = "pcap-fopen-offline-precision")] {
+        assert_eq!(Capture::from_raw_fd_with_precision(-999, Precision::Micro).err().unwrap(),
+                   Error::InvalidRawFd);
+    }
+
+    #[cfg(feature = "pcap-fopen-offline-precision")]
+    fn from_raw_fd_with_precision(fd: RawFd, precision: Precision) -> Capture<Offline> {
+        Capture::from_raw_fd_with_precision(fd, precision).unwrap()
+    }
+
+    #[cfg(not(feature = "pcap-fopen-offline-precision"))]
+    fn from_raw_fd_with_precision(fd: RawFd, _: Precision) -> Capture<Offline> {
+        Capture::from_raw_fd(fd).unwrap()
+    }
+
+    for with_tstamp in &[false, true] {
+        // Create an unnamed pipe
+        let mut pipe = [0 as libc::c_int; 2];
+        assert_eq!(unsafe { libc::pipe(pipe.as_mut_ptr()) }, 0);
+        let (fd_in, fd_out) = (pipe[0], pipe[1]);
+
+        let filename = tmpfile.clone();
+        thread::spawn(move || {
+            // Cat the pcap into the pipe in a separate thread.
+            // Hypothetically, we could do any sort of processing here,
+            // like decoding from a gzip stream.
+            let mut file_in = File::open(&filename).unwrap();
+            let mut file_out = unsafe { File::from_raw_fd(fd_out) };
+            io::copy(&mut file_in, &mut file_out).unwrap();
+            assert_eq!(unsafe { libc::close(fd_out) }, 0);
+        });
+
+        // Open the capture with pipe's file descriptor
+        let mut cap = if *with_tstamp {
+            from_raw_fd_with_precision(fd_in, Precision::Micro)
+        } else {
+            Capture::from_raw_fd(fd_in).unwrap()
+        };
+
+        // Verify that packets match
+        packets.verify(&mut cap);
+    }
 }
