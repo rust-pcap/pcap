@@ -1,9 +1,10 @@
 extern crate pcap;
 extern crate libc;
 
-use pcap::{Active, Activated, Offline, Capture, Packet, PacketHeader};
+use pcap::{Active, Activated, Offline, Capture, Packet, PacketHeader, Linktype};
 use std::env;
 use std::fs;
+use std::ops::Add;
 use std::path::Path;
 
 #[test]
@@ -48,59 +49,70 @@ fn unify_activated() {
 	  }
 }
 
+#[derive(Clone)]
+pub struct Packets {
+    headers: Vec<PacketHeader>,
+    data: Vec<Vec<u8>>,
+}
+
+impl Packets {
+    pub fn new() -> Packets {
+        Packets { headers: vec![], data: vec![] }
+    }
+
+    pub fn push(&mut self, tv_sec: libc::time_t, tv_usec: libc::suseconds_t,
+                caplen: u32, len: u32, data: &[u8])
+    {
+        self.headers.push(PacketHeader {
+            ts: libc::timeval { tv_sec: tv_sec, tv_usec: tv_usec },
+            caplen: caplen,
+            len: len,
+        });
+        self.data.push(data.to_vec());
+    }
+
+    pub fn foreach<F: FnMut(&Packet)>(&self, mut f: F) {
+        for (header, data) in self.headers.iter().zip(self.data.iter()) {
+            let packet = Packet { header: header, data: &data };
+            f(&packet);
+        }
+    }
+
+    pub fn verify<T: Activated + ?Sized>(&self, cap: &mut Capture<T>) {
+        for (header, data) in self.headers.iter().zip(self.data.iter()) {
+            assert_eq!(cap.next().unwrap(), Packet { header: header, data: &data });
+        }
+        assert!(cap.next().is_err());
+    }
+}
+
+impl<'a> Add for &'a Packets {
+    type Output = Packets;
+
+    fn add(self, rhs: &'a Packets) -> Packets {
+        let mut packets = self.clone();
+        packets.headers.extend(rhs.headers.iter());
+        packets.data.extend(rhs.data.iter().cloned());
+        packets
+    }
+}
+
 #[test]
 fn capture_dead_savefile() {
-	  let p1_header = PacketHeader {
-		    ts: libc::timeval {
-			      tv_sec: 1460408319,
-			      tv_usec: 1234,
-		    },
-		    caplen: 1,
-		    len: 1,
-	  };
-	  let p1_data = vec![1u8];
-
-	  let p2_header = PacketHeader {
-		    ts: libc::timeval {
-			      tv_sec: 1460408320,
-			      tv_usec: 4321,
-		    },
-		    caplen: 1,
-		    len: 1,
-	  };
-	  let p2_data = vec![2u8];
-
-	  let mut packets = vec![];
-	  packets.push(Packet { header: &p1_header, data: &p1_data });
-	  packets.push(Packet { header: &p2_header, data: &p2_data });
+    let mut packets = Packets::new();
+    packets.push(1460408319, 1234, 1, 1, &[1]);
+    packets.push(1460408320, 4321, 1, 1, &[2]);
 
 	  let mut tmp_file = env::temp_dir();
 	  tmp_file.push("pcap_dead_savefile_test.pcap");
 
-	  {
-		    // Scope for dead capture
-		    let dead_cap = pcap::Capture::dead(pcap::Linktype(1)).unwrap();
-		    let mut dead_save = dead_cap.savefile(&tmp_file).unwrap();
-		    for packet in &packets {
-			      dead_save.write(&packet);
-		    }
-	  }
+    let cap = Capture::dead(Linktype(1)).unwrap();
+    let mut save = cap.savefile(&tmp_file).unwrap();
+    packets.foreach(|p| save.write(p));
+    drop(save);
 
-	  {
-		    // Scope for offline capture
-		    let mut offline_cap = pcap::Capture::from_file(&tmp_file).unwrap();
-		    let mut idx = 0;
-		    while let Ok(packet) = offline_cap.next() {
-			      let orig_packet = &packets[idx];
-			      assert_eq!(orig_packet.header.ts.tv_sec, packet.header.ts.tv_sec);
-			      assert_eq!(orig_packet.header.ts.tv_usec, packet.header.ts.tv_usec);
-			      assert_eq!(orig_packet.header.caplen, packet.header.caplen);
-			      assert_eq!(orig_packet.header.len, packet.header.len);
-			      assert_eq!(orig_packet.data, packet.data);
-
-			      idx += 1;
-		    }
-	  }
+    let mut cap = Capture::from_file(&tmp_file).unwrap();
+    packets.verify(&mut cap);
 
 	  fs::remove_file(&tmp_file).unwrap();
 }
@@ -108,94 +120,29 @@ fn capture_dead_savefile() {
 #[test]
 #[cfg(feature = "pcap-savefile-append")]
 fn capture_dead_savefile_append() {
-	  let p1_header = PacketHeader {
-		    ts: libc::timeval {
-			      tv_sec: 1460408319,
-			      tv_usec: 1234,
-		    },
-		    caplen: 1,
-		    len: 1,
-	  };
-	  let p1_data = vec![1u8];
-
-	  let p2_header = PacketHeader {
-		    ts: libc::timeval {
-			      tv_sec: 1460408320,
-			      tv_usec: 4321,
-		    },
-		    caplen: 1,
-		    len: 1,
-	  };
-	  let p2_data = vec![2u8];
-
-	  let p3_header = PacketHeader {
-		    ts: libc::timeval {
-			      tv_sec: 1460408321,
-			      tv_usec: 2345,
-		    },
-		    caplen: 1,
-		    len: 1,
-	  };
-	  let p3_data = vec![3u8];
-
-	  let p4_header = PacketHeader {
-		    ts: libc::timeval {
-			      tv_sec: 1460408322,
-			      tv_usec: 5432,
-		    },
-		    caplen: 1,
-		    len: 1,
-	  };
-	  let p4_data = vec![4u8];
-
-	  let mut packets1 = vec![];
-	  packets1.push(Packet { header: &p1_header, data: &p1_data });
-	  packets1.push(Packet { header: &p2_header, data: &p2_data });
-
-	  let mut packets2 = vec![];
-	  packets2.push(Packet { header: &p3_header, data: &p3_data });
-	  packets2.push(Packet { header: &p4_header, data: &p4_data });
-
-	  let mut packets = vec![];
-	  packets.extend(packets1.iter().cloned());
-	  packets.extend(packets2.iter().cloned());
+    let mut packets1 = Packets::new();
+    packets1.push(1460408319, 1234, 1, 1, &[1]);
+    packets1.push(1460408320, 4321, 1, 1, &[2]);
+    let mut packets2 = Packets::new();
+    packets2.push(1460408321, 2345, 1, 1, &[3]);
+    packets2.push(1460408322, 5432, 1, 1, &[4]);
+    let packets = &packets1 + &packets2;
 
 	  let mut tmp_file = env::temp_dir();
 	  tmp_file.push("pcap_dead_savefile_append_test.pcap");
 
-	  {
-		    // Scope for dead capture
-		    let dead_cap = pcap::Capture::dead(pcap::Linktype(1)).unwrap();
-		    let mut dead_save = dead_cap.savefile(&tmp_file).unwrap();
-		    for packet in &packets1 {
-			      dead_save.write(&packet);
-		    }
-	  }
+    let cap = Capture::dead(Linktype(1)).unwrap();
+    let mut save = cap.savefile(&tmp_file).unwrap();
+    packets1.foreach(|p| save.write(p));
+    drop(save);
 
-	  {
-		    // Scope for appending to dead capture
-		    let dead_cap = pcap::Capture::dead(pcap::Linktype(1)).unwrap();
-		    let mut dead_save = dead_cap.savefile_append(&tmp_file).unwrap();
-		    for packet in &packets2 {
-			      dead_save.write(&packet);
-		    }
-	  }
+    let cap = Capture::dead(Linktype(1)).unwrap();
+    let mut save = cap.savefile_append(&tmp_file).unwrap();
+    packets2.foreach(|p| save.write(p));
+    drop(save);
 
-	  {
-		    // Scope for offline capture
-		    let mut offline_cap = pcap::Capture::from_file(&tmp_file).unwrap();
-		    let mut idx = 0;
-		    while let Ok(packet) = offline_cap.next() {
-			      let orig_packet = &packets[idx];
-			      assert_eq!(orig_packet.header.ts.tv_sec, packet.header.ts.tv_sec);
-			      assert_eq!(orig_packet.header.ts.tv_usec, packet.header.ts.tv_usec);
-			      assert_eq!(orig_packet.header.caplen, packet.header.caplen);
-			      assert_eq!(orig_packet.header.len, packet.header.len);
-			      assert_eq!(orig_packet.data, packet.data);
-
-			      idx += 1;
-		    }
-	  }
+    let mut cap = Capture::from_file(&tmp_file).unwrap();
+    packets.verify(&mut cap);
 
 	  fs::remove_file(&tmp_file).unwrap();
 }
