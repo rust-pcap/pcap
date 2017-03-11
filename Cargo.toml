@@ -8,7 +8,7 @@ keywords = ["pcap", "packet", "sniffing"]
 readme = "README.md"
 homepage = "https://github.com/ebfull/pcap"
 repository = "https://github.com/ebfull/pcap"
-documentation = "https://ebfull.github.io/pcap/"
+documentation = "https://docs.rs/pcap"
 license = "MIT OR Apache-2.0"
 build = "build.rs"
 
