@@ -71,7 +71,7 @@ const PCAP_ERROR_NOT_ACTIVATED: i32 = -3;
 const PCAP_ERRBUF_SIZE: usize = 256;
 
 /// An error received from pcap
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum Error {
     MalformedError(str::Utf8Error),
     InvalidString,
@@ -80,6 +80,8 @@ pub enum Error {
     TimeoutExpired,
     NoMorePackets,
     InsufficientMemory,
+    #[cfg(not(windows))]
+    InvalidRawFd,
 }
 
 impl Error {
@@ -112,6 +114,10 @@ impl fmt::Display for Error {
             InsufficientMemory => {
                 write!(f, "insufficient memory")
             },
+            #[cfg(not(windows))]
+            InvalidRawFd => {
+                write!(f, "invalid raw file descriptor")
+            },
         }
     }
 }
@@ -126,6 +132,8 @@ impl std::error::Error for Error {
             TimeoutExpired => "pcap was reading from a live capture and the timeout expired",
             NoMorePackets => "pcap was reading from a file and there were no more packets to read",
             InsufficientMemory => "insufficient memory",
+            #[cfg(not(windows))]
+            InvalidRawFd => "invalid raw file descriptor",
         }
     }
 
@@ -389,6 +397,60 @@ impl Capture<Offline> {
             })
         }
     }
+
+    /// Opens an offline capture handle from a pcap dump file, given a file descriptor.
+    #[cfg(not(windows))]
+    pub fn from_raw_fd(fd: RawFd) -> Result<Capture<Offline>, Error> {
+        let mut errbuf = [0i8; PCAP_ERRBUF_SIZE];
+        const MODE: [u8; 2] = [b'r', 0];
+
+        unsafe {
+            // File handle will be closed by libpcap.
+            let file: *mut _ = libc::fdopen(fd, MODE.as_ptr() as *const _);
+            if file.is_null() {
+                return Err(Error::InvalidRawFd);
+            }
+
+            let handle = raw::pcap_fopen_offline(file, errbuf.as_mut_ptr() as *mut _);
+            if handle.is_null() {
+                return Error::new(errbuf.as_ptr() as *mut _);
+            }
+
+            Ok(Capture {
+                handle: Unique::new(handle),
+                _marker: PhantomData
+            })
+        }
+    }
+
+    /// Opens an offline capture handle from a pcap dump file, given a file descriptor.
+    /// Takes an additional precision argument specifying the time stamp precision desired.
+    #[cfg(all(not(windows), feature = "pcap-fopen-offline-precision"))]
+    pub fn from_raw_fd_with_precision(fd: RawFd, precision: Precision) -> Result<Capture<Offline>, Error> {
+        let mut errbuf = [0i8; PCAP_ERRBUF_SIZE];
+        const MODE: [u8; 2] = [b'r', 0];
+
+        unsafe {
+            // File handle will be closed by libpcap.
+            let file: *mut _ = libc::fdopen(fd, MODE.as_ptr() as *const _);
+            if file.is_null() {
+                return Err(Error::InvalidRawFd);
+            }
+
+            let handle = raw::pcap_fopen_offline_with_tstamp_precision(file, match precision {
+                Precision::Micro => 0,
+                Precision::Nano => 1,
+            }, errbuf.as_mut_ptr() as *mut _);
+            if handle.is_null() {
+                return Error::new(errbuf.as_ptr() as *const _);
+            }
+
+            Ok(Capture {
+                handle: Unique::new(handle),
+                _marker: PhantomData
+            })
+        }
+    }
 }
 
 pub enum TstampType {
@@ -576,6 +638,31 @@ impl<T: Activated + ?Sized> Capture<T> {
         unsafe {
             let handle = raw::pcap_dump_open(*self.handle, name.as_ptr());
 
+            if handle.is_null() {
+                Error::new(raw::pcap_geterr(*self.handle))
+            } else {
+                Ok(Savefile {
+                    handle: Unique::new(handle)
+                })
+            }
+        }
+    }
+
+    /// Create a `Savefile` context for recording captured packets using this `Capture`'s
+    /// configurations. The output is written to a raw file descriptor which is opened
+    // in `"w"` mode.
+    #[cfg(not(windows))]
+    pub fn savefile_raw_fd(&self, fd: RawFd) -> Result<Savefile, Error> {
+        const MODE: [u8; 2] = [b'w', 0];
+
+        unsafe {
+            // File handle will be closed by libpcap.
+            let file: *mut _ = libc::fdopen(fd, MODE.as_ptr() as *const _);
+            if file.is_null() {
+                return Err(Error::InvalidRawFd);
+            }
+
+            let handle = raw::pcap_dump_fopen(*self.handle, file);
             if handle.is_null() {
                 Error::new(raw::pcap_geterr(*self.handle))
             } else {

@@ -15,11 +15,21 @@ build = "build.rs"
 [dependencies]
 libc = "0.2"
 
+[dev-dependencies]
+tempdir = "0.3"
+
 [features]
 # This feature enables access to the function Capture::savefile_append.
 # This is disabled by default, because it depends on a relatively recent
 # version of libpcap (1.7.2).
 pcap-savefile-append = []
+
+# This feature enables access to the function Capture::from_raw_fd_with_precision.
+# This is disabled by default, because it requires libpcap >= 1.5.0.
+pcap-fopen-offline-precision = []
+
+# A shortcut to enable all features.
+full = ["pcap-savefile-append", "pcap-fopen-offline-precision"]
 
 [lib]
 name = "pcap"
