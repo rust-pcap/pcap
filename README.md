@@ -37,18 +37,34 @@ libpcap should be installed on Mac OS X by default.
 
 **Note:** A timeout of zero may cause ```pcap::Capture::next``` to hang and never return (because it waits for the timeout to expire before returning). This can be fixed by using a non-zero timeout (as the libpcap manual recommends) and calling ```pcap::Capture::next``` in a loop.
 
-## Specifying library folder
+## Library Location
 
 If `PCAP_LIBDIR` environment variable is set when building the crate, it will be added to the linker search path - this allows linking against a specific `libpcap`.
 
 ## Optional Features
 
+#### `pcap-savefile-append`
+
 To get access to the `Capture::savefile_append` function (which allows appending
 to an existing pcap file) you have to depend on the `pcap-savefile-append`
 feature flag. It requires at least libpcap version 1.7.2.
 
-    [dependencies]
-    pcap = { version = "*", features = ["pcap-savefile-append"] }
+```toml
+[dependencies]
+pcap = { version = "0.5", features = ["pcap-savefile-append"] }
+```
+
+#### `pcap-fopen-offline-precision`
+
+To enable `Capture::from_raw_fd_with_precision` constructor (which allows opening
+an offline capture from a raw file descriptor with a predefined timestamp precision)
+you have to add `pcap-fopen-offline-precision` feature flag. This requires libpcap
+version 1.5.0 or later.
+
+```toml
+[dependencies]
+pcap = { version = "0.5", features = ["pcap-fopen-offline-precision"] }
+```
 
 ## License
 
