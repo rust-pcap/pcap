@@ -234,7 +234,7 @@ impl<'a> Into<Device> for &'a str {
 ///
 /// As an example, `Linktype(1)` is ethernet. A full list of linktypes is available
 /// [here](http://www.tcpdump.org/linktypes.html).
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub struct Linktype(pub i32);
 
 impl Linktype {
@@ -287,6 +287,7 @@ pub struct Stat {
     pub if_dropped: u32
 }
 
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum Precision {
     Micro,
     Nano,
@@ -453,6 +454,7 @@ impl Capture<Offline> {
     }
 }
 
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum TstampType {
     Host,
     HostLowPrec,
@@ -461,6 +463,7 @@ pub enum TstampType {
     AdapterUnsynced,
 }
 
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum Direction {
     InOut,
     In,
