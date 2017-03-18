@@ -358,68 +358,62 @@ pub struct Capture<T: State + ?Sized> {
     _marker: PhantomData<T>
 }
 
+impl<T: State + ?Sized> Capture<T> {
+    fn new_raw<F>(path: Option<&str>, func: F) -> Result<Capture<T>, Error>
+        where F: FnOnce(*const libc::c_char, *mut libc::c_char) -> *mut raw::pcap_t
+    {
+        let mut errbuf = [0i8; PCAP_ERRBUF_SIZE];
+        unsafe {
+            let handle = match path {
+                None => func(ptr::null(), errbuf.as_mut_ptr() as *mut _),
+                Some(path) => {
+                    let path = CString::new(path).or(Err(Error::InvalidString))?;
+                    func(path.as_ptr(), errbuf.as_mut_ptr() as *mut _)
+                },
+            };
+            if handle.is_null() {
+                Error::new(errbuf.as_ptr() as *const _)
+            } else {
+                Ok(Capture {
+                    handle: Unique::new(handle),
+                    _marker: PhantomData,
+                })
+            }
+        }
+    }
+}
+
 impl Capture<Offline> {
     /// Opens an offline capture handle from a pcap dump file, given a path.
     pub fn from_file<P: AsRef<Path>>(path: P) -> Result<Capture<Offline>, Error> {
-        let name = CString::new(path.as_ref().to_str().unwrap()).unwrap();
-        let mut errbuf = [0i8; PCAP_ERRBUF_SIZE];
-
-        unsafe {
-            let handle = raw::pcap_open_offline(name.as_ptr(), errbuf.as_mut_ptr() as *mut _);
-            if handle.is_null() {
-                return Error::new(errbuf.as_ptr() as *mut _);
-            }
-
-            Ok(Capture {
-                handle: Unique::new(handle),
-                _marker: PhantomData
-            })
-        }
+        Capture::new_raw(path.as_ref().to_str(), |path, err| unsafe {
+            raw::pcap_open_offline(path, err)
+        })
     }
 
     /// Opens an offline capture handle from a pcap dump file, given a path.
     /// Takes an additional precision argument specifying the time stamp precision desired.
     pub fn from_file_with_precision<P: AsRef<Path>>(path: P, precision: Precision) -> Result<Capture<Offline>, Error> {
-        let name = CString::new(path.as_ref().to_str().unwrap()).unwrap();
-        let mut errbuf = [0i8; PCAP_ERRBUF_SIZE];
-
-        unsafe {
-            let handle = raw::pcap_open_offline_with_tstamp_precision(name.as_ptr(), match precision {
-                Precision::Micro => 0,
-                Precision::Nano => 1,
-            }, errbuf.as_mut_ptr() as *mut _);
-            if handle.is_null() {
-                return Error::new(errbuf.as_ptr() as *const _);
-            }
-
-            Ok(Capture {
-                handle: Unique::new(handle),
-                _marker: PhantomData
-            })
-        }
+        let precision = match precision {
+            Precision::Micro => 0,
+            Precision::Nano => 1,
+        };
+        Capture::new_raw(path.as_ref().to_str(), |path, err| unsafe {
+            raw::pcap_open_offline_with_tstamp_precision(path, precision, err)
+        })
     }
 
     /// Opens an offline capture handle from a pcap dump file, given a file descriptor.
     #[cfg(not(windows))]
     pub fn from_raw_fd(fd: RawFd) -> Result<Capture<Offline>, Error> {
-        let mut errbuf = [0i8; PCAP_ERRBUF_SIZE];
         const MODE: [u8; 2] = [b'r', 0];
 
-        unsafe {
-            // File handle will be closed by libpcap.
-            let file: *mut _ = libc::fdopen(fd, MODE.as_ptr() as *const _);
-            if file.is_null() {
-                return Err(Error::InvalidRawFd);
-            }
-
-            let handle = raw::pcap_fopen_offline(file, errbuf.as_mut_ptr() as *mut _);
-            if handle.is_null() {
-                return Error::new(errbuf.as_ptr() as *mut _);
-            }
-
-            Ok(Capture {
-                handle: Unique::new(handle),
-                _marker: PhantomData
+        let file = unsafe { libc::fdopen(fd, MODE.as_ptr() as *const _) };
+        if file.is_null() {
+             Err(Error::InvalidRawFd)
+        } else {
+            Capture::new_raw(None, |_, err| unsafe {
+                raw::pcap_fopen_offline(file, err)
             })
         }
     }
@@ -428,27 +422,19 @@ impl Capture<Offline> {
     /// Takes an additional precision argument specifying the time stamp precision desired.
     #[cfg(all(not(windows), feature = "pcap-fopen-offline-precision"))]
     pub fn from_raw_fd_with_precision(fd: RawFd, precision: Precision) -> Result<Capture<Offline>, Error> {
-        let mut errbuf = [0i8; PCAP_ERRBUF_SIZE];
         const MODE: [u8; 2] = [b'r', 0];
 
-        unsafe {
-            // File handle will be closed by libpcap.
-            let file: *mut _ = libc::fdopen(fd, MODE.as_ptr() as *const _);
-            if file.is_null() {
-                return Err(Error::InvalidRawFd);
-            }
-
-            let handle = raw::pcap_fopen_offline_with_tstamp_precision(file, match precision {
+        // File handle will be closed by libpcap.
+        let file = unsafe { libc::fdopen(fd, MODE.as_ptr() as *const _) };
+        if file.is_null() {
+            return Err(Error::InvalidRawFd);
+        } else {
+            let precision = match precision {
                 Precision::Micro => 0,
                 Precision::Nano => 1,
-            }, errbuf.as_mut_ptr() as *mut _);
-            if handle.is_null() {
-                return Error::new(errbuf.as_ptr() as *const _);
-            }
-
-            Ok(Capture {
-                handle: Unique::new(handle),
-                _marker: PhantomData
+            };
+            Capture::new_raw(None, |_, err| unsafe {
+                raw::pcap_fopen_offline_with_tstamp_precision(file, precision, err)
             })
         }
     }
@@ -475,20 +461,9 @@ impl Capture<Inactive> {
     /// name here. The handle is inactive, but can be activated via `.open()`.
     pub fn from_device<D: Into<Device>>(device: D) -> Result<Capture<Inactive>, Error> {
         let device: Device = device.into();
-        let name = CString::new(device.name).unwrap();
-        let mut errbuf = [0i8; PCAP_ERRBUF_SIZE];
-
-        unsafe {
-            let handle = raw::pcap_create(name.as_ptr(), errbuf.as_mut_ptr() as *mut _);
-            if handle.is_null() {
-                return Error::new(errbuf.as_ptr() as *const _);
-            }
-
-            Ok(Capture {
-                handle: Unique::new(handle),
-                _marker: PhantomData
-            })
-        }
+        Capture::new_raw(Some(&device.name), |name, err| unsafe {
+            raw::pcap_create(name, err)
+        })
     }
 
     /// Activates an inactive capture created from `Capture::from_device()` or returns
