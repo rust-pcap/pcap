@@ -435,13 +435,16 @@ impl Capture<Offline> {
 
 #[repr(u8)]
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
-pub enum TstampType {
+pub enum TimestampType {
     Host = 0,
     HostLowPrec = 1,
     HostHighPrec = 2,
     Adapter = 3,
     AdapterUnsynced = 4,
 }
+
+#[deprecated(note = "Renamed to TimestampType")]
+pub type TstampType = TimestampType;
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum Direction {
@@ -485,7 +488,7 @@ impl Capture<Inactive> {
 
     /// Set the time stamp type to be used by a capture device.
     #[cfg(not(windows))]
-    pub fn tstamp_type(self, tstamp_type: TstampType) -> Capture<Inactive> {
+    pub fn tstamp_type(self, tstamp_type: TimestampType) -> Capture<Inactive> {
         unsafe {
             raw::pcap_set_tstamp_type(*self.handle, tstamp_type as u8 as _);
             self
