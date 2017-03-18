@@ -51,7 +51,7 @@ extern crate libc;
 use unique::Unique;
 use std::marker::PhantomData;
 use std::ptr;
-use std::ffi::{CStr,CString};
+use std::ffi::{self, CStr,CString};
 use std::path::Path;
 use std::slice;
 use std::ops::Deref;
@@ -80,6 +80,7 @@ pub enum Error {
     TimeoutExpired,
     NoMorePackets,
     InsufficientMemory,
+    InvalidInputString,
     #[cfg(not(windows))]
     InvalidRawFd,
 }
@@ -114,6 +115,9 @@ impl fmt::Display for Error {
             InsufficientMemory => {
                 write!(f, "insufficient memory")
             },
+            InvalidInputString => {
+                write!(f, "invalid input string")
+            }
             #[cfg(not(windows))]
             InvalidRawFd => {
                 write!(f, "invalid raw file descriptor")
@@ -132,8 +136,9 @@ impl std::error::Error for Error {
             TimeoutExpired => "pcap was reading from a live capture and the timeout expired",
             NoMorePackets => "pcap was reading from a file and there were no more packets to read",
             InsufficientMemory => "insufficient memory",
+            InvalidInputString => "invalid input string (internal null)",
             #[cfg(not(windows))]
-            InvalidRawFd => "invalid raw file descriptor",
+            InvalidRawFd => "invalid raw file descriptor provided",
         }
     }
 
@@ -150,6 +155,13 @@ impl From<str::Utf8Error> for Error {
         MalformedError(obj)
     }
 }
+
+impl From<ffi::NulError> for Error {
+    fn from(_: ffi::NulError) -> Error {
+        InvalidInputString
+    }
+}
+
 
 #[derive(Debug)]
 /// A network device name and (potentially) pcap's description of it.
@@ -368,7 +380,7 @@ impl<T: State + ?Sized> Capture<T> {
             let handle = match path {
                 None => func(ptr::null(), errbuf.as_mut_ptr() as *mut _),
                 Some(path) => {
-                    let path = CString::new(path).or(Err(Error::InvalidString))?;
+                    let path = CString::new(path)?;
                     func(path.as_ptr(), errbuf.as_mut_ptr() as *mut _)
                 },
             };
@@ -600,7 +612,7 @@ impl<T: Activated + ?Sized> Capture<T> {
     /// Create a `Savefile` context for recording captured packets using this `Capture`'s
     /// configurations.
     pub fn savefile<P: AsRef<Path>>(&self, path: P) -> Result<Savefile, Error> {
-        let name = CString::new(path.as_ref().to_str().unwrap()).unwrap();
+        let name = CString::new(path.as_ref().to_str().unwrap())?;
         unsafe {
             let handle = raw::pcap_dump_open(*self.handle, name.as_ptr());
 
@@ -647,7 +659,7 @@ impl<T: Activated + ?Sized> Capture<T> {
     /// at the end of the file.
     #[cfg(feature = "pcap-savefile-append")]
     pub fn savefile_append<P: AsRef<Path>>(&self, path: P) -> Result<Savefile, Error> {
-        let name = CString::new(path.as_ref().to_str().unwrap()).unwrap();
+        let name = CString::new(path.as_ref().to_str().unwrap())?;
         unsafe {
             let handle = raw::pcap_dump_open_append(*self.handle, name.as_ptr());
 
