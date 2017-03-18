@@ -9,8 +9,10 @@ pub struct Unique<T: ?Sized> {
     pointer: *const T,
     _marker: PhantomData<T>,
 }
+
 unsafe impl<T: Send + ?Sized> Send for Unique<T> { }
 unsafe impl<T: Sync + ?Sized> Sync for Unique<T> { }
+
 impl<T: ?Sized> Unique<T> {
     pub unsafe fn new(ptr: *mut T) -> Unique<T> {
         Unique { pointer: ptr, _marker: PhantomData }
@@ -27,7 +29,7 @@ impl<T:?Sized> Deref for Unique<T> {
     type Target = *mut T;
 
     #[inline]
-    fn deref<'a>(&'a self) -> &'a *mut T {
+    fn deref(&self) -> &*mut T {
         unsafe { mem::transmute(&self.pointer) }
     }
 }

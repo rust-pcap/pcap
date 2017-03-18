@@ -67,10 +67,10 @@ use std::os::unix::io::{RawFd, AsRawFd};
 
 pub use raw::PacketHeader;
 
+#[cfg_attr(feature = "clippy", allow(useless_transmute))]
 mod raw;
 mod unique;
 
-const PCAP_ERROR_NOT_ACTIVATED: i32 = -3;
 const PCAP_ERRBUF_SIZE: usize = 256;
 
 /// An error received from pcap
@@ -90,7 +90,7 @@ pub enum Error {
 
 impl Error {
     fn new<T>(ptr: *const libc::c_char) -> Result<T, Error> {
-        Err(PcapError(try!(cstr_to_string(ptr))))
+        Err(PcapError(cstr_to_string(ptr)?))
     }
 }
 
@@ -175,7 +175,7 @@ pub struct Device {
 impl Device {
     /// Opens a `Capture<Active>` on this device.
     pub fn open(self) -> Result<Capture<Active>, Error> {
-        Ok(try!(try!(Capture::from_device(self)).open()))
+        Capture::from_device(self)?.open()
     }
 
     /// Returns the default Device suitable for captures according to pcap_lookupdev,
@@ -191,7 +191,7 @@ impl Device {
             }
 
             Ok(Device {
-                name: try!(cstr_to_string(default_name)),
+                name: cstr_to_string(default_name)?,
                 desc: None
             })
         }
@@ -254,28 +254,14 @@ pub struct Linktype(pub i32);
 impl Linktype {
     /// Gets the name of the link type, such as EN10MB
     pub fn get_name(&self) -> Result<String, Error> {
-        unsafe {
-            let name = raw::pcap_datalink_val_to_name(self.0);
-
-            if name.is_null() {
-                return Err(InvalidLinktype)
-            } else {
-                Ok(try!(cstr_to_string(name)))
-            }
-        }
+        let name = unsafe { raw::pcap_datalink_val_to_name(self.0) };
+        if name.is_null() { Err(InvalidLinktype) } else { cstr_to_string(name) }
     }
 
     /// Gets the description of a link type.
     pub fn get_description(&self) -> Result<String, Error> {
-        unsafe {
-            let description = raw::pcap_datalink_val_to_description(self.0);
-
-            if description.is_null() {
-                return Err(InvalidLinktype)
-            } else {
-                Ok(try!(cstr_to_string(description)))
-            }
-        }
+        let description = unsafe { raw::pcap_datalink_val_to_description(self.0) };
+        if description.is_null() { Err(InvalidLinktype) } else { cstr_to_string(description) }
     }
 }
 
@@ -618,7 +604,8 @@ impl<T: Activated + ?Sized> Capture<T> {
     /// from. This buffer has a finite length, so if the buffer fills completely new
     /// packets will be discarded temporarily. This means that in realtime situations,
     /// you probably want to minimize the time between calls of this next() method.
-    pub fn next<'a>(&'a mut self) -> Result<Packet<'a>, Error> {
+    #[cfg_attr(feature = "clippy", allow(should_implement_trait))]
+    pub fn next(&mut self) -> Result<Packet, Error> {
         unsafe {
             let mut header: *mut raw::Struct_pcap_pkthdr = ptr::null_mut();
             let mut packet: *const libc::c_uchar = ptr::null();
@@ -772,6 +759,6 @@ fn cstr_to_string(ptr: *const libc::c_char) -> Result<String, Error> {
     if ptr.is_null() {
         Err(InvalidString)
     } else {
-        Ok(try!(str::from_utf8(unsafe{CStr::from_ptr(ptr)}.to_bytes())).into())
+        Ok(str::from_utf8(unsafe { CStr::from_ptr(ptr) }.to_bytes())?.to_owned())
     }
 }
