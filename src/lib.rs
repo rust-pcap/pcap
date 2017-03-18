@@ -413,7 +413,7 @@ impl Capture<Offline> {
     /// Takes an additional precision argument specifying the time stamp precision desired.
     pub fn from_file_with_precision<P: AsRef<Path>>(path: P, precision: Precision) -> Result<Capture<Offline>, Error> {
         Capture::new_raw(path.as_ref().to_str(), |path, err| unsafe {
-            raw::pcap_open_offline_with_tstamp_precision(path, precision as u8 as _, err)
+            raw::pcap_open_offline_with_tstamp_precision(path, precision as _, err)
         })
     }
 
@@ -432,7 +432,7 @@ impl Capture<Offline> {
     pub fn from_raw_fd_with_precision(fd: RawFd, precision: Precision) -> Result<Capture<Offline>, Error> {
         open_raw_fd(fd, b'r')
             .and_then(|file| Capture::new_raw(None, |_, err| unsafe {
-                raw::pcap_fopen_offline_with_tstamp_precision(file, precision as u8 as _, err)
+                raw::pcap_fopen_offline_with_tstamp_precision(file, precision as _, err)
             }))
     }
 }
@@ -487,20 +487,20 @@ impl Capture<Inactive> {
     /// Set the time stamp type to be used by a capture device.
     #[cfg(not(windows))]
     pub fn tstamp_type(self, tstamp_type: TimestampType) -> Capture<Inactive> {
-        unsafe { raw::pcap_set_tstamp_type(*self.handle, tstamp_type as u8 as _) };
+        unsafe { raw::pcap_set_tstamp_type(*self.handle, tstamp_type as _) };
         self
     }
 
     /// Set promiscuous mode on or off. By default, this is off.
     pub fn promisc(self, to: bool) -> Capture<Inactive> {
-        unsafe { raw::pcap_set_promisc(*self.handle, if to {1} else {0}) };
+        unsafe { raw::pcap_set_promisc(*self.handle, to as _) };
         self
     }
 
     /// Set rfmon mode on or off. The default is maintained by pcap.
     #[cfg(not(windows))]
     pub fn rfmon(self, to: bool) -> Capture<Inactive> {
-        unsafe { raw::pcap_set_rfmon(*self.handle, to as u8 as _) };
+        unsafe { raw::pcap_set_rfmon(*self.handle, to as _) };
         self
     }
 
@@ -515,7 +515,7 @@ impl Capture<Inactive> {
     /// Set the time stamp precision returned in captures.
     #[cfg(not(windows))]
     pub fn precision(self, precision: Precision) -> Capture<Inactive> {
-        unsafe { raw::pcap_set_tstamp_precision(*self.handle, precision as u8 as _) };
+        unsafe { raw::pcap_set_tstamp_precision(*self.handle, precision as _) };
         self
     }
 
