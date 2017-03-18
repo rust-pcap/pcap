@@ -305,7 +305,7 @@ impl Stat {
     }
 }
 
-#[repr(u8)]
+#[repr(u32)]
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum Precision {
     Micro = 0,
@@ -450,7 +450,7 @@ impl Capture<Offline> {
     }
 }
 
-#[repr(u8)]
+#[repr(i32)]
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum TimestampType {
     Host = 0,
@@ -463,11 +463,12 @@ pub enum TimestampType {
 #[deprecated(note = "Renamed to TimestampType")]
 pub type TstampType = TimestampType;
 
+#[repr(u32)]
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum Direction {
-    InOut,
-    In,
-    Out,
+    InOut = raw::PCAP_D_INOUT,
+    In = raw::PCAP_D_IN,
+    Out = raw::PCAP_D_OUT,
 }
 
 impl Capture<Inactive> {
@@ -607,11 +608,7 @@ impl<T: Activated + ?Sized> Capture<T> {
     /// Set the direction of the capture
     pub fn direction(&self, direction: Direction) -> Result<(), Error> {
         self.check_err(unsafe {
-            raw::pcap_setdirection(*self.handle, match direction {
-                Direction::InOut => raw::PCAP_D_INOUT,
-                Direction::In => raw::PCAP_D_IN,
-                Direction::Out => raw::PCAP_D_OUT,
-            }) == 0
+            raw::pcap_setdirection(*self.handle, direction as u32 as _) == 0
         })
     }
 
