@@ -287,10 +287,11 @@ pub struct Stat {
     pub if_dropped: u32
 }
 
+#[repr(u8)]
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum Precision {
-    Micro,
-    Nano,
+    Micro = 0,
+    Nano = 1,
 }
 
 /// Phantom type representing an inactive capture handle.
@@ -394,12 +395,8 @@ impl Capture<Offline> {
     /// Opens an offline capture handle from a pcap dump file, given a path.
     /// Takes an additional precision argument specifying the time stamp precision desired.
     pub fn from_file_with_precision<P: AsRef<Path>>(path: P, precision: Precision) -> Result<Capture<Offline>, Error> {
-        let precision = match precision {
-            Precision::Micro => 0,
-            Precision::Nano => 1,
-        };
         Capture::new_raw(path.as_ref().to_str(), |path, err| unsafe {
-            raw::pcap_open_offline_with_tstamp_precision(path, precision, err)
+            raw::pcap_open_offline_with_tstamp_precision(path, precision as u8 as _, err)
         })
     }
 
@@ -429,24 +426,21 @@ impl Capture<Offline> {
         if file.is_null() {
             return Err(Error::InvalidRawFd);
         } else {
-            let precision = match precision {
-                Precision::Micro => 0,
-                Precision::Nano => 1,
-            };
             Capture::new_raw(None, |_, err| unsafe {
-                raw::pcap_fopen_offline_with_tstamp_precision(file, precision, err)
+                raw::pcap_fopen_offline_with_tstamp_precision(file, precision as u8 as _, err)
             })
         }
     }
 }
 
+#[repr(u8)]
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum TstampType {
-    Host,
-    HostLowPrec,
-    HostHighPrec,
-    Adapter,
-    AdapterUnsynced,
+    Host = 0,
+    HostLowPrec = 1,
+    HostHighPrec = 2,
+    Adapter = 3,
+    AdapterUnsynced = 4,
 }
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
@@ -491,15 +485,9 @@ impl Capture<Inactive> {
 
     /// Set the time stamp type to be used by a capture device.
     #[cfg(not(windows))]
-    pub fn tstamp_type(self, t: TstampType) -> Capture<Inactive> {
+    pub fn tstamp_type(self, tstamp_type: TstampType) -> Capture<Inactive> {
         unsafe {
-            raw::pcap_set_tstamp_type(*self.handle, match t {
-                TstampType::Host => 0,
-                TstampType::HostLowPrec => 1,
-                TstampType::HostHighPrec => 2,
-                TstampType::Adapter => 3,
-                TstampType::AdapterUnsynced => 4,
-            });
+            raw::pcap_set_tstamp_type(*self.handle, tstamp_type as u8 as _);
             self
         }
     }
@@ -537,10 +525,7 @@ impl Capture<Inactive> {
     #[cfg(not(windows))]
     pub fn precision(self, precision: Precision) -> Capture<Inactive> {
         unsafe {
-            raw::pcap_set_tstamp_precision(*self.handle, match precision {
-                Precision::Micro => 0,
-                Precision::Nano => 1,
-            });
+            raw::pcap_set_tstamp_precision(*self.handle, precision as u8 as _);
             self
         }
     }
