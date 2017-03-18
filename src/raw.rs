@@ -804,9 +804,6 @@ extern "C" {
     // pub fn pcap_get_selectable_fd(arg1: *mut pcap_t) -> ::libc::c_int;
 }
 
-
-
-
 #[cfg(windows)]
 #[link(name = "wpcap")]
 extern {}

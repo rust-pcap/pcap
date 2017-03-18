@@ -162,7 +162,6 @@ impl From<ffi::NulError> for Error {
     }
 }
 
-
 #[derive(Debug)]
 /// A network device name and (potentially) pcap's description of it.
 pub struct Device {
