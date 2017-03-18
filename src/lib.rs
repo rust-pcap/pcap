@@ -58,7 +58,7 @@ use std::ffi::{self, CStr,CString};
 use std::path::Path;
 use std::slice;
 use std::ops::Deref;
-use std::mem::transmute;
+use std::mem;
 use std::str;
 use std::fmt;
 use self::Error::*;
@@ -67,7 +67,6 @@ use std::os::unix::io::{RawFd, AsRawFd};
 
 pub use raw::PacketHeader;
 
-#[cfg_attr(feature = "clippy", allow(useless_transmute))]
 mod raw;
 mod unique;
 
@@ -201,7 +200,7 @@ impl Device {
     pub fn list() -> Result<Vec<Device>, Error> {
         unsafe {
             let mut errbuf = [0i8; PCAP_ERRBUF_SIZE];
-            let mut dev_buf: *mut raw::Struct_pcap_if = ptr::null_mut();
+            let mut dev_buf: *mut raw::pcap_if_t = ptr::null_mut();
             let mut ret = vec![];
 
             match raw::pcap_findalldevs(&mut dev_buf, errbuf.as_mut_ptr() as *mut _) {
@@ -474,7 +473,7 @@ impl Capture<Inactive> {
     pub fn open(self) -> Result<Capture<Active>, Error> {
         unsafe {
             self.check_err(raw::pcap_activate(*self.handle) == 0)?;
-            Ok(transmute(self))
+            Ok(mem::transmute(self))
         }
     }
 
@@ -607,7 +606,7 @@ impl<T: Activated + ?Sized> Capture<T> {
     #[cfg_attr(feature = "clippy", allow(should_implement_trait))]
     pub fn next(&mut self) -> Result<Packet, Error> {
         unsafe {
-            let mut header: *mut raw::Struct_pcap_pkthdr = ptr::null_mut();
+            let mut header: *mut raw::pcap_pkthdr = ptr::null_mut();
             let mut packet: *const libc::c_uchar = ptr::null();
             let retcode = raw::pcap_next_ex(*self.handle, &mut header, &mut packet);
             self.check_err(retcode != -1)?;  // -1 => an error occured while reading the packet
@@ -615,7 +614,7 @@ impl<T: Activated + ?Sized> Capture<T> {
                 i if i >= 1 => {
                     // packet was read without issue
                     Ok(Packet {
-                        header: transmute(&*header),
+                        header: mem::transmute(&*header),
                         data: slice::from_raw_parts(packet, (&*header).caplen as usize)
                     })
                 },
@@ -644,7 +643,7 @@ impl<T: Activated + ?Sized> Capture<T> {
     pub fn filter(&mut self, program: &str) -> Result<(), Error> {
         let program = CString::new(program)?;
         unsafe {
-            let mut bpf_program: raw::Struct_bpf_program = Default::default();
+            let mut bpf_program: raw::bpf_program = mem::zeroed();
             self.check_err(raw::pcap_compile(*self.handle, &mut bpf_program,
                                              program.as_ptr(), 0, 0) != -1)?;
             let ok = raw::pcap_setfilter(*self.handle, &mut bpf_program) != -1;
@@ -655,7 +654,7 @@ impl<T: Activated + ?Sized> Capture<T> {
 
     pub fn stats(&mut self) -> Result<Stat, Error> {
         unsafe {
-            let mut stats: raw::Struct_pcap_stat = Default::default();
+            let mut stats: raw::pcap_stat = mem::zeroed();
             self.check_err(raw::pcap_stats(*self.handle, &mut stats) != -1)
                 .map(|_| Stat::new(stats.ps_recv, stats.ps_drop, stats.ps_ifdrop))
         }
@@ -710,7 +709,7 @@ impl<T: State + ?Sized> Drop for Capture<T> {
 
 impl<T: Activated> From<Capture<T>> for Capture<Activated> {
     fn from(cap: Capture<T>) -> Capture<Activated> {
-        unsafe { transmute(cap) }
+        unsafe { mem::transmute(cap) }
     }
 }
 
@@ -722,7 +721,9 @@ pub struct Savefile {
 impl Savefile {
     pub fn write<'a>(&mut self, packet: &'a Packet<'a>) {
         unsafe {
-            raw::pcap_dump(*self.handle as *mut u8, transmute::<_, &raw::Struct_pcap_pkthdr>(packet.header), packet.data.as_ptr());
+            raw::pcap_dump(*self.handle as *mut u8,
+                           mem::transmute::<_, &raw::pcap_pkthdr>(packet.header),
+                           packet.data.as_ptr());
         }
     }
 }
