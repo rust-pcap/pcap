@@ -807,11 +807,11 @@ extern "C" {
 
 
 
-#[cfg(target_os = "windows")]
+#[cfg(windows)]
 #[link(name = "wpcap")]
 extern {}
 
-#[cfg(not(target_os = "windows"))]
+#[cfg(not(windows))]
 #[link(name = "pcap")]
 extern {
     // pub fn pcap_inject(arg1: *mut pcap_t, arg2: *const ::libc::c_void,

@@ -511,9 +511,7 @@ impl Capture<Inactive> {
     }
 
     /// Set rfmon mode on or off. The default is maintained by pcap.
-    ///
-    /// **This is not available on Windows.**
-    #[cfg(not(target_os = "windows"))]
+    #[cfg(not(windows))]
     pub fn rfmon(self, to: bool) -> Capture<Inactive> {
         unsafe { raw::pcap_set_rfmon(*self.handle, to as u8 as _) };
         self
