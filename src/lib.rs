@@ -372,26 +372,30 @@ pub struct Capture<T: State + ?Sized> {
 }
 
 impl<T: State + ?Sized> Capture<T> {
+    fn new(handle: *mut raw::pcap_t) -> Capture<T> {
+        unsafe {
+            Capture {
+                handle: Unique::new(handle),
+                _marker: PhantomData,
+            }
+        }
+    }
+
     fn new_raw<F>(path: Option<&str>, func: F) -> Result<Capture<T>, Error>
         where F: FnOnce(*const libc::c_char, *mut libc::c_char) -> *mut raw::pcap_t
     {
         let mut errbuf = [0i8; PCAP_ERRBUF_SIZE];
-        unsafe {
-            let handle = match path {
-                None => func(ptr::null(), errbuf.as_mut_ptr() as *mut _),
-                Some(path) => {
-                    let path = CString::new(path)?;
-                    func(path.as_ptr(), errbuf.as_mut_ptr() as *mut _)
-                },
-            };
-            if handle.is_null() {
-                Error::new(errbuf.as_ptr() as *const _)
-            } else {
-                Ok(Capture {
-                    handle: Unique::new(handle),
-                    _marker: PhantomData,
-                })
-            }
+        let handle = match path {
+            None => func(ptr::null(), errbuf.as_mut_ptr() as *mut _),
+            Some(path) => {
+                let path = CString::new(path)?;
+                func(path.as_ptr(), errbuf.as_mut_ptr() as *mut _)
+            },
+        };
+        if handle.is_null() {
+            Error::new(errbuf.as_ptr() as *const _)
+        } else {
+            Ok(Capture::new(handle))
         }
     }
 
@@ -587,13 +591,8 @@ impl<T: Activated + ?Sized> Capture<T> {
     /// configurations.
     pub fn savefile<P: AsRef<Path>>(&self, path: P) -> Result<Savefile, Error> {
         let name = CString::new(path.as_ref().to_str().unwrap())?;
-        unsafe {
-            let handle = raw::pcap_dump_open(*self.handle, name.as_ptr());
-            self.check_err(!handle.is_null())?;
-            Ok(Savefile {
-                handle: Unique::new(handle)
-            })
-        }
+        let handle = unsafe { raw::pcap_dump_open(*self.handle, name.as_ptr()) };
+        self.check_err(!handle.is_null()).map(|_| Savefile::new(handle))
     }
 
     /// Create a `Savefile` context for recording captured packets using this `Capture`'s
@@ -609,12 +608,8 @@ impl<T: Activated + ?Sized> Capture<T> {
             if file.is_null() {
                 return Err(Error::InvalidRawFd);
             }
-
             let handle = raw::pcap_dump_fopen(*self.handle, file);
-            self.check_err(!handle.is_null())?;
-            Ok(Savefile {
-                handle: Unique::new(handle)
-            })
+            self.check_err(!handle.is_null()).map(|_| Savefile::new(handle))
         }
     }
 
@@ -627,11 +622,8 @@ impl<T: Activated + ?Sized> Capture<T> {
     #[cfg(feature = "pcap-savefile-append")]
     pub fn savefile_append<P: AsRef<Path>>(&self, path: P) -> Result<Savefile, Error> {
         let name = CString::new(path.as_ref().to_str().unwrap())?;
-        unsafe {
-            let handle = raw::pcap_dump_open_append(*self.handle, name.as_ptr());
-            self.check_err(!handle.is_null())
-                .map(|_| Savefile { handle: Unique::new(handle) })
-        }
+        let handle = unsafe { raw::pcap_dump_open_append(*self.handle, name.as_ptr()) };
+        self.check_err(!handle.is_null()).map(|_| Savefile::new(handle))
     }
 
     /// Set the direction of the capture
@@ -730,11 +722,7 @@ impl Capture<Dead> {
             if handle.is_null() {
                 return Err(Error::InsufficientMemory);
             }
-
-            Ok(Capture {
-                handle: Unique::new(handle),
-                _marker: PhantomData
-            })
+            Ok(Capture::new(handle))
         }
     }
 }
@@ -778,6 +766,16 @@ impl Savefile {
     pub fn write<'a>(&mut self, packet: &'a Packet<'a>) {
         unsafe {
             raw::pcap_dump(*self.handle as *mut u8, transmute::<_, &raw::Struct_pcap_pkthdr>(packet.header), packet.data.as_ptr());
+        }
+    }
+}
+
+impl Savefile {
+    fn new(handle: *mut raw::pcap_dumper_t) -> Savefile {
+        unsafe {
+            Savefile {
+                handle: Unique::new(handle)
+            }
         }
     }
 }
