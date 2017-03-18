@@ -562,16 +562,7 @@ impl<T: Activated + ?Sized> Capture<T> {
 
     /// Get the current datalink type for this capture handle.
     pub fn get_datalink(&self) -> Linktype {
-        unsafe {
-            match raw::pcap_datalink(*self.handle) {
-                PCAP_ERROR_NOT_ACTIVATED => {
-                    panic!("It should not be possible to run get_datalink on a Capture that is not activated, please report this bug!");
-                },
-                lt => {
-                    Linktype(lt)
-                }
-            }
-        }
+        unsafe { Linktype(raw::pcap_datalink(*self.handle)) }
     }
 
     /// Create a `Savefile` context for recording captured packets using this `Capture`'s
