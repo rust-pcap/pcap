@@ -71,7 +71,7 @@ const PCAP_ERROR_NOT_ACTIVATED: i32 = -3;
 const PCAP_ERRBUF_SIZE: usize = 256;
 
 /// An error received from pcap
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Error {
     MalformedError(str::Utf8Error),
     InvalidString,
