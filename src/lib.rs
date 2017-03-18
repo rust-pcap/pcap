@@ -427,33 +427,20 @@ impl Capture<Offline> {
     /// Opens an offline capture handle from a pcap dump file, given a file descriptor.
     #[cfg(not(windows))]
     pub fn from_raw_fd(fd: RawFd) -> Result<Capture<Offline>, Error> {
-        const MODE: [u8; 2] = [b'r', 0];
-
-        let file = unsafe { libc::fdopen(fd, MODE.as_ptr() as *const _) };
-        if file.is_null() {
-             Err(Error::InvalidRawFd)
-        } else {
-            Capture::new_raw(None, |_, err| unsafe {
+        open_raw_fd(fd, b'r')
+            .and_then(|file| Capture::new_raw(None, |_, err| unsafe {
                 raw::pcap_fopen_offline(file, err)
-            })
-        }
+            }))
     }
 
     /// Opens an offline capture handle from a pcap dump file, given a file descriptor.
     /// Takes an additional precision argument specifying the time stamp precision desired.
     #[cfg(all(not(windows), feature = "pcap-fopen-offline-precision"))]
     pub fn from_raw_fd_with_precision(fd: RawFd, precision: Precision) -> Result<Capture<Offline>, Error> {
-        const MODE: [u8; 2] = [b'r', 0];
-
-        // File handle will be closed by libpcap.
-        let file = unsafe { libc::fdopen(fd, MODE.as_ptr() as *const _) };
-        if file.is_null() {
-            return Err(Error::InvalidRawFd);
-        } else {
-            Capture::new_raw(None, |_, err| unsafe {
+        open_raw_fd(fd, b'r')
+            .and_then(|file| Capture::new_raw(None, |_, err| unsafe {
                 raw::pcap_fopen_offline_with_tstamp_precision(file, precision as u8 as _, err)
-            })
-        }
+            }))
     }
 }
 
@@ -600,17 +587,11 @@ impl<T: Activated + ?Sized> Capture<T> {
     // in `"w"` mode.
     #[cfg(not(windows))]
     pub fn savefile_raw_fd(&self, fd: RawFd) -> Result<Savefile, Error> {
-        const MODE: [u8; 2] = [b'w', 0];
-
-        unsafe {
-            // File handle will be closed by libpcap.
-            let file: *mut _ = libc::fdopen(fd, MODE.as_ptr() as *const _);
-            if file.is_null() {
-                return Err(Error::InvalidRawFd);
-            }
-            let handle = raw::pcap_dump_fopen(*self.handle, file);
-            self.check_err(!handle.is_null()).map(|_| Savefile::new(handle))
-        }
+        open_raw_fd(fd, b'w')
+            .and_then(|file| {
+                let handle = unsafe { raw::pcap_dump_fopen(*self.handle, file) };
+                self.check_err(!handle.is_null()).map(|_| Savefile::new(handle))
+            })
     }
 
     /// Reopen a `Savefile` context for recording captured packets using this `Capture`'s
@@ -783,6 +764,17 @@ impl Savefile {
 impl Drop for Savefile {
     fn drop(&mut self) {
         unsafe { raw::pcap_dump_close(*self.handle) }
+    }
+}
+
+#[cfg(not(windows))]
+pub fn open_raw_fd(fd: RawFd, mode: u8) -> Result<*mut libc::FILE, Error> {
+    let mode = vec![mode, 0];
+    let file = unsafe { libc::fdopen(fd, mode.as_ptr() as *const _) };
+    if file.is_null() {
+        Err(Error::InvalidRawFd)
+    } else {
+        Ok(file)
     }
 }
 
