@@ -51,38 +51,6 @@ pub struct pcap_pkthdr {
 
 #[repr(C)]
 #[derive(Copy, Clone)]
-/// Represents a packet header provided by pcap, including the timeval, caplen and len.
-pub struct PacketHeader {
-    pub ts: timeval,
-    pub caplen: u32,
-    pub len: u32,
-}
-
-impl ::std::fmt::Debug for PacketHeader {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
-        write!(f, "PacketHeader {{ ts: {}.{:06}, caplen: {}, len: {} }}",
-               self.ts.tv_sec, self.ts.tv_usec, self.caplen, self.len)
-    }
-}
-
-impl PartialEq for PacketHeader {
-    fn eq(&self, rhs: &PacketHeader) -> bool {
-        self.ts.tv_sec == rhs.ts.tv_sec && self.ts.tv_usec == rhs.ts.tv_usec &&
-            self.caplen == rhs.caplen && self.len == rhs.len
-    }
-}
-
-impl Eq for PacketHeader {}
-
-#[test]
-fn packet_hdr_eq() {
-    use std::mem::size_of;
-
-    assert_eq!(size_of::<PacketHeader>(), size_of::<pcap_pkthdr>())
-}
-
-#[repr(C)]
-#[derive(Copy, Clone)]
 pub struct pcap_stat {
     pub ps_recv: c_uint,
     pub ps_drop: c_uint,

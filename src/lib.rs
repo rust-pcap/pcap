@@ -65,8 +65,6 @@ use self::Error::*;
 #[cfg(not(windows))]
 use std::os::unix::io::{RawFd, AsRawFd};
 
-pub use raw::PacketHeader;
-
 mod raw;
 mod unique;
 
@@ -271,6 +269,13 @@ pub struct Packet<'a> {
     pub data: &'a [u8]
 }
 
+impl<'a> Packet<'a> {
+    #[doc(hidden)]
+    pub fn new(header: &'a PacketHeader, data: &'a [u8]) -> Packet<'a> {
+        Packet { header: header, data: data }
+    }
+}
+
 impl<'b> Deref for Packet<'b> {
    type Target = [u8];
 
@@ -278,6 +283,31 @@ impl<'b> Deref for Packet<'b> {
         self.data
     }
 }
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+/// Represents a packet header provided by pcap, including the timeval, caplen and len.
+pub struct PacketHeader {
+    pub ts: libc::timeval,
+    pub caplen: u32,
+    pub len: u32,
+}
+
+impl fmt::Debug for PacketHeader {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "PacketHeader {{ ts: {}.{:06}, caplen: {}, len: {} }}",
+               self.ts.tv_sec, self.ts.tv_usec, self.caplen, self.len)
+    }
+}
+
+impl PartialEq for PacketHeader {
+    fn eq(&self, rhs: &PacketHeader) -> bool {
+        self.ts.tv_sec == rhs.ts.tv_sec && self.ts.tv_usec == rhs.ts.tv_usec &&
+            self.caplen == rhs.caplen && self.len == rhs.len
+    }
+}
+
+impl Eq for PacketHeader {}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Stat {
@@ -762,4 +792,10 @@ fn cstr_to_string(ptr: *const libc::c_char) -> Result<String, Error> {
     } else {
         Ok(str::from_utf8(unsafe { CStr::from_ptr(ptr) }.to_bytes())?.to_owned())
     }
+}
+
+#[test]
+fn test_packet_header_size() {
+    use std::mem::size_of;
+    assert_eq!(size_of::<PacketHeader>(), size_of::<raw::pcap_pkthdr>());
 }
