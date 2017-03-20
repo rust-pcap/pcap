@@ -48,32 +48,31 @@
 
 #![cfg_attr(feature = "clippy", feature(plugin))]
 #![cfg_attr(feature = "clippy", plugin(clippy))]
+#![cfg_attr(feature = "clippy", allow(redundant_closure_call))]
 
 extern crate libc;
 
 use unique::Unique;
 use std::marker::PhantomData;
 use std::ptr;
-use std::ffi::{self, CStr,CString};
+use std::ffi::{self, CString};
 use std::path::Path;
 use std::slice;
 use std::ops::Deref;
 use std::mem;
-use std::str;
 use std::fmt;
-use self::Error::*;
 #[cfg(not(windows))]
 use std::os::unix::io::{RawFd, AsRawFd};
+
+use self::Error::*;
 
 mod raw;
 mod unique;
 
-const PCAP_ERRBUF_SIZE: usize = 256;
-
 /// An error received from pcap
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Error {
-    MalformedError(str::Utf8Error),
+    MalformedError(ffi::IntoStringError),
     InvalidString,
     PcapError(String),
     InvalidLinktype,
@@ -86,15 +85,17 @@ pub enum Error {
 }
 
 impl Error {
-    fn new<T>(ptr: *const libc::c_char) -> Result<T, Error> {
-        Err(PcapError(cstr_to_string(ptr)?))
+    fn new(ptr: *const libc::c_char) -> Error {
+        unsafe {
+            PcapError(CString::from_raw(ptr as *mut _).to_string_lossy().into_owned())
+        }
     }
 }
 
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
-            MalformedError(e) => {
+            MalformedError(ref e) => {
                 write!(f, "pcap returned a string that was not encoded properly: {}", e)
             },
             InvalidString => {
@@ -150,8 +151,8 @@ impl std::error::Error for Error {
     }
 }
 
-impl From<str::Utf8Error> for Error {
-    fn from(obj: str::Utf8Error) -> Error {
+impl From<ffi::IntoStringError> for Error {
+    fn from(obj: ffi::IntoStringError) -> Error {
         MalformedError(obj)
     }
 }
@@ -178,57 +179,36 @@ impl Device {
     /// Returns the default Device suitable for captures according to pcap_lookupdev,
     /// or an error from pcap.
     pub fn lookup() -> Result<Device, Error> {
-        let mut errbuf = [0i8; PCAP_ERRBUF_SIZE];
-
-        unsafe {
-            let default_name = raw::pcap_lookupdev(errbuf.as_mut_ptr() as *mut _);
-
-            if default_name.is_null() {
-                return Error::new(errbuf.as_ptr() as *const _);
-            }
-
-            Ok(Device {
-                name: cstr_to_string(default_name)?,
-                desc: None
-            })
-        }
+        with_errbuf(|err| {
+            cstr_to_string(unsafe { raw::pcap_lookupdev(err) })?
+                .map(|name| Device { name: name, desc: None })
+                .ok_or_else(|| Error::new(err))
+        })
     }
 
     /// Returns a vector of `Device`s known by pcap via pcap_findalldevs.
     pub fn list() -> Result<Vec<Device>, Error> {
-        unsafe {
-            let mut errbuf = [0i8; PCAP_ERRBUF_SIZE];
+        with_errbuf(|err| unsafe {
             let mut dev_buf: *mut raw::pcap_if_t = ptr::null_mut();
-            let mut ret = vec![];
-
-            match raw::pcap_findalldevs(&mut dev_buf, errbuf.as_mut_ptr() as *mut _) {
-                0 => {
-                    let mut cur = dev_buf;
-
-                    while !cur.is_null() {
-                        ret.push(Device {
-                            name: cstr_to_string((&*cur).name).unwrap(),
-                            desc: {
-                                if !(&*cur).description.is_null() {
-                                    Some(cstr_to_string((&*cur).description).unwrap())
-                                } else {
-                                    None
-                                }
-                            }
-                        });
-
-                        cur = (&*cur).next;
-                    }
-
-                    raw::pcap_freealldevs(dev_buf);
-
-                    Ok(ret)
-                },
-                _ => {
-                    Error::new(errbuf.as_ptr() as *mut _)
-                }
+            if raw::pcap_findalldevs(&mut dev_buf, err) != 0 {
+                return Err(Error::new(err));
             }
-        }
+            let result = (|| {
+                let mut devices = vec![];
+                let mut cur = dev_buf;
+                while !cur.is_null() {
+                    let dev = &*cur;
+                    devices.push(Device {
+                        name: cstr_to_string(dev.name)?.ok_or(InvalidString)?,
+                        desc: cstr_to_string(dev.description)?,
+                    });
+                    cur = dev.next;
+                }
+                Ok(devices)
+            })();
+            raw::pcap_freealldevs(dev_buf);
+            result
+        })
     }
 }
 
@@ -251,14 +231,14 @@ pub struct Linktype(pub i32);
 impl Linktype {
     /// Gets the name of the link type, such as EN10MB
     pub fn get_name(&self) -> Result<String, Error> {
-        let name = unsafe { raw::pcap_datalink_val_to_name(self.0) };
-        if name.is_null() { Err(InvalidLinktype) } else { cstr_to_string(name) }
+        cstr_to_string(unsafe { raw::pcap_datalink_val_to_name(self.0) })?
+            .ok_or(InvalidLinktype)
     }
 
     /// Gets the description of a link type.
     pub fn get_description(&self) -> Result<String, Error> {
-        let description = unsafe { raw::pcap_datalink_val_to_description(self.0) };
-        if description.is_null() { Err(InvalidLinktype) } else { cstr_to_string(description) }
+        cstr_to_string(unsafe { raw::pcap_datalink_val_to_description(self.0) })?
+            .ok_or(InvalidLinktype)
     }
 }
 
@@ -407,26 +387,26 @@ impl<T: State + ?Sized> Capture<T> {
     fn new_raw<F>(path: Option<&str>, func: F) -> Result<Capture<T>, Error>
         where F: FnOnce(*const libc::c_char, *mut libc::c_char) -> *mut raw::pcap_t
     {
-        let mut errbuf = [0i8; PCAP_ERRBUF_SIZE];
-        let handle = match path {
-            None => func(ptr::null(), errbuf.as_mut_ptr() as *mut _),
-            Some(path) => {
-                let path = CString::new(path)?;
-                func(path.as_ptr(), errbuf.as_mut_ptr() as *mut _)
-            },
-        };
-        if handle.is_null() {
-            Error::new(errbuf.as_ptr() as *const _)
-        } else {
-            Ok(Capture::new(handle))
-        }
+        with_errbuf(|err| {
+            let handle = match path {
+                None => func(ptr::null(), err),
+                Some(path) => {
+                    let path = CString::new(path)?;
+                    func(path.as_ptr(), err)
+                },
+            };
+            unsafe { handle.as_mut() }
+                .map(|h| Capture::new(h))
+                .ok_or_else(|| Error::new(err))
+        })
     }
 
+    #[inline]
     fn check_err(&self, success: bool) -> Result<(), Error> {
         if success {
             Ok(())
         } else {
-            Error::new(unsafe { raw::pcap_geterr(*self.handle) })
+            Err(Error::new(unsafe { raw::pcap_geterr(*self.handle) }))
         }
     }
 }
@@ -703,13 +683,9 @@ impl Capture<Active> {
 impl Capture<Dead> {
     /// Creates a "fake" capture handle for the given link type.
     pub fn dead(linktype: Linktype) -> Result<Capture<Dead>, Error> {
-        unsafe {
-            let handle = raw::pcap_open_dead(linktype.0, 65535);
-            if handle.is_null() {
-                return Err(Error::InsufficientMemory);
-            }
-            Ok(Capture::new(handle))
-        }
+        unsafe { raw::pcap_open_dead(linktype.0, 65535).as_mut() }
+            .map(|h| Capture::new(h))
+            .ok_or(InsufficientMemory)
     }
 }
 
@@ -777,25 +753,30 @@ impl Drop for Savefile {
 #[cfg(not(windows))]
 pub fn open_raw_fd(fd: RawFd, mode: u8) -> Result<*mut libc::FILE, Error> {
     let mode = vec![mode, 0];
-    let file = unsafe { libc::fdopen(fd, mode.as_ptr() as *const _) };
-    if file.is_null() {
-        Err(Error::InvalidRawFd)
-    } else {
-        Ok(file)
-    }
+    unsafe { libc::fdopen(fd, mode.as_ptr() as _).as_mut() }
+        .map(|f| f as _)
+        .ok_or(InvalidRawFd)
 }
 
 #[inline]
-fn cstr_to_string(ptr: *const libc::c_char) -> Result<String, Error> {
-    if ptr.is_null() {
-        Err(InvalidString)
+fn cstr_to_string(ptr: *const libc::c_char) -> Result<Option<String>, Error> {
+    Ok(if ptr.is_null() {
+        None
     } else {
-        Ok(str::from_utf8(unsafe { CStr::from_ptr(ptr) }.to_bytes())?.to_owned())
-    }
+        Some(unsafe { CString::from_raw(ptr as *mut _) }.into_string()?)
+    })
+}
+
+#[inline]
+fn with_errbuf<T, F>(func: F) -> Result<T, Error>
+    where F: FnOnce(*mut libc::c_char) -> Result<T, Error>
+{
+    let mut errbuf = [0i8; 256];
+    func(errbuf.as_mut_ptr() as *mut _)
 }
 
 #[test]
-fn test_packet_header_size() {
+fn test_struct_size() {
     use std::mem::size_of;
     assert_eq!(size_of::<PacketHeader>(), size_of::<raw::pcap_pkthdr>());
 }
