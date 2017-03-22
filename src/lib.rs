@@ -216,7 +216,7 @@ impl<'a> Into<Device> for &'a str {
     fn into(self) -> Device {
         Device {
             name: self.into(),
-            desc: None
+            desc: None,
         }
     }
 }
@@ -675,7 +675,7 @@ impl Capture<Active> {
     /// Sends a packet over this capture handle's interface.
     pub fn sendpacket<'a>(&mut self, buf: &'a [u8]) -> Result<(), Error> {
         self.check_err(unsafe {
-            raw::pcap_sendpacket(*self.handle, buf.as_ptr() as *const _, buf.len() as i32) == 0
+            raw::pcap_sendpacket(*self.handle, buf.as_ptr() as _, buf.len() as i32) == 0
         })
     }
 }
@@ -727,7 +727,7 @@ pub struct Savefile {
 impl Savefile {
     pub fn write<'a>(&mut self, packet: &'a Packet<'a>) {
         unsafe {
-            raw::pcap_dump(*self.handle as *mut u8,
+            raw::pcap_dump(*self.handle as _,
                            mem::transmute::<_, &raw::pcap_pkthdr>(packet.header),
                            packet.data.as_ptr());
         }
@@ -738,7 +738,7 @@ impl Savefile {
     fn new(handle: *mut raw::pcap_dumper_t) -> Savefile {
         unsafe {
             Savefile {
-                handle: Unique::new(handle)
+                handle: Unique::new(handle),
             }
         }
     }
@@ -763,7 +763,7 @@ fn cstr_to_string(ptr: *const libc::c_char) -> Result<Option<String>, Error> {
     Ok(if ptr.is_null() {
         None
     } else {
-        Some(unsafe { CString::from_raw(ptr as *mut _) }.into_string()?)
+        Some(unsafe { CString::from_raw(ptr as _) }.into_string()?)
     })
 }
 
@@ -772,7 +772,7 @@ fn with_errbuf<T, F>(func: F) -> Result<T, Error>
     where F: FnOnce(*mut libc::c_char) -> Result<T, Error>
 {
     let mut errbuf = [0i8; 256];
-    func(errbuf.as_mut_ptr() as *mut _)
+    func(errbuf.as_mut_ptr() as _)
 }
 
 #[test]
