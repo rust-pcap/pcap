@@ -86,43 +86,23 @@ pub enum Error {
 
 impl Error {
     fn new(ptr: *const libc::c_char) -> Error {
-        unsafe {
-            PcapError(CString::from_raw(ptr as *mut _).to_string_lossy().into_owned())
-        }
+        unsafe { PcapError(CString::from_raw(ptr as *mut _).to_string_lossy().into_owned()) }
     }
 }
 
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
-            MalformedError(ref e) => {
-                write!(f, "pcap returned a string that was not encoded properly: {}", e)
-            },
-            InvalidString => {
-                write!(f, "pcap returned an invalid (null) string")
-            },
-            PcapError(ref e) => {
-                write!(f, "pcap error: {}", e)
-            },
-            InvalidLinktype => {
-                write!(f, "invalid or unknown linktype")
-            },
-            TimeoutExpired => {
-               write!(f, "timeout expired")
-            },
-            NoMorePackets => {
-               write!(f, "no more packets to read from the file")
-            },
-            InsufficientMemory => {
-                write!(f, "insufficient memory")
-            },
-            InvalidInputString => {
-                write!(f, "invalid input string")
-            }
+            MalformedError(ref e) => write!(f, "libpcap returned invalid UTF-8: {}", e),
+            InvalidString => write!(f, "libpcap returned a null string"),
+            PcapError(ref e) => write!(f, "libpcap error: {}", e),
+            InvalidLinktype => write!(f, "invalid or unknown linktype"),
+            TimeoutExpired => write!(f, "timeout expired while reading from a live capture"),
+            NoMorePackets => write!(f, "no more packets to read from the file"),
+            InsufficientMemory => write!(f, "insufficient memory"),
+            InvalidInputString => write!(f, "invalid input string (internal null)"),
             #[cfg(not(windows))]
-            InvalidRawFd => {
-                write!(f, "invalid raw file descriptor")
-            },
+            InvalidRawFd => write!(f, "invalid raw file descriptor provided"),
         }
     }
 }
@@ -130,12 +110,12 @@ impl fmt::Display for Error {
 impl std::error::Error for Error {
     fn description(&self) -> &str {
         match *self {
-            MalformedError(..) => "message from pcap is not encoded properly",
-            PcapError(..) => "pcap FFI error",
-            InvalidString => "pcap returned an invalid (null) string",
+            MalformedError(..) => "libpcap returned invalid UTF-8",
+            PcapError(..) => "libpcap FFI error",
+            InvalidString => "libpcap returned a null string",
             InvalidLinktype => "invalid or unknown linktype",
-            TimeoutExpired => "pcap was reading from a live capture and the timeout expired",
-            NoMorePackets => "pcap was reading from a file and there were no more packets to read",
+            TimeoutExpired => "timeout expired while reading from a live capture",
+            NoMorePackets => "no more packets to read from the file",
             InsufficientMemory => "insufficient memory",
             InvalidInputString => "invalid input string (internal null)",
             #[cfg(not(windows))]
@@ -146,7 +126,7 @@ impl std::error::Error for Error {
     fn cause(&self) -> Option<&std::error::Error> {
         match *self {
             MalformedError(ref e) => Some(e),
-            _ => None
+            _ => None,
         }
     }
 }
@@ -167,10 +147,17 @@ impl From<ffi::NulError> for Error {
 /// A network device name and (potentially) pcap's description of it.
 pub struct Device {
     pub name: String,
-    pub desc: Option<String>
+    pub desc: Option<String>,
 }
 
 impl Device {
+    fn new(name: String, desc: Option<String>) -> Device {
+        Device {
+            name: name,
+            desc: desc,
+        }
+    }
+
     /// Opens a `Capture<Active>` on this device.
     pub fn open(self) -> Result<Capture<Active>, Error> {
         Capture::from_device(self)?.open()
@@ -179,9 +166,10 @@ impl Device {
     /// Returns the default Device suitable for captures according to pcap_lookupdev,
     /// or an error from pcap.
     pub fn lookup() -> Result<Device, Error> {
-        with_errbuf(|err| {
-            cstr_to_string(unsafe { raw::pcap_lookupdev(err) })?
-                .map(|name| Device { name: name, desc: None })
+        with_errbuf(|err| unsafe {
+            cstr_to_string(raw::pcap_lookupdev(err))
+                ?
+                .map(|name| Device::new(name, None))
                 .ok_or_else(|| Error::new(err))
         })
     }
@@ -198,10 +186,8 @@ impl Device {
                 let mut cur = dev_buf;
                 while !cur.is_null() {
                     let dev = &*cur;
-                    devices.push(Device {
-                        name: cstr_to_string(dev.name)?.ok_or(InvalidString)?,
-                        desc: cstr_to_string(dev.description)?,
-                    });
+                    devices.push(Device::new(cstr_to_string(dev.name)?.ok_or(InvalidString)?,
+                                             cstr_to_string(dev.description)?));
                     cur = dev.next;
                 }
                 Ok(devices)
@@ -214,10 +200,7 @@ impl Device {
 
 impl<'a> Into<Device> for &'a str {
     fn into(self) -> Device {
-        Device {
-            name: self.into(),
-            desc: None,
-        }
+        Device::new(self.into(), None)
     }
 }
 
@@ -231,13 +214,15 @@ pub struct Linktype(pub i32);
 impl Linktype {
     /// Gets the name of the link type, such as EN10MB
     pub fn get_name(&self) -> Result<String, Error> {
-        cstr_to_string(unsafe { raw::pcap_datalink_val_to_name(self.0) })?
+        cstr_to_string(unsafe { raw::pcap_datalink_val_to_name(self.0) })
+            ?
             .ok_or(InvalidLinktype)
     }
 
     /// Gets the description of a link type.
     pub fn get_description(&self) -> Result<String, Error> {
-        cstr_to_string(unsafe { raw::pcap_datalink_val_to_description(self.0) })?
+        cstr_to_string(unsafe { raw::pcap_datalink_val_to_description(self.0) })
+            ?
             .ok_or(InvalidLinktype)
     }
 }
@@ -246,18 +231,21 @@ impl Linktype {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Packet<'a> {
     pub header: &'a PacketHeader,
-    pub data: &'a [u8]
+    pub data: &'a [u8],
 }
 
 impl<'a> Packet<'a> {
     #[doc(hidden)]
     pub fn new(header: &'a PacketHeader, data: &'a [u8]) -> Packet<'a> {
-        Packet { header: header, data: data }
+        Packet {
+            header: header,
+            data: data,
+        }
     }
 }
 
 impl<'b> Deref for Packet<'b> {
-   type Target = [u8];
+    type Target = [u8];
 
     fn deref(&self) -> &[u8] {
         self.data
@@ -275,15 +263,19 @@ pub struct PacketHeader {
 
 impl fmt::Debug for PacketHeader {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "PacketHeader {{ ts: {}.{:06}, caplen: {}, len: {} }}",
-               self.ts.tv_sec, self.ts.tv_usec, self.caplen, self.len)
+        write!(f,
+               "PacketHeader {{ ts: {}.{:06}, caplen: {}, len: {} }}",
+               self.ts.tv_sec,
+               self.ts.tv_usec,
+               self.caplen,
+               self.len)
     }
 }
 
 impl PartialEq for PacketHeader {
     fn eq(&self, rhs: &PacketHeader) -> bool {
         self.ts.tv_sec == rhs.ts.tv_sec && self.ts.tv_usec == rhs.ts.tv_usec &&
-            self.caplen == rhs.caplen && self.len == rhs.len
+        self.caplen == rhs.caplen && self.len == rhs.len
     }
 }
 
@@ -293,12 +285,16 @@ impl Eq for PacketHeader {}
 pub struct Stat {
     pub received: u32,
     pub dropped: u32,
-    pub if_dropped: u32
+    pub if_dropped: u32,
 }
 
 impl Stat {
     fn new(received: u32, dropped: u32, if_dropped: u32) -> Stat {
-        Stat { received: received, dropped: dropped, if_dropped: if_dropped }
+        Stat {
+            received: received,
+            dropped: dropped,
+            if_dropped: if_dropped,
+        }
     }
 }
 
@@ -371,7 +367,7 @@ unsafe impl State for Dead {}
 /// ```
 pub struct Capture<T: State + ?Sized> {
     handle: Unique<raw::pcap_t>,
-    _marker: PhantomData<T>
+    _marker: PhantomData<T>,
 }
 
 impl<T: State + ?Sized> Capture<T> {
@@ -393,11 +389,9 @@ impl<T: State + ?Sized> Capture<T> {
                 Some(path) => {
                     let path = CString::new(path)?;
                     func(path.as_ptr(), err)
-                },
+                }
             };
-            unsafe { handle.as_mut() }
-                .map(|h| Capture::new(h))
-                .ok_or_else(|| Error::new(err))
+            unsafe { handle.as_mut() }.map(|h| Capture::new(h)).ok_or_else(|| Error::new(err))
         })
     }
 
@@ -414,9 +408,8 @@ impl<T: State + ?Sized> Capture<T> {
 impl Capture<Offline> {
     /// Opens an offline capture handle from a pcap dump file, given a path.
     pub fn from_file<P: AsRef<Path>>(path: P) -> Result<Capture<Offline>, Error> {
-        Capture::new_raw(path.as_ref().to_str(), |path, err| unsafe {
-            raw::pcap_open_offline(path, err)
-        })
+        Capture::new_raw(path.as_ref().to_str(),
+                         |path, err| unsafe { raw::pcap_open_offline(path, err) })
     }
 
     /// Opens an offline capture handle from a pcap dump file, given a path.
@@ -473,9 +466,8 @@ impl Capture<Inactive> {
     /// name here. The handle is inactive, but can be activated via `.open()`.
     pub fn from_device<D: Into<Device>>(device: D) -> Result<Capture<Inactive>, Error> {
         let device: Device = device.into();
-        Capture::new_raw(Some(&device.name), |name, err| unsafe {
-            raw::pcap_create(name, err)
-        })
+        Capture::new_raw(Some(&device.name),
+                         |name, err| unsafe { raw::pcap_create(name, err) })
     }
 
     /// Activates an inactive capture created from `Capture::from_device()` or returns
@@ -557,9 +549,7 @@ impl<T: Activated + ?Sized> Capture<T> {
 
     /// Set the datalink type for the current capture handle.
     pub fn set_datalink(&mut self, linktype: Linktype) -> Result<(), Error> {
-        self.check_err(unsafe {
-            raw::pcap_set_datalink(*self.handle, linktype.0) == 0
-        })
+        self.check_err(unsafe { raw::pcap_set_datalink(*self.handle, linktype.0) == 0 })
     }
 
     /// Get the current datalink type for this capture handle.
@@ -602,9 +592,7 @@ impl<T: Activated + ?Sized> Capture<T> {
 
     /// Set the direction of the capture
     pub fn direction(&self, direction: Direction) -> Result<(), Error> {
-        self.check_err(unsafe {
-            raw::pcap_setdirection(*self.handle, direction as u32 as _) == 0
-        })
+        self.check_err(unsafe { raw::pcap_setdirection(*self.handle, direction as u32 as _) == 0 })
     }
 
     /// Blocks until a packet is returned from the capture handle or an error occurs.
@@ -619,25 +607,23 @@ impl<T: Activated + ?Sized> Capture<T> {
             let mut header: *mut raw::pcap_pkthdr = ptr::null_mut();
             let mut packet: *const libc::c_uchar = ptr::null();
             let retcode = raw::pcap_next_ex(*self.handle, &mut header, &mut packet);
-            self.check_err(retcode != -1)?;  // -1 => an error occured while reading the packet
+            self.check_err(retcode != -1)?; // -1 => an error occured while reading the packet
             match retcode {
                 i if i >= 1 => {
                     // packet was read without issue
-                    Ok(Packet {
-                        header: mem::transmute(&*header),
-                        data: slice::from_raw_parts(packet, (&*header).caplen as usize)
-                    })
-                },
+                    Ok(Packet::new(mem::transmute(&*header),
+                                   slice::from_raw_parts(packet, (&*header).caplen as _)))
+                }
                 0 => {
                     // packets are being read from a live capture and the
                     // timeout expired
                     Err(TimeoutExpired)
-                },
+                }
                 -2 => {
                     // packets are being read from a "savefile" and there are no
                     // more packets to read
                     Err(NoMorePackets)
-                },
+                }
                 _ => {
                     // libpcap only defines codes >=1, 0, -1, and -2
                     unreachable!()
@@ -654,11 +640,11 @@ impl<T: Activated + ?Sized> Capture<T> {
         let program = CString::new(program)?;
         unsafe {
             let mut bpf_program: raw::bpf_program = mem::zeroed();
-            self.check_err(raw::pcap_compile(*self.handle, &mut bpf_program,
-                                             program.as_ptr(), 0, 0) != -1)?;
-            let ok = raw::pcap_setfilter(*self.handle, &mut bpf_program) != -1;
+            let ret = raw::pcap_compile(*self.handle, &mut bpf_program, program.as_ptr(), 0, 0);
+            self.check_err(ret != -1)?;
+            let ret = raw::pcap_setfilter(*self.handle, &mut bpf_program);
             raw::pcap_freecode(&mut bpf_program);
-            self.check_err(ok)
+            self.check_err(ret != -1)
         }
     }
 
@@ -675,7 +661,7 @@ impl Capture<Active> {
     /// Sends a packet over this capture handle's interface.
     pub fn sendpacket<'a>(&mut self, buf: &'a [u8]) -> Result<(), Error> {
         self.check_err(unsafe {
-            raw::pcap_sendpacket(*self.handle, buf.as_ptr() as _, buf.len() as i32) == 0
+            raw::pcap_sendpacket(*self.handle, buf.as_ptr() as _, buf.len() as _) == 0
         })
     }
 }
@@ -698,10 +684,8 @@ impl AsRawFd for Capture<Active> {
             match fd {
                 -1 => {
                     panic!("Unable to get file descriptor for live capture");
-                },
-                fd => {
-                    fd
                 }
+                fd => fd,
             }
         }
     }
@@ -721,7 +705,7 @@ impl<T: Activated> From<Capture<T>> for Capture<Activated> {
 
 /// Abstraction for writing pcap savefiles, which can be read afterwards via `Capture::from_file()`.
 pub struct Savefile {
-    handle: Unique<raw::pcap_dumper_t>
+    handle: Unique<raw::pcap_dumper_t>,
 }
 
 impl Savefile {
@@ -736,11 +720,7 @@ impl Savefile {
 
 impl Savefile {
     fn new(handle: *mut raw::pcap_dumper_t) -> Savefile {
-        unsafe {
-            Savefile {
-                handle: Unique::new(handle),
-            }
-        }
+        unsafe { Savefile { handle: Unique::new(handle) } }
     }
 }
 
@@ -753,18 +733,17 @@ impl Drop for Savefile {
 #[cfg(not(windows))]
 pub fn open_raw_fd(fd: RawFd, mode: u8) -> Result<*mut libc::FILE, Error> {
     let mode = vec![mode, 0];
-    unsafe { libc::fdopen(fd, mode.as_ptr() as _).as_mut() }
-        .map(|f| f as _)
-        .ok_or(InvalidRawFd)
+    unsafe { libc::fdopen(fd, mode.as_ptr() as _).as_mut() }.map(|f| f as _).ok_or(InvalidRawFd)
 }
 
 #[inline]
 fn cstr_to_string(ptr: *const libc::c_char) -> Result<Option<String>, Error> {
-    Ok(if ptr.is_null() {
+    let string = if ptr.is_null() {
         None
     } else {
         Some(unsafe { CString::from_raw(ptr as _) }.into_string()?)
-    })
+    };
+    Ok(string)
 }
 
 #[inline]

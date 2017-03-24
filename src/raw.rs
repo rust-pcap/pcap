@@ -77,10 +77,10 @@ pub struct pcap_addr_t {
     pub dstaddr: *mut sockaddr,
 }
 
-pub type pcap_handler =
-    Option<extern "C" fn (arg1: *mut c_uchar,
-                          arg2: *const pcap_pkthdr,
-                          arg3: *const c_uchar) -> ()>;
+pub type pcap_handler = Option<extern "C" fn(arg1: *mut c_uchar,
+                                             arg2: *const pcap_pkthdr,
+                                             arg3: *const c_uchar)
+                                             -> ()>;
 
 extern "C" {
     pub fn pcap_lookupdev(arg1: *mut c_char) -> *mut c_char;
@@ -175,14 +175,11 @@ extern "C" {
 
 #[cfg(windows)]
 #[link(name = "wpcap")]
-extern {}
+extern "C" {}
 
 #[cfg(not(windows))]
 #[link(name = "pcap")]
-extern {
-    // pub fn pcap_inject(arg1: *mut pcap_t, arg2: *const c_void,
-    //                    arg3: size_t) -> c_int;
-
-    pub fn pcap_set_rfmon(arg1: *mut pcap_t, arg2: c_int)
-     -> c_int;
+extern "C" {
+    // pub fn pcap_inject(arg1: *mut pcap_t, arg2: *const c_void, arg3: size_t) -> c_int;
+    pub fn pcap_set_rfmon(arg1: *mut pcap_t, arg2: c_int) -> c_int;
 }
