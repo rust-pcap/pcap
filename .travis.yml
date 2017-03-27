@@ -1,10 +1,28 @@
 language: rust
-
+sudo: false
+addons:
+  apt:
+    packages: [libpcap0.8, libpcap0.8-dev]
+matrix:
+  include:
+    - {os: linux, rust: stable,
+       env: FLAGS=""}
+    - {os: linux, rust: beta,
+       env: FLAGS=""}
+    - {os: linux, rust: nightly,
+       env: FLAGS="--features clippy"}
+    - {os: osx, rust: stable,
+       env: FLAGS="--features full" PCAP_LIBDIR=/usr/local/opt/libpcap/lib}
+    - {os: osx, rust: beta,
+       env: FLAGS="--features full" PCAP_LIBDIR=/usr/local/opt/libpcap/lib}
+    - {os: osx, rust: nightly,
+       env: FLAGS="--all-features" PCAP_LIBDIR=/usr/local/opt/libpcap/lib}
 before_install:
-  - sudo apt-get install libpcap0.8 libpcap0.8-dev
-
+  - if [ `uname` = "Darwin" ]; then
+      brew update >/dev/null;
+      brew install homebrew/dupes/libpcap;
+    fi
 script:
-  - cargo build --verbose
-  - cargo test --verbose
-  - cargo doc
-
+  - cargo build -v $FLAGS
+  - cargo test -v $FLAGS
+  - cargo doc --no-deps
