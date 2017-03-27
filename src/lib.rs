@@ -53,6 +53,8 @@
 extern crate libc;
 
 use unique::Unique;
+
+use std::borrow::Borrow;
 use std::marker::PhantomData;
 use std::ptr;
 use std::ffi::{self, CString};
@@ -659,7 +661,8 @@ impl<T: Activated + ?Sized> Capture<T> {
 
 impl Capture<Active> {
     /// Sends a packet over this capture handle's interface.
-    pub fn sendpacket<'a>(&mut self, buf: &'a [u8]) -> Result<(), Error> {
+    pub fn sendpacket<B: Borrow<[u8]>>(&mut self, buf: B) -> Result<(), Error> {
+        let buf = buf.borrow();
         self.check_err(unsafe {
             raw::pcap_sendpacket(*self.handle, buf.as_ptr() as _, buf.len() as _) == 0
         })
