@@ -712,7 +712,7 @@ pub struct Savefile {
 }
 
 impl Savefile {
-    pub fn write<'a>(&mut self, packet: &'a Packet<'a>) {
+    pub fn write(&mut self, packet: &Packet) {
         unsafe {
             raw::pcap_dump(*self.handle as _,
                            mem::transmute::<_, &raw::pcap_pkthdr>(packet.header),
