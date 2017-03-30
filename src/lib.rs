@@ -46,78 +46,65 @@
 //! }
 //! ```
 
+#![cfg_attr(feature = "clippy", feature(plugin))]
+#![cfg_attr(feature = "clippy", plugin(clippy))]
+#![cfg_attr(feature = "clippy", allow(redundant_closure_call))]
+
 extern crate libc;
 
 use unique::Unique;
+
+use std::borrow::Borrow;
 use std::marker::PhantomData;
 use std::ptr;
-use std::ffi::{CStr,CString};
+use std::ffi::{self, CString};
 use std::path::Path;
 use std::slice;
 use std::ops::Deref;
-use std::mem::transmute;
-use std::str;
+use std::mem;
 use std::fmt;
-use self::Error::*;
 #[cfg(not(windows))]
 use std::os::unix::io::{RawFd, AsRawFd};
 
-pub use raw::PacketHeader;
+use self::Error::*;
 
 mod raw;
 mod unique;
 
-const PCAP_ERROR_NOT_ACTIVATED: i32 = -3;
-const PCAP_ERRBUF_SIZE: usize = 256;
-
 /// An error received from pcap
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Error {
-    MalformedError(str::Utf8Error),
+    MalformedError(ffi::IntoStringError),
     InvalidString,
     PcapError(String),
     InvalidLinktype,
     TimeoutExpired,
     NoMorePackets,
     InsufficientMemory,
+    InvalidInputString,
     #[cfg(not(windows))]
     InvalidRawFd,
 }
 
 impl Error {
-    fn new<T>(ptr: *const libc::c_char) -> Result<T, Error> {
-        Err(PcapError(try!(cstr_to_string(ptr))))
+    fn new(ptr: *const libc::c_char) -> Error {
+        unsafe { PcapError(CString::from_raw(ptr as *mut _).to_string_lossy().into_owned()) }
     }
 }
 
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
-            MalformedError(e) => {
-                write!(f, "pcap returned a string that was not encoded properly: {}", e)
-            },
-            InvalidString => {
-                write!(f, "pcap returned an invalid (null) string")
-            },
-            PcapError(ref e) => {
-                write!(f, "pcap error: {}", e)
-            },
-            InvalidLinktype => {
-                write!(f, "invalid or unknown linktype")
-            },
-            TimeoutExpired => {
-               write!(f, "timeout expired")
-            },
-            NoMorePackets => {
-               write!(f, "no more packets to read from the file")
-            },
-            InsufficientMemory => {
-                write!(f, "insufficient memory")
-            },
+            MalformedError(ref e) => write!(f, "libpcap returned invalid UTF-8: {}", e),
+            InvalidString => write!(f, "libpcap returned a null string"),
+            PcapError(ref e) => write!(f, "libpcap error: {}", e),
+            InvalidLinktype => write!(f, "invalid or unknown linktype"),
+            TimeoutExpired => write!(f, "timeout expired while reading from a live capture"),
+            NoMorePackets => write!(f, "no more packets to read from the file"),
+            InsufficientMemory => write!(f, "insufficient memory"),
+            InvalidInputString => write!(f, "invalid input string (internal null)"),
             #[cfg(not(windows))]
-            InvalidRawFd => {
-                write!(f, "invalid raw file descriptor")
-            },
+            InvalidRawFd => write!(f, "invalid raw file descriptor provided"),
         }
     }
 }
@@ -125,29 +112,36 @@ impl fmt::Display for Error {
 impl std::error::Error for Error {
     fn description(&self) -> &str {
         match *self {
-            MalformedError(..) => "message from pcap is not encoded properly",
-            PcapError(..) => "pcap FFI error",
-            InvalidString => "pcap returned an invalid (null) string",
+            MalformedError(..) => "libpcap returned invalid UTF-8",
+            PcapError(..) => "libpcap FFI error",
+            InvalidString => "libpcap returned a null string",
             InvalidLinktype => "invalid or unknown linktype",
-            TimeoutExpired => "pcap was reading from a live capture and the timeout expired",
-            NoMorePackets => "pcap was reading from a file and there were no more packets to read",
+            TimeoutExpired => "timeout expired while reading from a live capture",
+            NoMorePackets => "no more packets to read from the file",
             InsufficientMemory => "insufficient memory",
+            InvalidInputString => "invalid input string (internal null)",
             #[cfg(not(windows))]
-            InvalidRawFd => "invalid raw file descriptor",
+            InvalidRawFd => "invalid raw file descriptor provided",
         }
     }
 
     fn cause(&self) -> Option<&std::error::Error> {
         match *self {
             MalformedError(ref e) => Some(e),
-            _ => None
+            _ => None,
         }
     }
 }
 
-impl From<str::Utf8Error> for Error {
-    fn from(obj: str::Utf8Error) -> Error {
+impl From<ffi::IntoStringError> for Error {
+    fn from(obj: ffi::IntoStringError) -> Error {
         MalformedError(obj)
+    }
+}
+
+impl From<ffi::NulError> for Error {
+    fn from(_: ffi::NulError) -> Error {
+        InvalidInputString
     }
 }
 
@@ -155,78 +149,60 @@ impl From<str::Utf8Error> for Error {
 /// A network device name and (potentially) pcap's description of it.
 pub struct Device {
     pub name: String,
-    pub desc: Option<String>
+    pub desc: Option<String>,
 }
 
 impl Device {
+    fn new(name: String, desc: Option<String>) -> Device {
+        Device {
+            name: name,
+            desc: desc,
+        }
+    }
+
     /// Opens a `Capture<Active>` on this device.
     pub fn open(self) -> Result<Capture<Active>, Error> {
-        Ok(try!(try!(Capture::from_device(self)).open()))
+        Capture::from_device(self)?.open()
     }
 
     /// Returns the default Device suitable for captures according to pcap_lookupdev,
     /// or an error from pcap.
     pub fn lookup() -> Result<Device, Error> {
-        let mut errbuf = [0i8; PCAP_ERRBUF_SIZE];
-
-        unsafe {
-            let default_name = raw::pcap_lookupdev(errbuf.as_mut_ptr() as *mut _);
-
-            if default_name.is_null() {
-                return Error::new(errbuf.as_ptr() as *const _);
-            }
-
-            Ok(Device {
-                name: try!(cstr_to_string(default_name)),
-                desc: None
-            })
-        }
+        with_errbuf(|err| unsafe {
+            cstr_to_string(raw::pcap_lookupdev(err))
+                ?
+                .map(|name| Device::new(name, None))
+                .ok_or_else(|| Error::new(err))
+        })
     }
 
     /// Returns a vector of `Device`s known by pcap via pcap_findalldevs.
     pub fn list() -> Result<Vec<Device>, Error> {
-        unsafe {
-            let mut errbuf = [0i8; PCAP_ERRBUF_SIZE];
-            let mut dev_buf: *mut raw::Struct_pcap_if = ptr::null_mut();
-            let mut ret = vec![];
-
-            match raw::pcap_findalldevs(&mut dev_buf, errbuf.as_mut_ptr() as *mut _) {
-                0 => {
-                    let mut cur = dev_buf;
-
-                    while !cur.is_null() {
-                        ret.push(Device {
-                            name: cstr_to_string((&*cur).name).unwrap(),
-                            desc: {
-                                if !(&*cur).description.is_null() {
-                                    Some(cstr_to_string((&*cur).description).unwrap())
-                                } else {
-                                    None
-                                }
-                            }
-                        });
-
-                        cur = (&*cur).next;
-                    }
-
-                    raw::pcap_freealldevs(dev_buf);
-
-                    Ok(ret)
-                },
-                _ => {
-                    Error::new(errbuf.as_ptr() as *mut _)
-                }
+        with_errbuf(|err| unsafe {
+            let mut dev_buf: *mut raw::pcap_if_t = ptr::null_mut();
+            if raw::pcap_findalldevs(&mut dev_buf, err) != 0 {
+                return Err(Error::new(err));
             }
-        }
+            let result = (|| {
+                let mut devices = vec![];
+                let mut cur = dev_buf;
+                while !cur.is_null() {
+                    let dev = &*cur;
+                    devices.push(Device::new(cstr_to_string(dev.name)?.ok_or(InvalidString)?,
+                                             cstr_to_string(dev.description)?));
+                    cur = dev.next;
+                }
+                Ok(devices)
+            })();
+            raw::pcap_freealldevs(dev_buf);
+            result
+        })
     }
 }
 
 impl<'a> Into<Device> for &'a str {
     fn into(self) -> Device {
-        Device {
-            name: self.into(),
-            desc: None
-        }
+        Device::new(self.into(), None)
     }
 }
 
@@ -240,28 +216,16 @@ pub struct Linktype(pub i32);
 impl Linktype {
     /// Gets the name of the link type, such as EN10MB
     pub fn get_name(&self) -> Result<String, Error> {
-        unsafe {
-            let name = raw::pcap_datalink_val_to_name(self.0);
-
-            if name.is_null() {
-                return Err(InvalidLinktype)
-            } else {
-                Ok(try!(cstr_to_string(name)))
-            }
-        }
+        cstr_to_string(unsafe { raw::pcap_datalink_val_to_name(self.0) })
+            ?
+            .ok_or(InvalidLinktype)
     }
 
     /// Gets the description of a link type.
     pub fn get_description(&self) -> Result<String, Error> {
-        unsafe {
-            let description = raw::pcap_datalink_val_to_description(self.0);
-
-            if description.is_null() {
-                return Err(InvalidLinktype)
-            } else {
-                Ok(try!(cstr_to_string(description)))
-            }
-        }
+        cstr_to_string(unsafe { raw::pcap_datalink_val_to_description(self.0) })
+            ?
+            .ok_or(InvalidLinktype)
     }
 }
 
@@ -269,28 +233,78 @@ impl Linktype {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Packet<'a> {
     pub header: &'a PacketHeader,
-    pub data: &'a [u8]
+    pub data: &'a [u8],
+}
+
+impl<'a> Packet<'a> {
+    #[doc(hidden)]
+    pub fn new(header: &'a PacketHeader, data: &'a [u8]) -> Packet<'a> {
+        Packet {
+            header: header,
+            data: data,
+        }
+    }
 }
 
 impl<'b> Deref for Packet<'b> {
-   type Target = [u8];
+    type Target = [u8];
 
     fn deref(&self) -> &[u8] {
         self.data
     }
 }
 
-#[derive(Debug, Clone, Copy)]
+#[repr(C)]
+#[derive(Copy, Clone)]
+/// Represents a packet header provided by pcap, including the timeval, caplen and len.
+pub struct PacketHeader {
+    pub ts: libc::timeval,
+    pub caplen: u32,
+    pub len: u32,
+}
+
+impl fmt::Debug for PacketHeader {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f,
+               "PacketHeader {{ ts: {}.{:06}, caplen: {}, len: {} }}",
+               self.ts.tv_sec,
+               self.ts.tv_usec,
+               self.caplen,
+               self.len)
+    }
+}
+
+impl PartialEq for PacketHeader {
+    fn eq(&self, rhs: &PacketHeader) -> bool {
+        self.ts.tv_sec == rhs.ts.tv_sec && self.ts.tv_usec == rhs.ts.tv_usec &&
+        self.caplen == rhs.caplen && self.len == rhs.len
+    }
+}
+
+impl Eq for PacketHeader {}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Stat {
     pub received: u32,
     pub dropped: u32,
-    pub if_dropped: u32
+    pub if_dropped: u32,
 }
 
+impl Stat {
+    fn new(received: u32, dropped: u32, if_dropped: u32) -> Stat {
+        Stat {
+            received: received,
+            dropped: dropped,
+            if_dropped: if_dropped,
+        }
+    }
+}
+
+#[repr(u32)]
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum Precision {
-    Micro,
-    Nano,
+    Micro = 0,
+    Nano = 1,
 }
 
 /// Phantom type representing an inactive capture handle.
@@ -355,119 +369,98 @@ unsafe impl State for Dead {}
 /// ```
 pub struct Capture<T: State + ?Sized> {
     handle: Unique<raw::pcap_t>,
-    _marker: PhantomData<T>
+    _marker: PhantomData<T>,
+}
+
+impl<T: State + ?Sized> Capture<T> {
+    fn new(handle: *mut raw::pcap_t) -> Capture<T> {
+        unsafe {
+            Capture {
+                handle: Unique::new(handle),
+                _marker: PhantomData,
+            }
+        }
+    }
+
+    fn new_raw<F>(path: Option<&str>, func: F) -> Result<Capture<T>, Error>
+        where F: FnOnce(*const libc::c_char, *mut libc::c_char) -> *mut raw::pcap_t
+    {
+        with_errbuf(|err| {
+            let handle = match path {
+                None => func(ptr::null(), err),
+                Some(path) => {
+                    let path = CString::new(path)?;
+                    func(path.as_ptr(), err)
+                }
+            };
+            unsafe { handle.as_mut() }.map(|h| Capture::new(h)).ok_or_else(|| Error::new(err))
+        })
+    }
+
+    #[inline]
+    fn check_err(&self, success: bool) -> Result<(), Error> {
+        if success {
+            Ok(())
+        } else {
+            Err(Error::new(unsafe { raw::pcap_geterr(*self.handle) }))
+        }
+    }
 }
 
 impl Capture<Offline> {
     /// Opens an offline capture handle from a pcap dump file, given a path.
     pub fn from_file<P: AsRef<Path>>(path: P) -> Result<Capture<Offline>, Error> {
-        let name = CString::new(path.as_ref().to_str().unwrap()).unwrap();
-        let mut errbuf = [0i8; PCAP_ERRBUF_SIZE];
-
-        unsafe {
-            let handle = raw::pcap_open_offline(name.as_ptr(), errbuf.as_mut_ptr() as *mut _);
-            if handle.is_null() {
-                return Error::new(errbuf.as_ptr() as *mut _);
-            }
-
-            Ok(Capture {
-                handle: Unique::new(handle),
-                _marker: PhantomData
-            })
-        }
+        Capture::new_raw(path.as_ref().to_str(),
+                         |path, err| unsafe { raw::pcap_open_offline(path, err) })
     }
 
     /// Opens an offline capture handle from a pcap dump file, given a path.
     /// Takes an additional precision argument specifying the time stamp precision desired.
     pub fn from_file_with_precision<P: AsRef<Path>>(path: P, precision: Precision) -> Result<Capture<Offline>, Error> {
-        let name = CString::new(path.as_ref().to_str().unwrap()).unwrap();
-        let mut errbuf = [0i8; PCAP_ERRBUF_SIZE];
-
-        unsafe {
-            let handle = raw::pcap_open_offline_with_tstamp_precision(name.as_ptr(), match precision {
-                Precision::Micro => 0,
-                Precision::Nano => 1,
-            }, errbuf.as_mut_ptr() as *mut _);
-            if handle.is_null() {
-                return Error::new(errbuf.as_ptr() as *const _);
-            }
-
-            Ok(Capture {
-                handle: Unique::new(handle),
-                _marker: PhantomData
-            })
-        }
+        Capture::new_raw(path.as_ref().to_str(), |path, err| unsafe {
+            raw::pcap_open_offline_with_tstamp_precision(path, precision as _, err)
+        })
     }
 
     /// Opens an offline capture handle from a pcap dump file, given a file descriptor.
     #[cfg(not(windows))]
     pub fn from_raw_fd(fd: RawFd) -> Result<Capture<Offline>, Error> {
-        let mut errbuf = [0i8; PCAP_ERRBUF_SIZE];
-        const MODE: [u8; 2] = [b'r', 0];
-
-        unsafe {
-            // File handle will be closed by libpcap.
-            let file: *mut _ = libc::fdopen(fd, MODE.as_ptr() as *const _);
-            if file.is_null() {
-                return Err(Error::InvalidRawFd);
-            }
-
-            let handle = raw::pcap_fopen_offline(file, errbuf.as_mut_ptr() as *mut _);
-            if handle.is_null() {
-                return Error::new(errbuf.as_ptr() as *mut _);
-            }
-
-            Ok(Capture {
-                handle: Unique::new(handle),
-                _marker: PhantomData
-            })
-        }
+        open_raw_fd(fd, b'r')
+            .and_then(|file| Capture::new_raw(None, |_, err| unsafe {
+                raw::pcap_fopen_offline(file, err)
+            }))
     }
 
     /// Opens an offline capture handle from a pcap dump file, given a file descriptor.
     /// Takes an additional precision argument specifying the time stamp precision desired.
     #[cfg(all(not(windows), feature = "pcap-fopen-offline-precision"))]
     pub fn from_raw_fd_with_precision(fd: RawFd, precision: Precision) -> Result<Capture<Offline>, Error> {
-        let mut errbuf = [0i8; PCAP_ERRBUF_SIZE];
-        const MODE: [u8; 2] = [b'r', 0];
-
-        unsafe {
-            // File handle will be closed by libpcap.
-            let file: *mut _ = libc::fdopen(fd, MODE.as_ptr() as *const _);
-            if file.is_null() {
-                return Err(Error::InvalidRawFd);
-            }
-
-            let handle = raw::pcap_fopen_offline_with_tstamp_precision(file, match precision {
-                Precision::Micro => 0,
-                Precision::Nano => 1,
-            }, errbuf.as_mut_ptr() as *mut _);
-            if handle.is_null() {
-                return Error::new(errbuf.as_ptr() as *const _);
-            }
-
-            Ok(Capture {
-                handle: Unique::new(handle),
-                _marker: PhantomData
-            })
-        }
+        open_raw_fd(fd, b'r')
+            .and_then(|file| Capture::new_raw(None, |_, err| unsafe {
+                raw::pcap_fopen_offline_with_tstamp_precision(file, precision as _, err)
+            }))
     }
 }
 
+#[repr(i32)]
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
-pub enum TstampType {
-    Host,
-    HostLowPrec,
-    HostHighPrec,
-    Adapter,
-    AdapterUnsynced,
+pub enum TimestampType {
+    Host = 0,
+    HostLowPrec = 1,
+    HostHighPrec = 2,
+    Adapter = 3,
+    AdapterUnsynced = 4,
 }
 
+#[deprecated(note = "Renamed to TimestampType")]
+pub type TstampType = TimestampType;
+
+#[repr(u32)]
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum Direction {
-    InOut,
-    In,
-    Out,
+    InOut = raw::PCAP_D_INOUT,
+    In = raw::PCAP_D_IN,
+    Out = raw::PCAP_D_OUT,
 }
 
 impl Capture<Inactive> {
@@ -475,110 +468,68 @@ impl Capture<Inactive> {
     /// name here. The handle is inactive, but can be activated via `.open()`.
     pub fn from_device<D: Into<Device>>(device: D) -> Result<Capture<Inactive>, Error> {
         let device: Device = device.into();
-        let name = CString::new(device.name).unwrap();
-        let mut errbuf = [0i8; PCAP_ERRBUF_SIZE];
-
-        unsafe {
-            let handle = raw::pcap_create(name.as_ptr(), errbuf.as_mut_ptr() as *mut _);
-            if handle.is_null() {
-                return Error::new(errbuf.as_ptr() as *const _);
-            }
-
-            Ok(Capture {
-                handle: Unique::new(handle),
-                _marker: PhantomData
-            })
-        }
+        Capture::new_raw(Some(&device.name),
+                         |name, err| unsafe { raw::pcap_create(name, err) })
     }
 
     /// Activates an inactive capture created from `Capture::from_device()` or returns
     /// an error.
     pub fn open(self) -> Result<Capture<Active>, Error> {
         unsafe {
-            let cap = transmute::<Capture<Inactive>, Capture<Active>>(self);
-
-            if 0 != raw::pcap_activate(*cap.handle) {
-                return Error::new(raw::pcap_geterr(*cap.handle));
-            }
-
-            Ok(cap)
+            self.check_err(raw::pcap_activate(*self.handle) == 0)?;
+            Ok(mem::transmute(self))
         }
     }
 
     /// Set the read timeout for the Capture. By default, this is 0, so it will block
     /// indefinitely.
     pub fn timeout(self, ms: i32) -> Capture<Inactive> {
-        unsafe {
-            raw::pcap_set_timeout(*self.handle, ms);
-            self
-        }
+        unsafe { raw::pcap_set_timeout(*self.handle, ms) };
+        self
     }
 
     /// Set the time stamp type to be used by a capture device.
     #[cfg(not(windows))]
-    pub fn tstamp_type(self, t: TstampType) -> Capture<Inactive> {
-        unsafe {
-            raw::pcap_set_tstamp_type(*self.handle, match t {
-                TstampType::Host => 0,
-                TstampType::HostLowPrec => 1,
-                TstampType::HostHighPrec => 2,
-                TstampType::Adapter => 3,
-                TstampType::AdapterUnsynced => 4,
-            });
-            self
-        }
+    pub fn tstamp_type(self, tstamp_type: TimestampType) -> Capture<Inactive> {
+        unsafe { raw::pcap_set_tstamp_type(*self.handle, tstamp_type as _) };
+        self
     }
 
     /// Set promiscuous mode on or off. By default, this is off.
     pub fn promisc(self, to: bool) -> Capture<Inactive> {
-        unsafe {
-            raw::pcap_set_promisc(*self.handle, if to {1} else {0});
-            self
-        }
+        unsafe { raw::pcap_set_promisc(*self.handle, to as _) };
+        self
     }
 
     /// Set rfmon mode on or off. The default is maintained by pcap.
-    ///
-    /// **This is not available on Windows.**
-    #[cfg(not(target_os = "windows"))]
+    #[cfg(not(windows))]
     pub fn rfmon(self, to: bool) -> Capture<Inactive> {
-        unsafe {
-            raw::pcap_set_rfmon(*self.handle, if to {1} else {0});
-            self
-        }
+        unsafe { raw::pcap_set_rfmon(*self.handle, to as _) };
+        self
     }
 
     /// Set the buffer size for incoming packet data.
     ///
     /// The default is 1000000. This should always be larger than the snaplen.
     pub fn buffer_size(self, to: i32) -> Capture<Inactive> {
-        unsafe {
-            raw::pcap_set_buffer_size(*self.handle, to);
-            self
-        }
+        unsafe { raw::pcap_set_buffer_size(*self.handle, to) };
+        self
     }
 
     /// Set the time stamp precision returned in captures.
     #[cfg(not(windows))]
     pub fn precision(self, precision: Precision) -> Capture<Inactive> {
-        unsafe {
-            raw::pcap_set_tstamp_precision(*self.handle, match precision {
-                Precision::Micro => 0,
-                Precision::Nano => 1,
-            });
-            self
-        }
+        unsafe { raw::pcap_set_tstamp_precision(*self.handle, precision as _) };
+        self
     }
 
     /// Set the snaplen size (the maximum length of a packet captured into the buffer).
     /// Useful if you only want certain headers, but not the entire packet.
     ///
-    /// The default is 65535
+    /// The default is 65535.
     pub fn snaplen(self, to: i32) -> Capture<Inactive> {
-        unsafe {
-            raw::pcap_set_snaplen(*self.handle, to);
-            self
-        }
+        unsafe { raw::pcap_set_snaplen(*self.handle, to) };
+        self
     }
 }
 
@@ -588,67 +539,32 @@ impl<T: Activated + ?Sized> Capture<T> {
     pub fn list_datalinks(&self) -> Result<Vec<Linktype>, Error> {
         unsafe {
             let mut links: *mut i32 = ptr::null_mut();
-
             let num = raw::pcap_list_datalinks(*self.handle, &mut links);
-
-            if num == PCAP_ERROR_NOT_ACTIVATED {
-                raw::pcap_free_datalinks(links);
-                panic!("It should not be possible to run list_datalinks on a Capture that is not activated, please report this bug!")
-            } else if num < 0 {
-                raw::pcap_free_datalinks(links);
-                Error::new(raw::pcap_geterr(*self.handle))
-            } else {
-                let slice = slice::from_raw_parts(links, num as usize).iter().map(|&a| Linktype(a)).collect();
-                raw::pcap_free_datalinks(links);
-
-                Ok(slice)
+            let mut vec = vec![];
+            if num > 0 {
+                vec.extend(slice::from_raw_parts(links, num as _).iter().cloned().map(Linktype))
             }
+            raw::pcap_free_datalinks(links);
+            self.check_err(num > 0).and(Ok(vec))
         }
     }
 
     /// Set the datalink type for the current capture handle.
     pub fn set_datalink(&mut self, linktype: Linktype) -> Result<(), Error> {
-        unsafe {
-            match raw::pcap_set_datalink(*self.handle, linktype.0) {
-                0 => {
-                    Ok(())
-                },
-                _ => {
-                    Error::new(raw::pcap_geterr(*self.handle))
-                }
-            }
-        }
+        self.check_err(unsafe { raw::pcap_set_datalink(*self.handle, linktype.0) == 0 })
     }
 
     /// Get the current datalink type for this capture handle.
     pub fn get_datalink(&self) -> Linktype {
-        unsafe {
-            match raw::pcap_datalink(*self.handle) {
-                PCAP_ERROR_NOT_ACTIVATED => {
-                    panic!("It should not be possible to run get_datalink on a Capture that is not activated, please report this bug!");
-                },
-                lt => {
-                    Linktype(lt)
-                }
-            }
-        }
+        unsafe { Linktype(raw::pcap_datalink(*self.handle)) }
     }
 
     /// Create a `Savefile` context for recording captured packets using this `Capture`'s
     /// configurations.
     pub fn savefile<P: AsRef<Path>>(&self, path: P) -> Result<Savefile, Error> {
-        let name = CString::new(path.as_ref().to_str().unwrap()).unwrap();
-        unsafe {
-            let handle = raw::pcap_dump_open(*self.handle, name.as_ptr());
-
-            if handle.is_null() {
-                Error::new(raw::pcap_geterr(*self.handle))
-            } else {
-                Ok(Savefile {
-                    handle: Unique::new(handle)
-                })
-            }
-        }
+        let name = CString::new(path.as_ref().to_str().unwrap())?;
+        let handle = unsafe { raw::pcap_dump_open(*self.handle, name.as_ptr()) };
+        self.check_err(!handle.is_null()).map(|_| Savefile::new(handle))
     }
 
     /// Create a `Savefile` context for recording captured packets using this `Capture`'s
@@ -656,24 +572,11 @@ impl<T: Activated + ?Sized> Capture<T> {
     // in `"w"` mode.
     #[cfg(not(windows))]
     pub fn savefile_raw_fd(&self, fd: RawFd) -> Result<Savefile, Error> {
-        const MODE: [u8; 2] = [b'w', 0];
-
-        unsafe {
-            // File handle will be closed by libpcap.
-            let file: *mut _ = libc::fdopen(fd, MODE.as_ptr() as *const _);
-            if file.is_null() {
-                return Err(Error::InvalidRawFd);
-            }
-
-            let handle = raw::pcap_dump_fopen(*self.handle, file);
-            if handle.is_null() {
-                Error::new(raw::pcap_geterr(*self.handle))
-            } else {
-                Ok(Savefile {
-                    handle: Unique::new(handle)
-                })
-            }
-        }
+        open_raw_fd(fd, b'w')
+            .and_then(|file| {
+                let handle = unsafe { raw::pcap_dump_fopen(*self.handle, file) };
+                self.check_err(!handle.is_null()).map(|_| Savefile::new(handle))
+            })
     }
 
     /// Reopen a `Savefile` context for recording captured packets using this `Capture`'s
@@ -684,34 +587,14 @@ impl<T: Activated + ?Sized> Capture<T> {
     /// at the end of the file.
     #[cfg(feature = "pcap-savefile-append")]
     pub fn savefile_append<P: AsRef<Path>>(&self, path: P) -> Result<Savefile, Error> {
-        let name = CString::new(path.as_ref().to_str().unwrap()).unwrap();
-        unsafe {
-            let handle = raw::pcap_dump_open_append(*self.handle, name.as_ptr());
-
-            if handle.is_null() {
-                Error::new(raw::pcap_geterr(*self.handle))
-            } else {
-                Ok(Savefile {
-                    handle: Unique::new(handle)
-                })
-            }
-        }
+        let name = CString::new(path.as_ref().to_str().unwrap())?;
+        let handle = unsafe { raw::pcap_dump_open_append(*self.handle, name.as_ptr()) };
+        self.check_err(!handle.is_null()).map(|_| Savefile::new(handle))
     }
 
     /// Set the direction of the capture
     pub fn direction(&self, direction: Direction) -> Result<(), Error> {
-        let result = unsafe {
-            raw::pcap_setdirection(*self.handle, match direction {
-                Direction::InOut => raw::PCAP_D_INOUT,
-                Direction::In => raw::PCAP_D_IN,
-                Direction::Out => raw::PCAP_D_OUT,
-            })
-        };
-        if result == 0 {
-            Ok(())
-        } else {
-            Error::new( unsafe { raw::pcap_geterr(*self.handle) })
-        }
+        self.check_err(unsafe { raw::pcap_setdirection(*self.handle, direction as u32 as _) == 0 })
     }
 
     /// Blocks until a packet is returned from the capture handle or an error occurs.
@@ -720,32 +603,29 @@ impl<T: Activated + ?Sized> Capture<T> {
     /// from. This buffer has a finite length, so if the buffer fills completely new
     /// packets will be discarded temporarily. This means that in realtime situations,
     /// you probably want to minimize the time between calls of this next() method.
-    pub fn next<'a>(&'a mut self) -> Result<Packet<'a>, Error> {
+    #[cfg_attr(feature = "clippy", allow(should_implement_trait))]
+    pub fn next(&mut self) -> Result<Packet, Error> {
         unsafe {
-            let mut header: *mut raw::Struct_pcap_pkthdr = ptr::null_mut();
+            let mut header: *mut raw::pcap_pkthdr = ptr::null_mut();
             let mut packet: *const libc::c_uchar = ptr::null();
-            match raw::pcap_next_ex(*self.handle, &mut header, &mut packet) {
+            let retcode = raw::pcap_next_ex(*self.handle, &mut header, &mut packet);
+            self.check_err(retcode != -1)?; // -1 => an error occured while reading the packet
+            match retcode {
                 i if i >= 1 => {
                     // packet was read without issue
-                    Ok(Packet {
-                        header: transmute(&*header),
-                        data: slice::from_raw_parts(packet, (&*header).caplen as usize)
-                    })
-                },
+                    Ok(Packet::new(mem::transmute(&*header),
+                                   slice::from_raw_parts(packet, (&*header).caplen as _)))
+                }
                 0 => {
                     // packets are being read from a live capture and the
                     // timeout expired
                     Err(TimeoutExpired)
-                },
-                -1 => {
-                    // an error occured while reading the packet
-                    Error::new(raw::pcap_geterr(*self.handle))
-                },
+                }
                 -2 => {
                     // packets are being read from a "savefile" and there are no
                     // more packets to read
                     Err(NoMorePackets)
-                },
+                }
                 _ => {
                     // libpcap only defines codes >=1, 0, -1, and -2
                     unreachable!()
@@ -759,75 +639,42 @@ impl<T: Activated + ?Sized> Capture<T> {
     ///
     /// See http://biot.com/capstats/bpf.html for more information about this syntax.
     pub fn filter(&mut self, program: &str) -> Result<(), Error> {
-        let program = CString::new(program).unwrap();
-
+        let program = CString::new(program)?;
         unsafe {
-            let mut bpf_program: raw::Struct_bpf_program = Default::default();
-
-            if -1 == raw::pcap_compile(*self.handle, &mut bpf_program, program.as_ptr(), 0, 0) {
-                return Error::new(raw::pcap_geterr(*self.handle));
-            }
-
-            if -1 == raw::pcap_setfilter(*self.handle, &mut bpf_program) {
-                raw::pcap_freecode(&mut bpf_program);
-                return Error::new(raw::pcap_geterr(*self.handle));
-            }
-
+            let mut bpf_program: raw::bpf_program = mem::zeroed();
+            let ret = raw::pcap_compile(*self.handle, &mut bpf_program, program.as_ptr(), 0, 0);
+            self.check_err(ret != -1)?;
+            let ret = raw::pcap_setfilter(*self.handle, &mut bpf_program);
             raw::pcap_freecode(&mut bpf_program);
-            Ok(())
+            self.check_err(ret != -1)
         }
     }
 
     pub fn stats(&mut self) -> Result<Stat, Error> {
         unsafe {
-            let mut stats: raw::Struct_pcap_stat =
-                raw::Struct_pcap_stat {ps_recv: 0, ps_drop: 0, ps_ifdrop: 0};
-
-            if -1 == raw::pcap_stats(*self.handle, &mut stats) {
-                return Error::new(raw::pcap_geterr(*self.handle));
-            }
-
-            Ok(Stat {
-                received: stats.ps_recv,
-                dropped: stats.ps_drop,
-                if_dropped: stats.ps_ifdrop
-            })
+            let mut stats: raw::pcap_stat = mem::zeroed();
+            self.check_err(raw::pcap_stats(*self.handle, &mut stats) != -1)
+                .map(|_| Stat::new(stats.ps_recv, stats.ps_drop, stats.ps_ifdrop))
         }
     }
 }
 
 impl Capture<Active> {
     /// Sends a packet over this capture handle's interface.
-    pub fn sendpacket<'a>(&mut self, buf: &'a [u8]) -> Result<(), Error> {
-        unsafe {
-            let result = raw::pcap_sendpacket(*self.handle, buf.as_ptr() as *const _, buf.len() as i32);
-
-            match result {
-                -1 => {
-                    return Error::new(raw::pcap_geterr(*self.handle));
-                },
-                _ => {
-                    Ok(())
-                }
-            }
-        }
+    pub fn sendpacket<B: Borrow<[u8]>>(&mut self, buf: B) -> Result<(), Error> {
+        let buf = buf.borrow();
+        self.check_err(unsafe {
+            raw::pcap_sendpacket(*self.handle, buf.as_ptr() as _, buf.len() as _) == 0
+        })
     }
 }
 
 impl Capture<Dead> {
     /// Creates a "fake" capture handle for the given link type.
     pub fn dead(linktype: Linktype) -> Result<Capture<Dead>, Error> {
-        unsafe {
-            let handle = raw::pcap_open_dead(linktype.0, 65535);
-            if handle.is_null() {
-                return Err(Error::InsufficientMemory);
-            }
-
-            Ok(Capture {
-                handle: Unique::new(handle),
-                _marker: PhantomData
-            })
-        }
+        unsafe { raw::pcap_open_dead(linktype.0, 65535).as_mut() }
+            .map(|h| Capture::new(h))
+            .ok_or(InsufficientMemory)
     }
 }
 
@@ -840,10 +687,8 @@ impl AsRawFd for Capture<Active> {
             match fd {
                 -1 => {
                     panic!("Unable to get file descriptor for live capture");
-                },
-                fd => {
-                    fd
                 }
+                fd => fd,
             }
         }
     }
@@ -851,44 +696,69 @@ impl AsRawFd for Capture<Active> {
 
 impl<T: State + ?Sized> Drop for Capture<T> {
     fn drop(&mut self) {
-        unsafe {
-            raw::pcap_close(*self.handle)
-        }
+        unsafe { raw::pcap_close(*self.handle) }
     }
 }
 
 impl<T: Activated> From<Capture<T>> for Capture<Activated> {
     fn from(cap: Capture<T>) -> Capture<Activated> {
-        unsafe { transmute(cap) }
+        unsafe { mem::transmute(cap) }
     }
 }
 
 /// Abstraction for writing pcap savefiles, which can be read afterwards via `Capture::from_file()`.
 pub struct Savefile {
-    handle: Unique<raw::pcap_dumper_t>
+    handle: Unique<raw::pcap_dumper_t>,
 }
 
 impl Savefile {
-    pub fn write<'a>(&mut self, packet: &'a Packet<'a>) {
+    pub fn write(&mut self, packet: &Packet) {
         unsafe {
-            raw::pcap_dump(*self.handle as *mut u8, transmute::<_, &raw::Struct_pcap_pkthdr>(packet.header), packet.data.as_ptr());
+            raw::pcap_dump(*self.handle as _,
+                           mem::transmute::<_, &raw::pcap_pkthdr>(packet.header),
+                           packet.data.as_ptr());
         }
+    }
+}
+
+impl Savefile {
+    fn new(handle: *mut raw::pcap_dumper_t) -> Savefile {
+        unsafe { Savefile { handle: Unique::new(handle) } }
     }
 }
 
 impl Drop for Savefile {
     fn drop(&mut self) {
-        unsafe {
-            raw::pcap_dump_close(*self.handle);
-        }
+        unsafe { raw::pcap_dump_close(*self.handle) }
     }
 }
 
+#[cfg(not(windows))]
+pub fn open_raw_fd(fd: RawFd, mode: u8) -> Result<*mut libc::FILE, Error> {
+    let mode = vec![mode, 0];
+    unsafe { libc::fdopen(fd, mode.as_ptr() as _).as_mut() }.map(|f| f as _).ok_or(InvalidRawFd)
+}
+
 #[inline]
-fn cstr_to_string(ptr: *const libc::c_char) -> Result<String, Error> {
-    if ptr.is_null() {
-        Err(InvalidString)
+fn cstr_to_string(ptr: *const libc::c_char) -> Result<Option<String>, Error> {
+    let string = if ptr.is_null() {
+        None
     } else {
-        Ok(try!(str::from_utf8(unsafe{CStr::from_ptr(ptr)}.to_bytes())).into())
-    }
+        Some(unsafe { CString::from_raw(ptr as _) }.into_string()?)
+    };
+    Ok(string)
+}
+
+#[inline]
+fn with_errbuf<T, F>(func: F) -> Result<T, Error>
+    where F: FnOnce(*mut libc::c_char) -> Result<T, Error>
+{
+    let mut errbuf = [0i8; 256];
+    func(errbuf.as_mut_ptr() as _)
+}
+
+#[test]
+fn test_struct_size() {
+    use std::mem::size_of;
+    assert_eq!(size_of::<PacketHeader>(), size_of::<raw::pcap_pkthdr>());
 }

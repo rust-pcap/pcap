@@ -7,8 +7,7 @@ use std::ops::Add;
 use std::path::Path;
 use tempdir::TempDir;
 
-use pcap::{Active, Activated, Offline, Capture, Packet,
-           PacketHeader, Linktype, Precision, Error};
+use pcap::{Active, Activated, Offline, Capture, Packet, PacketHeader, Linktype, Precision, Error};
 
 #[test]
 fn read_packet_with_full_data() {
@@ -30,25 +29,21 @@ fn capture_from_test_file(file_name: &str) -> Capture<Offline> {
 #[test]
 fn unify_activated() {
 	  #![allow(dead_code)]
-	  fn test1() -> Capture<Active> {
-		    loop{}
-	  }
+    fn test1() -> Capture<Active> {
+        loop {}
+    }
 
-	  fn test2() -> Capture<Offline> {
-		    loop{}
-	  }
+    fn test2() -> Capture<Offline> {
+        loop {}
+    }
 
-	  fn maybe(a: bool) -> Capture<Activated> {
-		    if a {
-			      test1().into()
-		    } else {
-			      test2().into()
-		    }
-	  }
+    fn maybe(a: bool) -> Capture<Activated> {
+        if a { test1().into() } else { test2().into() }
+    }
 
-	  fn also_maybe(a: &mut Capture<Activated>) {
-		    a.filter("whatever filter string, this won't be run anyway").unwrap();
-	  }
+    fn also_maybe(a: &mut Capture<Activated>) {
+        a.filter("whatever filter string, this won't be run anyway").unwrap();
+    }
 }
 
 #[derive(Clone)]
@@ -59,30 +54,39 @@ pub struct Packets {
 
 impl Packets {
     pub fn new() -> Packets {
-        Packets { headers: vec![], data: vec![] }
+        Packets {
+            headers: vec![],
+            data: vec![],
+        }
     }
 
-    pub fn push(&mut self, tv_sec: libc::time_t, tv_usec: libc::suseconds_t,
-                caplen: u32, len: u32, data: &[u8])
-    {
+    pub fn push(&mut self,
+                tv_sec: libc::time_t,
+                tv_usec: libc::suseconds_t,
+                caplen: u32,
+                len: u32,
+                data: &[u8]) {
         self.headers.push(PacketHeader {
-            ts: libc::timeval { tv_sec: tv_sec, tv_usec: tv_usec },
-            caplen: caplen,
-            len: len,
-        });
+                              ts: libc::timeval {
+                                  tv_sec: tv_sec,
+                                  tv_usec: tv_usec,
+                              },
+                              caplen: caplen,
+                              len: len,
+                          });
         self.data.push(data.to_vec());
     }
 
     pub fn foreach<F: FnMut(&Packet)>(&self, mut f: F) {
         for (header, data) in self.headers.iter().zip(self.data.iter()) {
-            let packet = Packet { header: header, data: &data };
+            let packet = Packet::new(header, &data);
             f(&packet);
         }
     }
 
     pub fn verify<T: Activated + ?Sized>(&self, cap: &mut Capture<T>) {
         for (header, data) in self.headers.iter().zip(self.data.iter()) {
-            assert_eq!(cap.next().unwrap(), Packet { header: header, data: &data });
+            assert_eq!(cap.next().unwrap(), Packet::new(header, &data));
         }
         assert!(cap.next().is_err());
     }
@@ -160,7 +164,9 @@ fn test_raw_fd_api() {
     let mut packets = Packets::new();
     for i in 0..N_PACKETS {
         packets.push(1460408319 + i as libc::time_t,
-                     1000 + i as libc::suseconds_t, 1024, 1024,
+                     1000 + i as libc::suseconds_t,
+                     1024,
+                     1024,
                      &data[i * 1024..(i + 1) * 1024]);
     }
 
@@ -175,7 +181,8 @@ fn test_raw_fd_api() {
 
     assert_eq!(Capture::from_raw_fd(-999).err().unwrap(),
                Error::InvalidRawFd);
-    #[cfg(feature = "pcap-fopen-offline-precision")] {
+    #[cfg(feature = "pcap-fopen-offline-precision")]
+    {
         assert_eq!(Capture::from_raw_fd_with_precision(-999, Precision::Micro).err().unwrap(),
                    Error::InvalidRawFd);
     }
