@@ -51,7 +51,7 @@ feature flag. It requires at least libpcap version 1.7.2.
 
 ```toml
 [dependencies]
-pcap = { version = "0.5", features = ["pcap-savefile-append"] }
+pcap = { version = "0.6", features = ["pcap-savefile-append"] }
 ```
 
 #### `pcap-fopen-offline-precision`
@@ -63,7 +63,7 @@ version 1.5.0 or later.
 
 ```toml
 [dependencies]
-pcap = { version = "0.5", features = ["pcap-fopen-offline-precision"] }
+pcap = { version = "0.6", features = ["pcap-fopen-offline-precision"] }
 ```
 
 ## License
