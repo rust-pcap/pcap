@@ -14,7 +14,7 @@ build = "build.rs"
 
 [dependencies]
 libc = "0.2"
-clippy = { version = "*", optional = true }
+clippy = { version = "0.0.134", optional = true }
 
 [dev-dependencies]
 tempdir = "0.3"
