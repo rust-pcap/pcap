@@ -57,7 +57,7 @@ use unique::Unique;
 use std::borrow::Borrow;
 use std::marker::PhantomData;
 use std::ptr;
-use std::ffi::{self, CString};
+use std::ffi::{self, CString, CStr};
 use std::path::Path;
 use std::slice;
 use std::ops::Deref;
@@ -744,7 +744,8 @@ fn cstr_to_string(ptr: *const libc::c_char) -> Result<Option<String>, Error> {
     let string = if ptr.is_null() {
         None
     } else {
-        Some(unsafe { CString::from_raw(ptr as _) }.into_string()?)
+        Some(unsafe {
+            CStr::from_ptr(ptr as _) .to_string_lossy().into_owned()})
     };
     Ok(string)
 }
