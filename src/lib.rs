@@ -88,7 +88,10 @@ pub enum Error {
 
 impl Error {
     fn new(ptr: *const libc::c_char) -> Error {
-        unsafe { PcapError(CString::from_raw(ptr as *mut _).to_string_lossy().into_owned()) }
+        match cstr_to_string(ptr) {
+            Err(e) => e as Error,
+            Ok(string) => PcapError(string.unwrap_or_default()),
+        }
     }
 }
 

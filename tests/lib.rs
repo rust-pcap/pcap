@@ -266,3 +266,10 @@ fn test_linktype() {
     assert_eq!(linktype.get_name().unwrap(), String::from("EN10MB"));
     assert!(linktype.get_description().is_ok());
 }
+
+#[test]
+fn test_error() {
+    let mut capture = capture_from_test_file("packet_snaplen_65535.pcap");
+    // Trying to get stats from offline capture should error.
+    assert!(capture.stats().err().is_some());
+}
