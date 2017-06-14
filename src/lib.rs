@@ -74,7 +74,7 @@ mod unique;
 /// An error received from pcap
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Error {
-    MalformedError(ffi::IntoStringError),
+    MalformedError(std::str::Utf8Error),
     InvalidString,
     PcapError(String),
     InvalidLinktype,
@@ -133,15 +133,15 @@ impl std::error::Error for Error {
     }
 }
 
-impl From<ffi::IntoStringError> for Error {
-    fn from(obj: ffi::IntoStringError) -> Error {
-        MalformedError(obj)
-    }
-}
-
 impl From<ffi::NulError> for Error {
     fn from(_: ffi::NulError) -> Error {
         InvalidInputString
+    }
+}
+
+impl From<std::str::Utf8Error> for Error {
+    fn from(obj: std::str::Utf8Error) -> Error {
+        MalformedError(obj)
     }
 }
 
@@ -744,8 +744,7 @@ fn cstr_to_string(ptr: *const libc::c_char) -> Result<Option<String>, Error> {
     let string = if ptr.is_null() {
         None
     } else {
-        Some(unsafe {
-            CStr::from_ptr(ptr as _) .to_string_lossy().into_owned()})
+        Some(unsafe {CStr::from_ptr(ptr as _)}.to_str()?.to_owned())
     };
     Ok(string)
 }
