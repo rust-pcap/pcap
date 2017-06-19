@@ -57,7 +57,7 @@ use unique::Unique;
 use std::borrow::Borrow;
 use std::marker::PhantomData;
 use std::ptr;
-use std::ffi::{self, CString};
+use std::ffi::{self, CString, CStr};
 use std::path::Path;
 use std::slice;
 use std::ops::Deref;
@@ -74,7 +74,7 @@ mod unique;
 /// An error received from pcap
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Error {
-    MalformedError(ffi::IntoStringError),
+    MalformedError(std::str::Utf8Error),
     InvalidString,
     PcapError(String),
     InvalidLinktype,
@@ -88,7 +88,10 @@ pub enum Error {
 
 impl Error {
     fn new(ptr: *const libc::c_char) -> Error {
-        unsafe { PcapError(CString::from_raw(ptr as *mut _).to_string_lossy().into_owned()) }
+        match cstr_to_string(ptr) {
+            Err(e) => e as Error,
+            Ok(string) => PcapError(string.unwrap_or_default()),
+        }
     }
 }
 
@@ -133,15 +136,15 @@ impl std::error::Error for Error {
     }
 }
 
-impl From<ffi::IntoStringError> for Error {
-    fn from(obj: ffi::IntoStringError) -> Error {
-        MalformedError(obj)
-    }
-}
-
 impl From<ffi::NulError> for Error {
     fn from(_: ffi::NulError) -> Error {
         InvalidInputString
+    }
+}
+
+impl From<std::str::Utf8Error> for Error {
+    fn from(obj: std::str::Utf8Error) -> Error {
+        MalformedError(obj)
     }
 }
 
@@ -744,7 +747,7 @@ fn cstr_to_string(ptr: *const libc::c_char) -> Result<Option<String>, Error> {
     let string = if ptr.is_null() {
         None
     } else {
-        Some(unsafe { CString::from_raw(ptr as _) }.into_string()?)
+        Some(unsafe {CStr::from_ptr(ptr as _)}.to_str()?.to_owned())
     };
     Ok(string)
 }

@@ -256,3 +256,20 @@ fn test_raw_fd_api() {
         packets.verify(&mut cap);
     }
 }
+
+#[test]
+fn test_linktype() {
+    let capture = capture_from_test_file("packet_snaplen_65535.pcap");
+    let linktype = capture.get_datalink();
+
+    assert!(linktype.get_name().is_ok());
+    assert_eq!(linktype.get_name().unwrap(), String::from("EN10MB"));
+    assert!(linktype.get_description().is_ok());
+}
+
+#[test]
+fn test_error() {
+    let mut capture = capture_from_test_file("packet_snaplen_65535.pcap");
+    // Trying to get stats from offline capture should error.
+    assert!(capture.stats().err().is_some());
+}
