@@ -15,6 +15,9 @@ build = "build.rs"
 [dependencies]
 libc = "0.2"
 clippy = { version = "0.0.134", optional = true }
+mio = { version = "*", optional = true }
+tokio-core = { version = "*", optional = true }
+futures = { version = "*", optional = true }
 
 [dev-dependencies]
 tempdir = "0.3"
@@ -29,8 +32,12 @@ pcap-savefile-append = []
 # This is disabled by default, because it requires libpcap >= 1.5.0.
 pcap-fopen-offline-precision = []
 
+# This feature enables access to the function Capture::stream.
+# This is disabled by default, because it depends on a tokio and mio
+tokio = ["mio", "tokio-core", "futures"]
+
 # A shortcut to enable all features.
-full = ["pcap-savefile-append", "pcap-fopen-offline-precision"]
+full = ["pcap-savefile-append", "pcap-fopen-offline-precision", "tokio"]
 
 [lib]
 name = "pcap"

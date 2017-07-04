@@ -129,7 +129,7 @@ extern "C" {
     pub fn pcap_setfilter(arg1: *mut pcap_t, arg2: *mut bpf_program) -> c_int;
     pub fn pcap_setdirection(arg1: *mut pcap_t, arg2: pcap_direction_t) -> c_int;
     // pub fn pcap_getnonblock(arg1: *mut pcap_t, arg2: *mut c_char) -> c_int;
-    // pub fn pcap_setnonblock(arg1: *mut pcap_t, arg2: c_int, arg3: *mut c_char) -> c_int;
+    pub fn pcap_setnonblock(arg1: *mut pcap_t, arg2: c_int, arg3: *mut c_char) -> c_int;
     pub fn pcap_sendpacket(arg1: *mut pcap_t, arg2: *const c_uchar, arg3: c_int) -> c_int;
     // pub fn pcap_statustostr(arg1: c_int) -> *const c_char;
     // pub fn pcap_strerror(arg1: c_int) -> *const c_char;
@@ -170,7 +170,7 @@ extern "C" {
     // pub fn pcap_lib_version() -> *const c_char;
     // pub fn bpf_image(arg1: *const bpf_insn, arg2: c_int) -> *mut c_char;
     // pub fn bpf_dump(arg1: *const bpf_program, arg2: c_int) -> ();
-    // pub fn pcap_get_selectable_fd(arg1: *mut pcap_t) -> c_int;
+    pub fn pcap_get_selectable_fd(arg1: *mut pcap_t) -> c_int;
 }
 
 #[cfg(windows)]
