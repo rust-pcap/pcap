@@ -56,7 +56,6 @@ extern crate mio;
 #[cfg(feature = "tokio")]
 extern crate futures;
 #[cfg(feature = "tokio")]
-#[macro_use]
 extern crate tokio_core;
 
 use unique::Unique;
@@ -69,8 +68,8 @@ use std::path::Path;
 use std::slice;
 use std::ops::Deref;
 use std::mem;
-use std::mem::transmute;
 use std::fmt;
+#[cfg(feature = "tokio")]
 use std::io;
 #[cfg(not(windows))]
 use std::os::unix::io::{RawFd, AsRawFd};
@@ -80,10 +79,10 @@ use self::Error::*;
 mod raw;
 mod unique;
 #[cfg(feature = "tokio")]
-mod tokio;
+pub mod tokio;
 
 /// An error received from pcap
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug)]
 pub enum Error {
     MalformedError(std::str::Utf8Error),
     InvalidString,
@@ -91,9 +90,10 @@ pub enum Error {
     InvalidLinktype,
     TimeoutExpired,
     NoMorePackets,
+    NonNonBlock,
     InsufficientMemory,
     InvalidInputString,
-    IoError(std::fmt::Error),
+    IoError(std::io::Error),
     #[cfg(not(windows))]
     InvalidRawFd,
 }
@@ -115,9 +115,11 @@ impl fmt::Display for Error {
             PcapError(ref e) => write!(f, "libpcap error: {}", e),
             InvalidLinktype => write!(f, "invalid or unknown linktype"),
             TimeoutExpired => write!(f, "timeout expired while reading from a live capture"),
+            NonNonBlock => write!(f, "must be in non-blocking mode to function"),
             NoMorePackets => write!(f, "no more packets to read from the file"),
             InsufficientMemory => write!(f, "insufficient memory"),
             InvalidInputString => write!(f, "invalid input string (internal null)"),
+            IoError(ref e) => write!(f, "io error occurred: {}", e),
             #[cfg(not(windows))]
             InvalidRawFd => write!(f, "invalid raw file descriptor provided"),
         }
@@ -132,9 +134,11 @@ impl std::error::Error for Error {
             InvalidString => "libpcap returned a null string",
             InvalidLinktype => "invalid or unknown linktype",
             TimeoutExpired => "timeout expired while reading from a live capture",
+            NonNonBlock => "must be in non-blocking mode to function",
             NoMorePackets => "no more packets to read from the file",
             InsufficientMemory => "insufficient memory",
             InvalidInputString => "invalid input string (internal null)",
+            IoError(..) => "io error occurred",
             #[cfg(not(windows))]
             InvalidRawFd => "invalid raw file descriptor provided",
         }
@@ -157,6 +161,12 @@ impl From<ffi::NulError> for Error {
 impl From<std::str::Utf8Error> for Error {
     fn from(obj: std::str::Utf8Error) -> Error {
         MalformedError(obj)
+    }
+}
+
+impl From<std::io::Error> for Error {
+    fn from(obj: std::io::Error) -> Error {
+        IoError(obj)
     }
 }
 
@@ -391,6 +401,7 @@ unsafe impl State for Dead {}
 /// }
 /// ```
 pub struct Capture<T: State + ? Sized> {
+    nonblock: bool,
     handle: Unique<raw::pcap_t>,
     _marker: PhantomData<T>,
 }
@@ -399,6 +410,7 @@ impl<T: State + ? Sized> Capture<T> {
     fn new(handle: *mut raw::pcap_t) -> Capture<T> {
         unsafe {
             Capture {
+                nonblock: false,
                 handle: Unique::new(handle),
                 _marker: PhantomData,
             }
@@ -675,13 +687,10 @@ impl<T: Activated + ? Sized> Capture<T> {
 
     #[cfg(feature = "tokio")]
     pub fn stream<C: tokio::PacketCodec>(self, handle: &tokio_core::reactor::Handle, codec: C) -> Result<tokio::PacketStream<T, C>, Error> {
+        if !self.nonblock {
+            return Err(NonNonBlock);
+        }
         unsafe {
-            with_errbuf(|err| unsafe {
-                if raw::pcap_setnonblock(*self.handle, 1, err) != 0 {
-                    return Err(Error::new(err));
-                }
-                Ok(self)
-            });
             let fd = raw::pcap_get_selectable_fd(*self.handle);
             tokio::PacketStream::new(self, fd, handle, codec)
         }
@@ -718,6 +727,16 @@ impl Capture<Active> {
         let buf = buf.borrow();
         self.check_err(unsafe {
             raw::pcap_sendpacket(*self.handle, buf.as_ptr() as _, buf.len() as _) == 0
+        })
+    }
+
+    pub fn setnonblock(mut self) -> Result<Capture<Active>, Error> {
+        with_errbuf(|err| unsafe {
+            if raw::pcap_setnonblock(*self.handle, 1, err) != 0 {
+                return Err(Error::new(err));
+            }
+            self.nonblock = true;
+            Ok(self)
         })
     }
 }
