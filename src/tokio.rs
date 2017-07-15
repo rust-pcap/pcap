@@ -57,7 +57,7 @@ impl<'a, T: Activated + ? Sized, C: PacketCodec> futures::Stream for PacketStrea
     fn poll(&mut self) -> futures::Poll<Option<Self::Item>, Self::Error> {
         let p = match self.cap.next_noblock(&mut self.fd) {
             Ok(t) => t,
-            Err(Error::IoError(ref e)) if e.kind() == ::std::io::ErrorKind::WouldBlock => {
+            Err(Error::IoError(ref e)) if *e == ::std::io::ErrorKind::WouldBlock => {
                 return Ok(futures::Async::NotReady)
             }
             Err(e) => return Err(e.into())

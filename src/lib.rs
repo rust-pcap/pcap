@@ -82,7 +82,7 @@ mod unique;
 pub mod tokio;
 
 /// An error received from pcap
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum Error {
     MalformedError(std::str::Utf8Error),
     InvalidString,
@@ -93,7 +93,7 @@ pub enum Error {
     NonNonBlock,
     InsufficientMemory,
     InvalidInputString,
-    IoError(std::io::Error),
+    IoError(std::io::ErrorKind),
     #[cfg(not(windows))]
     InvalidRawFd,
 }
@@ -119,7 +119,7 @@ impl fmt::Display for Error {
             NoMorePackets => write!(f, "no more packets to read from the file"),
             InsufficientMemory => write!(f, "insufficient memory"),
             InvalidInputString => write!(f, "invalid input string (internal null)"),
-            IoError(ref e) => write!(f, "io error occurred: {}", e),
+            IoError(ref e) => write!(f, "io error occurred: {:?}", e),
             #[cfg(not(windows))]
             InvalidRawFd => write!(f, "invalid raw file descriptor provided"),
         }
@@ -166,6 +166,12 @@ impl From<std::str::Utf8Error> for Error {
 
 impl From<std::io::Error> for Error {
     fn from(obj: std::io::Error) -> Error {
+        IoError(obj.kind())
+    }
+}
+
+impl From<std::io::ErrorKind> for Error {
+    fn from(obj: std::io::ErrorKind) -> Error {
         IoError(obj)
     }
 }
@@ -672,13 +678,13 @@ impl<T: Activated + ? Sized> Capture<T> {
     #[cfg(feature = "tokio")]
     fn next_noblock<'a>(&'a mut self, fd: &mut tokio_core::reactor::PollEvented<tokio::SelectableFd>) -> Result<Packet<'a>, Error> {
         if let futures::Async::NotReady = fd.poll_read() {
-            return Err(IoError(io::Error::new(io::ErrorKind::WouldBlock, "would block")))
+            return Err(IoError(io::ErrorKind::WouldBlock))
         } else {
             return match self.next() {
                 Ok(p) => Ok(p),
                 Err(TimeoutExpired) => {
                     fd.need_read();
-                    Err(IoError(io::Error::new(io::ErrorKind::WouldBlock, "would block")))
+                    Err(IoError(io::ErrorKind::WouldBlock))
                 }
                 Err(e) => Err(e)
             }
