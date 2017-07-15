@@ -10,7 +10,7 @@ matrix:
     - {os: linux, rust: beta,
        env: FLAGS="--features tokio"}
     - {os: linux, rust: nightly,
-       env: FLAGS="--features clippy tokio"}
+       env: FLAGS="--features clippy,tokio"}
     - {os: osx, rust: stable,
        env: FLAGS="--features full" PCAP_LIBDIR=/usr/local/opt/libpcap/lib}
     - {os: osx, rust: beta,

@@ -14,7 +14,7 @@ build = "build.rs"
 
 [dependencies]
 libc = "0.2"
-clippy = { version = "0.0.134", optional = true }
+clippy = { version = "*", optional = true, git="https://github.com/kraai/rust-clippy", branch="fix-build" }
 mio = { version = "*", optional = true }
 tokio-core = { version = "*", optional = true }
 futures = { version = "*", optional = true }
