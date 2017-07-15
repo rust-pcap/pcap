@@ -23,6 +23,6 @@ before_install:
       brew install homebrew/dupes/libpcap;
     fi
 script:
-  - cargo build --features tokio -v $FLAGS
-  - cargo test --features tokio -v $FLAGS
-  - cargo doc --no-deps
+  - cargo build -v $FLAGS --features tokio
+  - cargo test  -v $FLAGS --features tokio
+  - cargo doc --no-deps --features tokio
