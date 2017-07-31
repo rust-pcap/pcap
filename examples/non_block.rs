@@ -67,9 +67,7 @@ fn main() {
     let handle = event_loop.handle();
 
     // get the default Device and make it non blocking
-    // let mut cap = pcap::Device::lookup().unwrap().open().unwrap();
-    let dev: pcap::Device = "wlp58s0".into();
-    let mut capture = dev.open().unwrap();
+    let mut capture = pcap::Device::lookup().unwrap().open().unwrap();
     capture.setnonblock(true).unwrap();
 
     // get the raw fd from the capture device
