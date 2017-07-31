@@ -15,6 +15,9 @@ build = "build.rs"
 [dependencies]
 libc = "0.2"
 clippy = { version = "0.0.134", optional = true }
+futures = "*"
+mio = "*"
+tokio-core = "*"
 
 [dev-dependencies]
 tempdir = "0.3"
@@ -54,3 +57,7 @@ path = "examples/savefile.rs"
 [[example]]
 name = "getstatistics"
 path = "examples/getstatistics.rs"
+
+[[example]]
+name = "non_block"
+path = "examples/non_block.rs"
