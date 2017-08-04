@@ -43,6 +43,15 @@ If `PCAP_LIBDIR` environment variable is set when building the crate, it will be
 
 ## Optional Features
 
+#### `tokio`
+
+Use the `tokio` feature to enable support for streamed packet captures.
+
+```toml
+[dependencies]
+pcap = { version = "0.7", features = ["tokio"] }
+```
+
 #### `pcap-savefile-append`
 
 To get access to the `Capture::savefile_append` function (which allows appending
@@ -51,7 +60,7 @@ feature flag. It requires at least libpcap version 1.7.2.
 
 ```toml
 [dependencies]
-pcap = { version = "0.6", features = ["pcap-savefile-append"] }
+pcap = { version = "0.7", features = ["pcap-savefile-append"] }
 ```
 
 #### `pcap-fopen-offline-precision`
@@ -63,7 +72,7 @@ version 1.5.0 or later.
 
 ```toml
 [dependencies]
-pcap = { version = "0.6", features = ["pcap-fopen-offline-precision"] }
+pcap = { version = "0.7", features = ["pcap-fopen-offline-precision"] }
 ```
 
 ## License
