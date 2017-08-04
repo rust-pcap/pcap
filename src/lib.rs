@@ -725,6 +725,25 @@ impl<T: Activated + ? Sized> Capture<T> {
                 .map(|_| Stat::new(stats.ps_recv, stats.ps_drop, stats.ps_ifdrop))
         }
     }
+
+    pub fn setnonblock(&self, non_blocking: bool) -> Result<(), Error> {
+        with_errbuf(|err| unsafe {
+
+            let nonblock: ::libc::c_int = if non_blocking { 1 } else { 0 };
+
+            if -1 == raw::pcap_setnonblock(*self.handle, nonblock, err) {
+                return Err(Error::new(err));
+            }
+            Ok(())
+        })
+    }
+
+    pub fn get_selectable_fd(&self) -> Result<RawFd, Error> {
+        unsafe {
+            let fd = raw::pcap_get_selectable_fd(*self.handle);
+            self.check_err(fd != -1).map(|_| fd as RawFd)
+        }
+    }
 }
 
 impl Capture<Active> {
