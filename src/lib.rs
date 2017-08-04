@@ -51,6 +51,12 @@
 #![cfg_attr(feature = "clippy", allow(redundant_closure_call))]
 
 extern crate libc;
+#[cfg(feature = "tokio")]
+extern crate mio;
+#[cfg(feature = "tokio")]
+extern crate futures;
+#[cfg(feature = "tokio")]
+extern crate tokio_core;
 
 use unique::Unique;
 
@@ -63,6 +69,8 @@ use std::slice;
 use std::ops::Deref;
 use std::mem;
 use std::fmt;
+#[cfg(feature = "tokio")]
+use std::io;
 #[cfg(not(windows))]
 use std::os::unix::io::{RawFd, AsRawFd};
 
@@ -70,9 +78,11 @@ use self::Error::*;
 
 mod raw;
 mod unique;
+#[cfg(feature = "tokio")]
+pub mod tokio;
 
 /// An error received from pcap
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, PartialEq)]
 pub enum Error {
     MalformedError(std::str::Utf8Error),
     InvalidString,
@@ -80,8 +90,10 @@ pub enum Error {
     InvalidLinktype,
     TimeoutExpired,
     NoMorePackets,
+    NonNonBlock,
     InsufficientMemory,
     InvalidInputString,
+    IoError(std::io::ErrorKind),
     #[cfg(not(windows))]
     InvalidRawFd,
 }
@@ -103,9 +115,11 @@ impl fmt::Display for Error {
             PcapError(ref e) => write!(f, "libpcap error: {}", e),
             InvalidLinktype => write!(f, "invalid or unknown linktype"),
             TimeoutExpired => write!(f, "timeout expired while reading from a live capture"),
+            NonNonBlock => write!(f, "must be in non-blocking mode to function"),
             NoMorePackets => write!(f, "no more packets to read from the file"),
             InsufficientMemory => write!(f, "insufficient memory"),
             InvalidInputString => write!(f, "invalid input string (internal null)"),
+            IoError(ref e) => write!(f, "io error occurred: {:?}", e),
             #[cfg(not(windows))]
             InvalidRawFd => write!(f, "invalid raw file descriptor provided"),
         }
@@ -120,9 +134,11 @@ impl std::error::Error for Error {
             InvalidString => "libpcap returned a null string",
             InvalidLinktype => "invalid or unknown linktype",
             TimeoutExpired => "timeout expired while reading from a live capture",
+            NonNonBlock => "must be in non-blocking mode to function",
             NoMorePackets => "no more packets to read from the file",
             InsufficientMemory => "insufficient memory",
             InvalidInputString => "invalid input string (internal null)",
+            IoError(..) => "io error occurred",
             #[cfg(not(windows))]
             InvalidRawFd => "invalid raw file descriptor provided",
         }
@@ -145,6 +161,18 @@ impl From<ffi::NulError> for Error {
 impl From<std::str::Utf8Error> for Error {
     fn from(obj: std::str::Utf8Error) -> Error {
         MalformedError(obj)
+    }
+}
+
+impl From<std::io::Error> for Error {
+    fn from(obj: std::io::Error) -> Error {
+        IoError(obj.kind())
+    }
+}
+
+impl From<std::io::ErrorKind> for Error {
+    fn from(obj: std::io::ErrorKind) -> Error {
+        IoError(obj)
     }
 }
 
@@ -280,7 +308,7 @@ impl fmt::Debug for PacketHeader {
 impl PartialEq for PacketHeader {
     fn eq(&self, rhs: &PacketHeader) -> bool {
         self.ts.tv_sec == rhs.ts.tv_sec && self.ts.tv_usec == rhs.ts.tv_usec &&
-        self.caplen == rhs.caplen && self.len == rhs.len
+            self.caplen == rhs.caplen && self.len == rhs.len
     }
 }
 
@@ -312,11 +340,14 @@ pub enum Precision {
 
 /// Phantom type representing an inactive capture handle.
 pub enum Inactive {}
+
 /// Phantom type representing an active capture handle.
 pub enum Active {}
+
 /// Phantom type representing an offline capture handle, from a pcap dump file.
 /// Implements `Activated` because it behaves nearly the same as a live handle.
 pub enum Offline {}
+
 /// Phantom type representing a dead capture handle.  This can be use to create
 /// new save files that are not generated from an active capture.
 /// Implements `Activated` because it behaves nearly the same as a live handle.
@@ -325,7 +356,9 @@ pub enum Dead {}
 pub unsafe trait Activated: State {}
 
 unsafe impl Activated for Active {}
+
 unsafe impl Activated for Offline {}
+
 unsafe impl Activated for Dead {}
 
 /// `Capture`s can be in different states at different times, and in these states they
@@ -335,8 +368,11 @@ unsafe impl Activated for Dead {}
 pub unsafe trait State {}
 
 unsafe impl State for Inactive {}
+
 unsafe impl State for Active {}
+
 unsafe impl State for Offline {}
+
 unsafe impl State for Dead {}
 
 /// This is a pcap capture handle which is an abstraction over the `pcap_t` provided by pcap.
@@ -370,15 +406,17 @@ unsafe impl State for Dead {}
 ///     println!("received packet! {:?}", packet);
 /// }
 /// ```
-pub struct Capture<T: State + ?Sized> {
+pub struct Capture<T: State + ? Sized> {
+    nonblock: bool,
     handle: Unique<raw::pcap_t>,
     _marker: PhantomData<T>,
 }
 
-impl<T: State + ?Sized> Capture<T> {
+impl<T: State + ? Sized> Capture<T> {
     fn new(handle: *mut raw::pcap_t) -> Capture<T> {
         unsafe {
             Capture {
+                nonblock: false,
                 handle: Unique::new(handle),
                 _marker: PhantomData,
             }
@@ -537,7 +575,7 @@ impl Capture<Inactive> {
 }
 
 ///# Activated captures include `Capture<Active>` and `Capture<Offline>`.
-impl<T: Activated + ?Sized> Capture<T> {
+impl<T: Activated + ? Sized> Capture<T> {
     /// List the datalink types that this captured device supports.
     pub fn list_datalinks(&self) -> Result<Vec<Linktype>, Error> {
         unsafe {
@@ -637,6 +675,33 @@ impl<T: Activated + ?Sized> Capture<T> {
         }
     }
 
+    #[cfg(feature = "tokio")]
+    fn next_noblock<'a>(&'a mut self, fd: &mut tokio_core::reactor::PollEvented<tokio::SelectableFd>) -> Result<Packet<'a>, Error> {
+        if let futures::Async::NotReady = fd.poll_read() {
+            return Err(IoError(io::ErrorKind::WouldBlock))
+        } else {
+            return match self.next() {
+                Ok(p) => Ok(p),
+                Err(TimeoutExpired) => {
+                    fd.need_read();
+                    Err(IoError(io::ErrorKind::WouldBlock))
+                }
+                Err(e) => Err(e)
+            }
+        }
+    }
+
+    #[cfg(feature = "tokio")]
+    pub fn stream<C: tokio::PacketCodec>(self, handle: &tokio_core::reactor::Handle, codec: C) -> Result<tokio::PacketStream<T, C>, Error> {
+        if !self.nonblock {
+            return Err(NonNonBlock);
+        }
+        unsafe {
+            let fd = raw::pcap_get_selectable_fd(*self.handle);
+            tokio::PacketStream::new(self, fd, handle, codec)
+        }
+    }
+
     /// Adds a filter to the capture using the given BPF program string. Internally
     /// this is compiled using `pcap_compile()`.
     ///
@@ -670,6 +735,16 @@ impl Capture<Active> {
             raw::pcap_sendpacket(*self.handle, buf.as_ptr() as _, buf.len() as _) == 0
         })
     }
+
+    pub fn setnonblock(mut self) -> Result<Capture<Active>, Error> {
+        with_errbuf(|err| unsafe {
+            if raw::pcap_setnonblock(*self.handle, 1, err) != 0 {
+                return Err(Error::new(err));
+            }
+            self.nonblock = true;
+            Ok(self)
+        })
+    }
 }
 
 impl Capture<Dead> {
@@ -697,7 +772,7 @@ impl AsRawFd for Capture<Active> {
     }
 }
 
-impl<T: State + ?Sized> Drop for Capture<T> {
+impl<T: State + ? Sized> Drop for Capture<T> {
     fn drop(&mut self) {
         unsafe { raw::pcap_close(*self.handle) }
     }
@@ -747,7 +822,7 @@ fn cstr_to_string(ptr: *const libc::c_char) -> Result<Option<String>, Error> {
     let string = if ptr.is_null() {
         None
     } else {
-        Some(unsafe {CStr::from_ptr(ptr as _)}.to_str()?.to_owned())
+        Some(unsafe { CStr::from_ptr(ptr as _) }.to_str()?.to_owned())
     };
     Ok(string)
 }
