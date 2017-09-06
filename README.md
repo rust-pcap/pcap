@@ -23,9 +23,8 @@ See examples for usage.
 ## Windows
 
 Install [WinPcap](http://www.winpcap.org/install/default.htm).
-
-Place wpcap.dll in your `C:\Rust\bin\rustlib\x86_64-pc-windows-gnu\lib\` directory on 64 bit
-or `C:\Rust\bin\rustlib\i686-pc-windows-gnu\lib\` on 32 bit.
+Download the WinPcap [Developer's Pack](https://www.winpcap.org/devel.htm).
+Add the `/Lib` or `/Lib/x64` folder to your `LIB` environment variable.
 
 ## Linux
 

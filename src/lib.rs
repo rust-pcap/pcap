@@ -57,6 +57,8 @@ extern crate mio;
 extern crate futures;
 #[cfg(feature = "tokio")]
 extern crate tokio_core;
+#[cfg(target_os = "windows")]
+extern crate winapi;
 
 use unique::Unique;
 
