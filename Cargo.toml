@@ -36,6 +36,9 @@ pcap-fopen-offline-precision = []
 # This is disabled by default, because it depends on a tokio and mio
 tokio = ["mio", "tokio-core", "futures"]
 
+# This feature enables clippy.
+clippy-lint = ["clippy"]
+
 # A shortcut to enable all features.
 full = ["pcap-savefile-append", "pcap-fopen-offline-precision", "tokio"]
 
