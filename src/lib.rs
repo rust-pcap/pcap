@@ -77,6 +77,8 @@ use std::os::unix::io::{RawFd, AsRawFd};
 use self::Error::*;
 
 mod raw;
+pub use raw::bpf_insn;
+
 mod unique;
 #[cfg(feature = "tokio")]
 pub mod tokio;
@@ -257,6 +259,17 @@ impl Linktype {
         cstr_to_string(unsafe { raw::pcap_datalink_val_to_description(self.0) })
             ?
             .ok_or(InvalidLinktype)
+    }
+
+    /// Gets the linktype from a name string
+    pub fn from_name(name: &str) -> Result<Linktype, Error> {
+        let name = CString::new(name)?;
+        let val = unsafe{raw::pcap_datalink_name_to_val(name.as_ptr())};
+        if val == -1 {
+            return Err(InvalidLinktype);
+        }
+
+        Ok(Linktype(val))
     }
 }
 
@@ -753,6 +766,28 @@ impl Capture<Dead> {
         unsafe { raw::pcap_open_dead(linktype.0, 65535).as_mut() }
             .map(|h| Capture::new(h))
             .ok_or(InsufficientMemory)
+    }
+
+    /// Compiles a pcap filter expression to a bpf program, which is just
+    /// a list of bpf instructions
+    pub fn compile_filter(&mut self, program: &str) -> Result<Vec<bpf_insn>, Error> {
+        let mut dst = vec![];
+        let program = CString::new(program)?;
+        unsafe {
+            let mut bpf_program: raw::bpf_program = mem::zeroed();
+            let ret = raw::pcap_compile(*self.handle, &mut bpf_program, program.as_ptr(), 1, 0xffffffff /* PCAP_NETMASK_UNKNOWN */);
+            self.check_err(ret != -1)?;
+
+            // The returned struct is a pointer to an array and a length;
+            // transmute that to a slice.
+            let a = slice::from_raw_parts(bpf_program.bf_insns, (bpf_program.bf_len as usize));
+            // Copy the values in to the vector so we can free the memory
+            // allocated by libpcap.
+            dst.extend_from_slice(a);
+            raw::pcap_freecode(&mut bpf_program);
+        };
+
+        Ok(dst)
     }
 }
 

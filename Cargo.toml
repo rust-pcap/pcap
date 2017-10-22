@@ -41,27 +41,3 @@ full = ["pcap-savefile-append", "pcap-fopen-offline-precision", "tokio"]
 
 [lib]
 name = "pcap"
-
-[[example]]
-name = "listenlocalhost"
-path = "examples/listenlocalhost.rs"
-
-[[example]]
-name = "getdevices"
-path = "examples/getdevices.rs"
-
-[[example]]
-name = "easylisten"
-path = "examples/easylisten.rs"
-
-[[example]]
-name = "savefile"
-path = "examples/savefile.rs"
-
-[[example]]
-name = "getstatistics"
-path = "examples/getstatistics.rs"
-
-[[example]]
-name = "streamlisten"
-path = "examples/streamlisten.rs"

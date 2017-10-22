@@ -273,3 +273,23 @@ fn test_error() {
     // Trying to get stats from offline capture should error.
     assert!(capture.stats().err().is_some());
 }
+
+
+#[test]
+fn test_compile_filter() {
+    let mut h = Capture::dead(Linktype(1)).unwrap();
+    let p = h.compile_filter("tcp port 80");
+    assert!(p.is_ok());
+    let p = p.unwrap();
+
+    assert_eq!(p.len(), 20);
+
+    // Serialize like nfbpf_compile
+    let def: String = p.iter()
+        .map(|&op| format!("{} {} {} {}", op.code, op.jt, op.jf, op.k))
+        .collect::<Vec<_>>()
+        .join(",");
+
+    let expected = "40 0 0 12,21 0 6 34525,48 0 0 20,21 0 15 6,40 0 0 54,21 12 0 80,40 0 0 56,21 10 11 80,21 0 10 2048,48 0 0 23,21 0 8 6,40 0 0 20,69 6 0 8191,177 0 0 14,72 0 0 14,21 2 0 80,72 0 0 16,21 0 1 80,6 0 0 65535,6 0 0 0";
+    assert_eq!(def, expected);
+}
