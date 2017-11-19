@@ -750,7 +750,7 @@ impl Capture<Active> {
 impl Capture<Dead> {
     /// Creates a "fake" capture handle for the given link type.
     pub fn dead(linktype: Linktype) -> Result<Capture<Dead>, Error> {
-        unsafe { raw::pcap_open_dead(linktype.0, 65535).as_mut() }
+        unsafe { raw::pcap_open_dead(linktype.0, 65_535).as_mut() }
             .map(|h| Capture::new(h))
             .ok_or(InsufficientMemory)
     }

@@ -60,7 +60,7 @@ impl<'a, T: Activated + ? Sized, C: PacketCodec> futures::Stream for PacketStrea
             Err(Error::IoError(ref e)) if *e == ::std::io::ErrorKind::WouldBlock => {
                 return Ok(futures::Async::NotReady)
             }
-            Err(e) => return Err(e.into())
+            Err(e) => return Err(e)
         };
         let frame = self.codec.decode(p)?;
         Ok(futures::Async::Ready(Some(frame)))
