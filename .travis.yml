@@ -1,28 +1,31 @@
+os:
+  - linux
+  - osx
 language: rust
+cache: cargo
+rust:
+  - stable
+  - beta
+  - nightly
+dist: trusty
 sudo: false
 addons:
   apt:
-    packages: [libpcap0.8, libpcap0.8-dev]
-matrix:
-  include:
-    - {os: linux, rust: stable,
-       env: FLAGS="--features tokio"}
-    - {os: linux, rust: beta,
-       env: FLAGS="--features tokio"}
-    - {os: linux, rust: nightly,
-       env: FLAGS="--features clippy,tokio"}
-    - {os: osx, rust: stable,
-       env: FLAGS="--features full" PCAP_LIBDIR=/usr/local/opt/libpcap/lib}
-    - {os: osx, rust: beta,
-       env: FLAGS="--features full" PCAP_LIBDIR=/usr/local/opt/libpcap/lib}
-    - {os: osx, rust: nightly,
-       env: FLAGS="--all-features" PCAP_LIBDIR=/usr/local/opt/libpcap/lib}
+    packages:
+      - libpcap-dev
 before_install:
-  - if [ `uname` = "Darwin" ]; then
+  - if [ "$TRAVIS_OS_NAME" = osx ]; then
       brew update >/dev/null;
-      brew install homebrew/dupes/libpcap;
+      brew install libpcap;
     fi
 script:
-  - cargo build -v $FLAGS 
-  - cargo test  -v $FLAGS
-  - cargo doc --no-deps
+  - FEATURES=tokio,pcap-fopen-offline-precision;
+  - if [ "$TRAVIS_OS_NAME" = osx ]; then
+      FEATURES=full;
+      export PCAP_LIBDIR=$(brew --prefix libpcap)/lib;
+    fi
+  - if [ "$TRAVIS_RUST_VERSION" = nightly ]; then
+      FEATURES+=,clippy;
+    fi
+  - cargo test --features "$FEATURES"
+  - cargo doc  --features "$FEATURES" --no-deps
