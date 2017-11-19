@@ -705,7 +705,7 @@ impl<T: Activated + ? Sized> Capture<T> {
     /// Adds a filter to the capture using the given BPF program string. Internally
     /// this is compiled using `pcap_compile()`.
     ///
-    /// See http://biot.com/capstats/bpf.html for more information about this syntax.
+    /// See <http://biot.com/capstats/bpf.html> for more information about this syntax.
     pub fn filter(&mut self, program: &str) -> Result<(), Error> {
         let program = CString::new(program)?;
         unsafe {
