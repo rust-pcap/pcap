@@ -12,7 +12,10 @@
 //! use pcap::Device;
 //!
 //! fn main() {
-//!     let mut cap = Device::lookup().unwrap().open().unwrap();
+//!     let mut cap = Device::lookup()
+//!         .unwrap()
+//!         .open()
+//!         .unwrap();
 //!
 //!     while let Ok(packet) = cap.next() {
 //!         println!("received packet! {:?}", packet);
@@ -38,6 +41,7 @@
 //!     let mut cap = Capture::from_device(main_device).unwrap()
 //!                       .promisc(true)
 //!                       .snaplen(5000)
+//!                       .timeout(5000)
 //!                       .open().unwrap();
 //!
 //!     while let Ok(packet) = cap.next() {
@@ -45,7 +49,6 @@
 //!     }
 //! }
 //! ```
-
 #![cfg_attr(feature = "clippy", feature(plugin))]
 #![cfg_attr(feature = "clippy", plugin(clippy))]
 #![cfg_attr(feature = "clippy", allow(redundant_closure_call))]
@@ -522,8 +525,10 @@ impl Capture<Inactive> {
         }
     }
 
-    /// Set the read timeout for the Capture. By default, this is 0, so it will block
-    /// indefinitely.
+    /// This is a packet-length buffer timeout, meaning that that libpcap will return
+    /// the packet buffer *within* a specified time.
+    /// 
+    /// The default value is 0, which will block indefinitely.
     pub fn timeout(self, ms: i32) -> Capture<Inactive> {
         unsafe { raw::pcap_set_timeout(*self.handle, ms) };
         self
