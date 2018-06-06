@@ -838,5 +838,19 @@ fn with_errbuf<T, F>(func: F) -> Result<T, Error>
 #[test]
 fn test_struct_size() {
     use std::mem::size_of;
-    assert_eq!(size_of::<PacketHeader>(), size_of::<raw::pcap_pkthdr>());
+
+    let rust_size = size_of::<PacketHeader>();
+    let c_size = size_of::<raw::pcap_pkthdr>();
+
+    // https://opensource.apple.com/source/libpcap/libpcap-42/libpcap/version.h.auto.html
+    let is_apple = unsafe {
+        CStr::from_ptr(raw::pcap_lib_version())
+    }.to_string_lossy().contains("Apple");
+
+    assert_eq!(rust_size, if is_apple {
+        // https://opensource.apple.com/source/libpcap/libpcap-29/libpcap/pcap/pcap.h.auto.html
+        c_size - 256
+    } else {
+        c_size
+    });
 }
