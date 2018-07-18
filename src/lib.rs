@@ -84,17 +84,28 @@ pub mod tokio;
 /// An error received from pcap
 #[derive(Debug, PartialEq)]
 pub enum Error {
+    /// The underlying library returned invalid UTF-8
     MalformedError(std::str::Utf8Error),
+    /// The underlying library returned a null string
     InvalidString,
+    /// The unerlying library returned an error
     PcapError(String),
+    /// The linktype was invalid or unknown
     InvalidLinktype,
+    /// The timeout expired while reading from a live capture
     TimeoutExpired,
+    /// No more packets to read from the file
     NoMorePackets,
+    /// Must be in non-blocking mode to function
     NonNonBlock,
+    /// There is not sufficent memory to create a dead capture
     InsufficientMemory,
+    /// An invalid input string (internal null)
     InvalidInputString,
+    /// An IO error occurred
     IoError(std::io::ErrorKind),
     #[cfg(not(windows))]
+    /// An invalid raw file descriptor was provided
     InvalidRawFd,
 }
 
@@ -179,7 +190,9 @@ impl From<std::io::ErrorKind> for Error {
 #[derive(Debug)]
 /// A network device name and (potentially) pcap's description of it.
 pub struct Device {
+    /// The name of the interface
     pub name: String,
+    /// A textual description of the interface, if available
     pub desc: Option<String>,
 }
 
@@ -263,7 +276,10 @@ impl Linktype {
 /// Represents a packet returned from pcap.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Packet<'a> {
+    /// The packet header provided by pcap, including the timeval, captured length, and packet
+    /// length
     pub header: &'a PacketHeader,
+    /// The captured packet data
     pub data: &'a [u8],
 }
 
@@ -289,8 +305,13 @@ impl<'b> Deref for Packet<'b> {
 #[derive(Copy, Clone)]
 /// Represents a packet header provided by pcap, including the timeval, caplen and len.
 pub struct PacketHeader {
+    /// The time when the packet was captured
     pub ts: libc::timeval,
+    /// The number of bytes of the packet that are available from the capture
     pub caplen: u32,
+    /// The length of the packet, in bytes (which might be more than the number of bytes available
+    /// from the capture, if the length of the packet is larger than the maximum number of bytes to
+    /// capture)
     pub len: u32,
 }
 
@@ -315,9 +336,14 @@ impl PartialEq for PacketHeader {
 impl Eq for PacketHeader {}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+/// Packet statistics for a capture
 pub struct Stat {
+    /// Number of packets received
     pub received: u32,
+    /// Number of packets dropped because there was no room in the operating system's buffer when
+    /// they arrived, because packets weren't being read fast enough
     pub dropped: u32,
+    /// Number of packets dropped by the network interface or its driver
     pub if_dropped: u32,
 }
 
@@ -333,8 +359,14 @@ impl Stat {
 
 #[repr(u32)]
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
+/// Timestamp resolution types
+///
+/// Not all systems and interfaces will necessarily support all of these resolutions when doing
+/// live captures; all of them can be requested when reading a safefile.
 pub enum Precision {
+    /// Use timestamps with microsecond precision. This is the default.
     Micro = 0,
+    /// Use timestamps with nanosecond precision.
     Nano = 1,
 }
 
@@ -353,6 +385,10 @@ pub enum Offline {}
 /// Implements `Activated` because it behaves nearly the same as a live handle.
 pub enum Dead {}
 
+/// `Capture`s can be in different states at different times, and in these states they
+/// may or may not have particular capabilities. This trait is implemented by phantom
+/// types which allows us to punt these invariants to the type system to avoid runtime
+/// errors.
 pub unsafe trait Activated: State {}
 
 unsafe impl Activated for Active {}
@@ -485,22 +521,60 @@ impl Capture<Offline> {
 
 #[repr(i32)]
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
+/// Timestamp types
+///
+/// Not all systems and interfaces will necessarily support all of these.
+///
+/// Note that time stamps synchronized with the system clock can go backwards, as the system clock
+/// can go backwards.  If a clock is not in sync with the system clock, that could be because the
+/// system clock isn't keeping accurate time, because the other clock isn't keeping accurate time,
+/// or both.
+///
+/// Note that host-provided time stamps generally correspond to the time when the time-stamping
+/// code sees the packet; this could be some unknown amount of time after the first or last bit of
+/// the packet is received by the network adapter, due to batching of interrupts for packet
+/// arrival, queueing delays, etc..
 pub enum TimestampType {
+    /// Timestamps are provided by the host machine, rather than by the capture device.
+    ///
+    /// The characteristics of the timestamp are unknown.
     Host = 0,
+    /// A timestamp provided by the host machine that is low precision but relatively cheap to
+    /// fetch.
+    ///
+    /// This is normally done using the system clock, so it's normally synchornized with times
+    /// you'd fetch from system calls.
     HostLowPrec = 1,
+    /// A timestamp provided by the host machine that is high precision. It might be more expensive
+    /// to fetch.
+    ///
+    /// The timestamp might or might not be synchronized with the system clock, and might have
+    /// problems with time stamps for packets received on different CPUs, depending on the
+    /// platform.
     HostHighPrec = 2,
+    /// The timestamp is a high-precision time stamp supplied by the capture device.
+    ///
+    /// The timestamp is synchronized with the system clock.
     Adapter = 3,
+    /// The timestamp is a high-precision time stamp supplied by the capture device.
+    ///
+    /// The timestamp is not synchronized with the system clock.
     AdapterUnsynced = 4,
 }
 
 #[deprecated(note = "Renamed to TimestampType")]
+/// An old name for `TimestampType`, kept around for backward-compatibility.
 pub type TstampType = TimestampType;
 
 #[repr(u32)]
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
+/// The direction of packets to be captured. Use with `Capture::direction`.
 pub enum Direction {
+    /// Capture packets received by or sent by the device. This is the default.
     InOut = raw::PCAP_D_INOUT,
+    /// Only capture packets received by the device.
     In = raw::PCAP_D_IN,
+    /// Only capture packets sent by the device.
     Out = raw::PCAP_D_OUT,
 }
 
@@ -718,6 +792,11 @@ impl<T: Activated + ? Sized> Capture<T> {
         }
     }
 
+    /// Get capture statistics about this capture. The values represent packet statistics from the
+    /// start of the run to the time of the call.
+    ///
+    /// See https://www.tcpdump.org/manpages/pcap_stats.3pcap.html for per-platform caveats about
+    /// how packet statistics are calculated.
     pub fn stats(&mut self) -> Result<Stat, Error> {
         unsafe {
             let mut stats: raw::pcap_stat = mem::zeroed();
@@ -736,6 +815,8 @@ impl Capture<Active> {
         })
     }
 
+    /// Set the capture to be non-blocking. When this is set, next() may return an error indicating
+    /// that there is no packet available to be read.
     pub fn setnonblock(mut self) -> Result<Capture<Active>, Error> {
         with_errbuf(|err| unsafe {
             if raw::pcap_setnonblock(*self.handle, 1, err) != 0 {
@@ -790,6 +871,7 @@ pub struct Savefile {
 }
 
 impl Savefile {
+    /// Write a packet to a capture file
     pub fn write(&mut self, packet: &Packet) {
         unsafe {
             raw::pcap_dump(*self.handle as _,
@@ -812,6 +894,7 @@ impl Drop for Savefile {
 }
 
 #[cfg(not(windows))]
+/// Open a raw file descriptor.
 pub fn open_raw_fd(fd: RawFd, mode: u8) -> Result<*mut libc::FILE, Error> {
     let mode = vec![mode, 0];
     unsafe { libc::fdopen(fd, mode.as_ptr() as _).as_mut() }.map(|f| f as _).ok_or(InvalidRawFd)
