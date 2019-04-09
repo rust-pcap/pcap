@@ -36,6 +36,9 @@ pcap-fopen-offline-precision = []
 # This is disabled by default, because it depends on a tokio and mio
 tokio = ["mio", "tokio-core", "futures"]
 
+# This feature enables access to futures.
+futures-feature = ["futures"]
+
 # A shortcut to enable all features.
 full = ["pcap-savefile-append", "pcap-fopen-offline-precision", "tokio"]
 
@@ -65,3 +68,4 @@ path = "examples/getstatistics.rs"
 [[example]]
 name = "streamlisten"
 path = "examples/streamlisten.rs"
+required-features = ["futures-feature"]
