@@ -20,7 +20,7 @@ matrix:
 before_install:
   - if [ `uname` = "Darwin" ]; then
       brew update >/dev/null;
-      brew install homebrew/dupes/libpcap;
+      brew install libpcap;
     fi
 script:
   - cargo build -v $FLAGS 
