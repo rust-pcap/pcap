@@ -3,6 +3,7 @@
 name = "pcap"
 version = "0.7.0"
 authors = ["Sean Bowe <ewillbefull@gmail.com>"]
+edition = "2018"
 description = "A packet capture API around pcap/wpcap"
 keywords = ["pcap", "packet", "sniffing"]
 readme = "README.md"
@@ -21,6 +22,7 @@ futures = { version = "0.3", optional = true }
 
 [dev-dependencies]
 tempdir = "0.3"
+tokio = { version = "0.2", features = ["rt-core"] }
 
 [features]
 # This feature enables access to the function Capture::savefile_append.
