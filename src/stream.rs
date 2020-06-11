@@ -10,7 +10,7 @@ use super::Packet;
 use super::Error;
 use super::State;
 use super::Capture;
-use tokio_core;
+use tokio;
 use futures;
 
 pub struct SelectableFd {
@@ -42,13 +42,13 @@ pub trait PacketCodec {
 
 pub struct PacketStream<T: State + ? Sized, C> {
     cap: Capture<T>,
-    fd: tokio_core::reactor::PollEvented<SelectableFd>,
+    fd: tokio::reactor::PollEvented<SelectableFd>,
     codec: C,
 }
 
 impl<T: Activated + ? Sized, C: PacketCodec> PacketStream<T, C> {
-    pub fn new(cap: Capture<T>, fd: RawFd, handle: &tokio_core::reactor::Handle, codec: C) -> Result<PacketStream<T, C>, Error> {
-        Ok(PacketStream { cap: cap, fd: tokio_core::reactor::PollEvented::new(SelectableFd { fd: fd }, handle)?, codec: codec })
+    pub fn new(cap: Capture<T>, fd: RawFd, handle: &tokio::reactor::Handle, codec: C) -> Result<PacketStream<T, C>, Error> {
+        Ok(PacketStream { cap: cap, fd: tokio::reactor::PollEvented::new(SelectableFd { fd: fd }, handle)?, codec: codec })
     }
 }
 
