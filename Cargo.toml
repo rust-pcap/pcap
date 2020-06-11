@@ -16,7 +16,7 @@ build = "build.rs"
 libc = "0.2"
 clippy = { version = "0.0.*", optional = true }
 mio = { version = "0.6", optional = true }
-tokio = { version = "0.2", optional = true }
+tokio = { version = "0.2", features = ["io-driver"], optional = true }
 futures = { version = "0.3", optional = true }
 
 [dev-dependencies]

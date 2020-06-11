@@ -672,14 +672,14 @@ impl<T: Activated + ? Sized> Capture<T> {
     }
 
     #[cfg(feature = "capture-stream")]
-    fn next_noblock<'a>(&'a mut self, fd: &mut tokio::reactor::PollEvented<stream::SelectableFd>) -> Result<Packet<'a>, Error> {
-        if let futures::task::Poll::Pending = fd.poll_read() {
+    fn next_noblock<'a>(&'a mut self, cx: &mut core::task::Context, fd: &mut tokio::io::PollEvented<stream::SelectableFd>) -> Result<Packet<'a>, Error> {
+        if let futures::task::Poll::Pending = fd.poll_read_ready(cx, mio::Ready::readable()) {
             return Err(IoError(io::ErrorKind::WouldBlock))
         } else {
             return match self.next() {
                 Ok(p) => Ok(p),
                 Err(TimeoutExpired) => {
-                    fd.need_read();
+                    fd.clear_read_ready(cx, mio::Ready::readable())?;
                     Err(IoError(io::ErrorKind::WouldBlock))
                 }
                 Err(e) => Err(e)
@@ -688,13 +688,13 @@ impl<T: Activated + ? Sized> Capture<T> {
     }
 
     #[cfg(feature = "capture-stream")]
-    pub fn stream<C: stream::PacketCodec>(self, handle: &tokio::reactor::Handle, codec: C) -> Result<stream::PacketStream<T, C>, Error> {
+    pub fn stream<C: stream::PacketCodec>(self, codec: C) -> Result<stream::PacketStream<T, C>, Error> {
         if !self.nonblock {
             return Err(NonNonBlock);
         }
         unsafe {
             let fd = raw::pcap_get_selectable_fd(*self.handle);
-            stream::PacketStream::new(self, fd, handle, codec)
+            stream::PacketStream::new(self, fd, codec)
         }
     }
 
