@@ -673,7 +673,7 @@ impl<T: Activated + ? Sized> Capture<T> {
 
     #[cfg(feature = "tokio")]
     fn next_noblock<'a>(&'a mut self, fd: &mut tokio_core::reactor::PollEvented<tokio::SelectableFd>) -> Result<Packet<'a>, Error> {
-        if let futures::Async::NotReady = fd.poll_read() {
+        if let futures::task::Poll::Pending = fd.poll_read() {
             return Err(IoError(io::ErrorKind::WouldBlock))
         } else {
             return match self.next() {
