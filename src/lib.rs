@@ -47,12 +47,12 @@
 //! ```
 
 extern crate libc;
-#[cfg(feature = "tokio")]
+#[cfg(feature = "capture-stream")]
 extern crate mio;
-#[cfg(feature = "tokio")]
+#[cfg(feature = "capture-stream")]
 extern crate futures;
-#[cfg(feature = "tokio")]
-extern crate tokio_core;
+#[cfg(feature = "capture-stream")]
+extern crate tokio;
 
 use unique::Unique;
 
@@ -65,7 +65,7 @@ use std::slice;
 use std::ops::Deref;
 use std::mem;
 use std::fmt;
-#[cfg(feature = "tokio")]
+#[cfg(feature = "capture-stream")]
 use std::io;
 #[cfg(not(windows))]
 use std::os::unix::io::{RawFd, AsRawFd};
@@ -74,8 +74,8 @@ use self::Error::*;
 
 mod raw;
 mod unique;
-#[cfg(feature = "tokio")]
-pub mod tokio;
+#[cfg(feature = "capture-stream")]
+pub mod stream;
 
 /// An error received from pcap
 #[derive(Debug, PartialEq)]
@@ -671,8 +671,8 @@ impl<T: Activated + ? Sized> Capture<T> {
         }
     }
 
-    #[cfg(feature = "tokio")]
-    fn next_noblock<'a>(&'a mut self, fd: &mut tokio_core::reactor::PollEvented<tokio::SelectableFd>) -> Result<Packet<'a>, Error> {
+    #[cfg(feature = "capture-stream")]
+    fn next_noblock<'a>(&'a mut self, fd: &mut tokio::reactor::PollEvented<stream::SelectableFd>) -> Result<Packet<'a>, Error> {
         if let futures::task::Poll::Pending = fd.poll_read() {
             return Err(IoError(io::ErrorKind::WouldBlock))
         } else {
@@ -687,14 +687,14 @@ impl<T: Activated + ? Sized> Capture<T> {
         }
     }
 
-    #[cfg(feature = "tokio")]
-    pub fn stream<C: tokio::PacketCodec>(self, handle: &tokio_core::reactor::Handle, codec: C) -> Result<tokio::PacketStream<T, C>, Error> {
+    #[cfg(feature = "capture-stream")]
+    pub fn stream<C: stream::PacketCodec>(self, handle: &tokio::reactor::Handle, codec: C) -> Result<stream::PacketStream<T, C>, Error> {
         if !self.nonblock {
             return Err(NonNonBlock);
         }
         unsafe {
             let fd = raw::pcap_get_selectable_fd(*self.handle);
-            tokio::PacketStream::new(self, fd, handle, codec)
+            stream::PacketStream::new(self, fd, handle, codec)
         }
     }
 
