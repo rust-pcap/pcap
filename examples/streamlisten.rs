@@ -1,39 +1,46 @@
-extern crate pcap;
 extern crate futures;
-extern crate tokio_core;
+extern crate pcap;
+extern crate tokio;
 
-use pcap::{Capture, Packet, Error, Device};
-use pcap::tokio::PacketCodec;
-use tokio_core::reactor::Core;
-use futures::stream::Stream;
+use futures::StreamExt;
+use pcap::stream::{PacketCodec, PacketStream};
+use pcap::{Active, Capture, Device, Error, Packet};
 
 pub struct SimpleDumpCodec;
 
-impl PacketCodec for SimpleDumpCodec{
+impl PacketCodec for SimpleDumpCodec {
     type Type = String;
 
     fn decode<'p>(&mut self, packet: Packet<'p>) -> Result<Self::Type, Error> {
         Ok(format!("{:?}", packet))
-
     }
 }
 
-fn ma1n() -> Result<(),Error> {
-    let mut core = Core::new().unwrap();
-    let handle = core.handle();
-    let cap = Capture::from_device(Device::lookup()?)?.open()?.setnonblock()?;
-    let s = cap.stream(&handle, SimpleDumpCodec{})?;
-    let done = s.for_each(move |s| {
-        println!("{:?}", s);
-        Ok(())
-    });
-    core.run(done).unwrap();
-    Ok(())
+fn new_stream() -> Result<PacketStream<Active, SimpleDumpCodec>, Error> {
+    let cap = Capture::from_device(Device::lookup()?)?
+        .open()?
+        .setnonblock()?;
+    cap.stream(SimpleDumpCodec {})
 }
 
 fn main() {
-    match ma1n() {
-        Ok(()) => (),
-        Err(e) => println!("{:?}", e),
-    }
+    let mut rt = tokio::runtime::Builder::new()
+        .enable_io()
+        .basic_scheduler()
+        .build()
+        .unwrap();
+
+    let stream = rt.enter(|| match new_stream() {
+        Ok(stream) => stream,
+        Err(e) => {
+            println!("{:?}", e);
+            std::process::exit(1);
+        }
+    });
+
+    let fut = stream.for_each(move |s| {
+        println!("{:?}", s);
+        futures::future::ready(())
+    });
+    rt.block_on(fut);
 }
