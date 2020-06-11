@@ -4,6 +4,7 @@ use mio::unix::EventedFd;
 use std::io;
 #[cfg(not(windows))]
 use std::os::unix::io::RawFd;
+use std::pin::Pin;
 use super::Activated;
 use super::Packet;
 use super::Error;
@@ -52,17 +53,16 @@ impl<T: Activated + ? Sized, C: PacketCodec> PacketStream<T, C> {
 }
 
 impl<'a, T: Activated + ? Sized, C: PacketCodec> futures::Stream for PacketStream<T, C> {
-    type Item = C::Type;
-    type Error = Error;
-    fn poll(&mut self) -> futures::Poll<Option<Self::Item>, Self::Error> {
+    type Item = Result<C::Type, Error>;
+    fn poll_next(self: Pin<&mut Self>, cx: &mut futures::task::Context) -> futures::task::Poll<Option<Self::Item>> {
         let p = match self.cap.next_noblock(&mut self.fd) {
             Ok(t) => t,
             Err(Error::IoError(ref e)) if *e == ::std::io::ErrorKind::WouldBlock => {
-                return Ok(futures::Async::NotReady)
+                return futures::task::Poll::Pending;
             }
-            Err(e) => return Err(e.into())
+            Err(e) => return futures::task::Poll::Ready(Some(Err(e.into()))),
         };
-        let frame = self.codec.decode(p)?;
-        Ok(futures::Async::Ready(Some(frame)))
+        let frame_result = self.codec.decode(p);
+        futures::task::Poll::Ready(Some(frame_result))
     }
 }
