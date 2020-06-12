@@ -435,6 +435,7 @@ impl Capture<Offline> {
 
     /// Opens an offline capture handle from a pcap dump file, given a path.
     /// Takes an additional precision argument specifying the time stamp precision desired.
+    #[cfg(pcap_1_5_0)]
     pub fn from_file_with_precision<P: AsRef<Path>>(path: P, precision: Precision) -> Result<Capture<Offline>, Error> {
         Capture::new_raw(path.as_ref().to_str(), |path, err| unsafe {
             raw::pcap_open_offline_with_tstamp_precision(path, precision as _, err)
@@ -452,7 +453,7 @@ impl Capture<Offline> {
 
     /// Opens an offline capture handle from a pcap dump file, given a file descriptor.
     /// Takes an additional precision argument specifying the time stamp precision desired.
-    #[cfg(all(not(windows), feature = "pcap-fopen-offline-precision"))]
+    #[cfg(pcap_1_5_0)]
     pub fn from_raw_fd_with_precision(fd: RawFd, precision: Precision) -> Result<Capture<Offline>, Error> {
         open_raw_fd(fd, b'r')
             .and_then(|file| Capture::new_raw(None, |_, err| unsafe {
@@ -524,7 +525,7 @@ impl Capture<Inactive> {
     }
 
     /// Set the time stamp type to be used by a capture device.
-    #[cfg(not(windows))]
+    #[cfg(pcap_1_2_1)]
     pub fn tstamp_type(self, tstamp_type: TimestampType) -> Capture<Inactive> {
         unsafe { raw::pcap_set_tstamp_type(*self.handle, tstamp_type as _) };
         self
@@ -552,7 +553,7 @@ impl Capture<Inactive> {
     }
 
     /// Set the time stamp precision returned in captures.
-    #[cfg(not(windows))]
+    #[cfg(pcap_1_5_0)]
     pub fn precision(self, precision: Precision) -> Capture<Inactive> {
         unsafe { raw::pcap_set_tstamp_precision(*self.handle, precision as _) };
         self
@@ -620,7 +621,7 @@ impl<T: Activated + ? Sized> Capture<T> {
     /// byte order as the host opening the file, and has the same time stamp precision,
     /// link-layer header type,  and  snapshot length as p, it will write new packets
     /// at the end of the file.
-    #[cfg(feature = "pcap-savefile-append")]
+    #[cfg(pcap_1_7_2)]
     pub fn savefile_append<P: AsRef<Path>>(&self, path: P) -> Result<Savefile, Error> {
         let name = CString::new(path.as_ref().to_str().unwrap())?;
         let handle = unsafe { raw::pcap_dump_open_append(*self.handle, name.as_ptr()) };
