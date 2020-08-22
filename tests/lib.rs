@@ -37,11 +37,11 @@ fn unify_activated() {
         loop {}
     }
 
-    fn maybe(a: bool) -> Capture<Activated> {
+    fn maybe(a: bool) -> Capture<dyn Activated> {
         if a { test1().into() } else { test2().into() }
     }
 
-    fn also_maybe(a: &mut Capture<Activated>) {
+    fn also_maybe(a: &mut Capture<dyn Activated>) {
         a.filter("whatever filter string, this won't be run anyway").unwrap();
     }
 }

@@ -144,7 +144,7 @@ impl std::error::Error for Error {
         }
     }
 
-    fn cause(&self) -> Option<&std::error::Error> {
+    fn cause(&self) -> Option<&dyn std::error::Error> {
         match *self {
             MalformedError(ref e) => Some(e),
             _ => None,
@@ -778,8 +778,8 @@ impl<T: State + ? Sized> Drop for Capture<T> {
     }
 }
 
-impl<T: Activated> From<Capture<T>> for Capture<Activated> {
-    fn from(cap: Capture<T>) -> Capture<Activated> {
+impl<T: Activated> From<Capture<T>> for Capture<dyn Activated> {
+    fn from(cap: Capture<T>) -> Capture<dyn Activated> {
         unsafe { mem::transmute(cap) }
     }
 }

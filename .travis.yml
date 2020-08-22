@@ -1,9 +1,10 @@
 language: rust
-sudo: false
+os: linux
+dist: bionic
 addons:
   apt:
     packages: [libpcap0.8, libpcap0.8-dev]
-matrix:
+jobs:
   include:
     - {os: linux, rust: stable,
        env: FLAGS="--features tokio"}
@@ -18,10 +19,13 @@ matrix:
     - {os: osx, rust: nightly,
        env: FLAGS="--all-features" PCAP_LIBDIR=/usr/local/opt/libpcap/lib}
 before_install:
-  - if [ `uname` = "Darwin" ]; then
-      brew update >/dev/null;
-      brew install homebrew/dupes/libpcap;
-    fi
+- |-
+    case $TRAVIS_OS_NAME in
+      osx)
+        brew update >/dev/null;
+        brew install libpcap;
+        ;;
+    esac
 script:
   - cargo build -v $FLAGS 
   - cargo test  -v $FLAGS
