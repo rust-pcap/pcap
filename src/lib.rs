@@ -46,10 +46,6 @@
 //! }
 //! ```
 
-#![cfg_attr(feature = "clippy", feature(plugin))]
-#![cfg_attr(feature = "clippy", plugin(clippy))]
-#![cfg_attr(feature = "clippy", allow(redundant_closure_call))]
-
 extern crate libc;
 #[cfg(feature = "tokio")]
 extern crate mio;
@@ -644,7 +640,7 @@ impl<T: Activated + ? Sized> Capture<T> {
     /// from. This buffer has a finite length, so if the buffer fills completely new
     /// packets will be discarded temporarily. This means that in realtime situations,
     /// you probably want to minimize the time between calls of this next() method.
-    #[cfg_attr(feature = "clippy", allow(should_implement_trait))]
+    #[allow(clippy::should_implement_trait)]
     pub fn next(&mut self) -> Result<Packet, Error> {
         unsafe {
             let mut header: *mut raw::pcap_pkthdr = ptr::null_mut();
