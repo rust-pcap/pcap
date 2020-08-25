@@ -43,13 +43,13 @@ If `PCAP_LIBDIR` environment variable is set when building the crate, it will be
 
 ## Optional Features
 
-#### `tokio`
+#### `capture-stream`
 
-Use the `tokio` feature to enable support for streamed packet captures.
+Use the `capture-stream` feature to enable support for streamed packet captures.
 
 ```toml
 [dependencies]
-pcap = { version = "0.7", features = ["tokio"] }
+pcap = { version = "0.7", features = ["capture-stream"] }
 ```
 
 #### `pcap-savefile-append`
