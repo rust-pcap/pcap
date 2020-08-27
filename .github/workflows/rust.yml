@@ -8,6 +8,7 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
+  LIB: 'c:\winpcap-dp\WpdPack\Lib\x64'
 
 jobs:
   build:
@@ -28,11 +29,21 @@ jobs:
         ls -l WpdPack/Lib/x64
         # echo "::set-env LIB=$LIB:/c/winpcap-dp/WpdPack/Lib/x64"
         popd
-    - name: Build
-      run: cargo build --verbose
-    - name: Run tests
-      shell: bash
-      run: env LIB='c:\winpcap-dp\WpdPack\Lib\x64' cargo test --verbose
+    - name: Build and Test (default)
+      run: |
+        cargo build --verbose
+        cargo test --verbose
+        cargo clean
+    - name: Build and Test (tokio)
+      run: |
+        cargo build --verbose --features tokio
+        cargo test --verbose --features tokio
+        cargo clean
+    - name: Build and Test (full)
+      run: |
+        cargo build --verbose --features full
+        cargo test --verbose --features full
+        cargo clean
     - name: Clean up
       shell: bash
       run: rm -r /c/winpcap-dp
