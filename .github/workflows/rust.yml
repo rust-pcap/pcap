@@ -16,7 +16,18 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+    - name: Install npcap sdk
+      shell: bash
+      run: |
+        mkdir $TEMP/whatever
+        curl -O https://nmap.org/npcap/dist/npcap-sdk-1.05.zip
+        7z x npcap-sdk-1.05.zip -o$TEMP/whatever
+        ls $TEMP/whatever/Lib/x64
     - name: Build
       run: cargo build --verbose
     - name: Run tests
-      run: cargo test --verbose
+      shell: bash
+      run: env LIB=$TEMP/whatever/Lib/x64/ cargo test --verbose
+    - name: Clean up
+      shell: bash
+      run: rm -r $TEMP/whatever
