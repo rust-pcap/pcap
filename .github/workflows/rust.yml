@@ -21,18 +21,18 @@ jobs:
     - name: Install WinPcap 4.1.2 Developer's Pack
       shell: bash
       run: |
-        mkdir $TEMP/winpcap-dp
-        pushd $TEMP/winpcap-dp
+        mkdir /c/winpcap-dp
+        pushd /c/winpcap-dp
         curl -O https://www.winpcap.org/install/bin/WpdPack_4_1_2.zip
         7z x WpdPack_4_1_2.zip -o.
         ls -l WpdPack/Lib/x64
-        # echo "::set-env LIB=$LIB:$TEMP/winpcap-dp/WpdPack/Lib/x64"
+        # echo "::set-env LIB=$LIB:/c/winpcap-dp/WpdPack/Lib/x64"
         popd
     - name: Build
       run: cargo build --verbose
     - name: Run tests
       shell: bash
-      run: env LIB=$TEMP/winpcap-dp/Lib/x64/ cargo test --verbose
+      run: env LIB='c:\winpcap-dp\WpdPack\Lib\x64' cargo test --verbose
     - name: Clean up
       shell: bash
-      run: rm -r $TEMP/winpcap-dp
+      run: rm -r /c/winpcap-dp
