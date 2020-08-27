@@ -16,21 +16,23 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - name: Install npcap sdk
+    - name: Install WinPcap 4.1.3
+      run: cinst -y winpcap --version 4.1.3.20161116
+    - name: Install WinPcap 4.1.2 Developer's Pack
       shell: bash
       run: |
-        mkdir $TEMP/npcap-sdk
-        pushd $TEMP/npcap-sdk
-        curl -O https://nmap.org/npcap/dist/npcap-sdk-1.05.zip
-        7z x npcap-sdk-1.05.zip -o.
-        ls -l $TEMP/npcap-sdk/Lib/x64
-        # echo "::set-env LIB=$LIB:$TEMP/npcap-sdk/Lib/x64"
+        mkdir $TEMP/winpcap-dp
+        pushd $TEMP/winpcap-dp
+        curl -O https://www.winpcap.org/install/bin/WpdPack_4_1_2.zip
+        7z x WpdPack_4_1_2.zip -o.
+        ls -l WpdPack/Lib/x64
+        # echo "::set-env LIB=$LIB:$TEMP/winpcap-dp/WpdPack/Lib/x64"
         popd
     - name: Build
       run: cargo build --verbose
     - name: Run tests
       shell: bash
-      run: env LIB=$TEMP/npcap-sdk/Lib/x64/ cargo test --verbose
+      run: env LIB=$TEMP/winpcap-dp/Lib/x64/ cargo test --verbose
     - name: Clean up
       shell: bash
-      run: rm -r $TEMP/npcap-sdk
+      run: rm -r $TEMP/winpcap-dp
