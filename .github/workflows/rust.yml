@@ -19,7 +19,7 @@ jobs:
       matrix:
         os: [windows-latest, ubuntu-latest, macos-latest]
         profile: ['', --release]
-        toolchain: [stable]
+        toolchain: [stable, beta, nightly]
         features: ['']
     runs-on: ${{ matrix.os }} 
 
