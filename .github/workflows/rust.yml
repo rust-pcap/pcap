@@ -1,0 +1,49 @@
+name: Rust
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+env:
+  CARGO_TERM_COLOR: always
+  LIB: 'c:\winpcap-dp\WpdPack\Lib\x64'
+
+jobs:
+  build:
+
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Install WinPcap 4.1.3
+      run: cinst -y winpcap --version 4.1.3.20161116
+    - name: Install WinPcap 4.1.2 Developer's Pack
+      shell: bash
+      run: |
+        mkdir /c/winpcap-dp
+        pushd /c/winpcap-dp
+        curl -O https://www.winpcap.org/install/bin/WpdPack_4_1_2.zip
+        7z x WpdPack_4_1_2.zip -o.
+        ls -l WpdPack/Lib/x64
+        # echo "::set-env LIB=$LIB:/c/winpcap-dp/WpdPack/Lib/x64"
+        popd
+    - name: Build and Test (default)
+      run: |
+        cargo build --verbose
+        cargo test --verbose
+        cargo clean
+    - name: Build and Test (tokio)
+      run: |
+        cargo build --verbose --features tokio
+        cargo test --verbose --features tokio
+        cargo clean
+    - name: Build and Test (full)
+      run: |
+        cargo build --verbose --features full
+        cargo test --verbose --features full
+        cargo clean
+    - name: Clean up
+      shell: bash
+      run: rm -r /c/winpcap-dp

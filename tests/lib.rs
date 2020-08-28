@@ -9,6 +9,16 @@ use tempdir::TempDir;
 
 use pcap::{Active, Activated, Offline, Capture, Packet, PacketHeader, Linktype, Precision, Error};
 
+#[cfg(not(windows))]
+type time_t = libc::time_t;
+#[cfg(windows)]
+type time_t = libc::c_long;
+
+#[cfg(not(windows))]
+type suseconds_t = libc::suseconds_t;
+#[cfg(windows)]
+type suseconds_t = libc::c_long;
+
 #[test]
 fn read_packet_with_full_data() {
     let mut capture = capture_from_test_file("packet_snaplen_65535.pcap");
@@ -61,8 +71,8 @@ impl Packets {
     }
 
     pub fn push(&mut self,
-                tv_sec: libc::time_t,
-                tv_usec: libc::suseconds_t,
+                tv_sec: time_t,
+                tv_usec: suseconds_t,
                 caplen: u32,
                 len: u32,
                 data: &[u8]) {
@@ -163,8 +173,8 @@ fn test_raw_fd_api() {
     let data: Vec<u8> = (0..191).cycle().take(N_PACKETS * 1024).collect();
     let mut packets = Packets::new();
     for i in 0..N_PACKETS {
-        packets.push(1460408319 + i as libc::time_t,
-                     1000 + i as libc::suseconds_t,
+        packets.push(1460408319 + i as time_t,
+                     1000 + i as suseconds_t,
                      1024,
                      1024,
                      &data[i * 1024..(i + 1) * 1024]);
