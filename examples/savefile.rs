@@ -1,5 +1,3 @@
-extern crate pcap;
-
 use pcap::*;
 
 fn main() {

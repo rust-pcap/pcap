@@ -20,6 +20,8 @@ See examples for usage.
 
 # Building
 
+As of 0.8.0 This crate uses Rust 2018 and thus requires a compiler version >= 1.31.
+
 ## Windows
 
 Install [WinPcap](http://www.winpcap.org/install/default.htm).
