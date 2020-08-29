@@ -46,14 +46,6 @@
 //! }
 //! ```
 
-extern crate libc;
-#[cfg(feature = "capture-stream")]
-extern crate mio;
-#[cfg(feature = "capture-stream")]
-extern crate futures;
-#[cfg(feature = "capture-stream")]
-extern crate tokio;
-
 use unique::Unique;
 
 use std::borrow::Borrow;

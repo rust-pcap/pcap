@@ -1,5 +1,3 @@
-extern crate pcap;
-
 fn main() {
     // listen on the device named "any", which is only available on Linux. This is only for
     // demonstration purposes.

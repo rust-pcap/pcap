@@ -1,7 +1,3 @@
-extern crate futures;
-extern crate pcap;
-extern crate tokio;
-
 use futures::StreamExt;
 use pcap::stream::{PacketCodec, PacketStream};
 use pcap::{Active, Capture, Device, Error, Packet};

@@ -1,5 +1,3 @@
-extern crate pcap;
-
 fn main() {
     // get the default Device
     let mut cap = pcap::Device::lookup().unwrap().open().unwrap();
