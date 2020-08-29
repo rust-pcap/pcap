@@ -173,10 +173,7 @@ pub struct Device {
 
 impl Device {
     fn new(name: String, desc: Option<String>) -> Device {
-        Device {
-            name: name,
-            desc: desc,
-        }
+        Device { name, desc }
     }
 
     /// Opens a `Capture<Active>` on this device.
@@ -258,10 +255,7 @@ pub struct Packet<'a> {
 impl<'a> Packet<'a> {
     #[doc(hidden)]
     pub fn new(header: &'a PacketHeader, data: &'a [u8]) -> Packet<'a> {
-        Packet {
-            header: header,
-            data: data,
-        }
+        Packet { header, data }
     }
 }
 
@@ -311,11 +305,7 @@ pub struct Stat {
 
 impl Stat {
     fn new(received: u32, dropped: u32, if_dropped: u32) -> Stat {
-        Stat {
-            received: received,
-            dropped: dropped,
-            if_dropped: if_dropped,
-        }
+        Stat { received, dropped, if_dropped }
     }
 }
 
@@ -412,7 +402,7 @@ impl<T: State + ? Sized> Capture<T> {
     }
 
     fn new_raw<F>(path: Option<&str>, func: F) -> Result<Capture<T>, Error>
-        where F: FnOnce(*const libc::c_char, *mut libc::c_char) -> *mut raw::pcap_t
+    where F: FnOnce(*const libc::c_char, *mut libc::c_char) -> *mut raw::pcap_t
     {
         with_errbuf(|err| {
             let handle = match path {
@@ -642,8 +632,8 @@ impl<T: Activated + ? Sized> Capture<T> {
             match retcode {
                 i if i >= 1 => {
                     // packet was read without issue
-                    Ok(Packet::new(mem::transmute(&*header),
-                                   slice::from_raw_parts(packet, (&*header).caplen as _)))
+                    Ok(Packet::new(&*(&*header as *const raw::pcap_pkthdr as *const PacketHeader),
+                                   slice::from_raw_parts(packet, (*header).caplen as _)))
                 }
                 0 => {
                     // packets are being read from a live capture and the
@@ -666,9 +656,9 @@ impl<T: Activated + ? Sized> Capture<T> {
     #[cfg(feature = "capture-stream")]
     fn next_noblock<'a>(&'a mut self, cx: &mut core::task::Context, fd: &mut tokio::io::PollEvented<stream::SelectableFd>) -> Result<Packet<'a>, Error> {
         if let futures::task::Poll::Pending = fd.poll_read_ready(cx, mio::Ready::readable()) {
-            return Err(IoError(io::ErrorKind::WouldBlock))
+            Err(IoError(io::ErrorKind::WouldBlock))
         } else {
-            return match self.next() {
+            match self.next() {
                 Ok(p) => Ok(p),
                 Err(TimeoutExpired) => {
                     fd.clear_read_ready(cx, mio::Ready::readable())?;
@@ -739,7 +729,7 @@ impl Capture<Dead> {
     /// Creates a "fake" capture handle for the given link type.
     pub fn dead(linktype: Linktype) -> Result<Capture<Dead>, Error> {
         unsafe { raw::pcap_open_dead(linktype.0, 65535).as_mut() }
-            .map(|h| Capture::new(h))
+        .map(|h| Capture::new(h))
             .ok_or(InsufficientMemory)
     }
 }
@@ -781,7 +771,7 @@ impl Savefile {
     pub fn write(&mut self, packet: &Packet) {
         unsafe {
             raw::pcap_dump(*self.handle as _,
-                           mem::transmute::<_, &raw::pcap_pkthdr>(packet.header),
+                           &*(packet.header as *const PacketHeader as *const raw::pcap_pkthdr),
                            packet.data.as_ptr());
         }
     }
@@ -817,7 +807,7 @@ fn cstr_to_string(ptr: *const libc::c_char) -> Result<Option<String>, Error> {
 
 #[inline]
 fn with_errbuf<T, F>(func: F) -> Result<T, Error>
-    where F: FnOnce(*mut libc::c_char) -> Result<T, Error>
+where F: FnOnce(*mut libc::c_char) -> Result<T, Error>
 {
     let mut errbuf = [0i8; 256];
     func(errbuf.as_mut_ptr() as _)

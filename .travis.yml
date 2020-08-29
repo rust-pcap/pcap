@@ -27,5 +27,5 @@ before_script:
 script:
   - cargo build -v $FLAGS
   - cargo test  -v $FLAGS
-  - cargo clippy
+  - cargo clippy -v $FLAGS -- -D warnings
   - cargo doc --no-deps

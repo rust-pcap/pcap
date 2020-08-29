@@ -47,3 +47,5 @@ jobs:
           override: true
       - name: cargo test
         run: cargo test ${{ matrix.profile }} ${{ matrix.features }}
+      - name: cargo clippy
+        run: cargo clippy ${{ matrix.profile }} ${{ matrix.features }} -- -D warnings

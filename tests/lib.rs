@@ -1,18 +1,25 @@
+#[cfg(not(windows))]
 use std::io;
 use std::ops::Add;
 use std::path::Path;
 use tempdir::TempDir;
 
-use pcap::{Active, Activated, Offline, Capture, Packet, PacketHeader, Linktype, Precision, Error};
+use pcap::{Active, Activated, Offline, Capture, Packet, PacketHeader, Linktype};
+#[cfg(not(windows))]
+use pcap::{Precision, Error};
 
 #[cfg(not(windows))]
+#[allow(non_camel_case_types)]
 type time_t = libc::time_t;
 #[cfg(windows)]
+#[allow(non_camel_case_types)]
 type time_t = libc::c_long;
 
 #[cfg(not(windows))]
+#[allow(non_camel_case_types)]
 type suseconds_t = libc::suseconds_t;
 #[cfg(windows)]
+#[allow(non_camel_case_types)]
 type suseconds_t = libc::c_long;
 
 #[test]
