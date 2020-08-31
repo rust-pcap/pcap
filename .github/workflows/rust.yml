@@ -18,8 +18,8 @@ jobs:
     strategy:
       matrix:
         os: [windows-latest, ubuntu-latest, macos-latest]
-        profile: ['', --release]
         toolchain: [stable]
+        profile: ['', --release]
         features: ['', '--features full']
         exclude:
           - os: windows-latest
@@ -27,12 +27,12 @@ jobs:
         include:
           # beta and nightly checks are performed on ubuntu only.
           - os: ubuntu-latest
-            profile: --release
             toolchain: beta
+            profile: --release
             features: --features full 
           - os: ubuntu-latest
-            profile: ''
             toolchain: nightly
+            profile: ''
             features: --features full 
     runs-on: ${{ matrix.os }} 
 
