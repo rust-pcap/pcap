@@ -19,13 +19,21 @@ jobs:
       matrix:
         os: [windows-latest, ubuntu-latest, macos-latest]
         profile: ['', --release]
-        toolchain: [stable, beta, nightly]
-        features: ['', '--features capture-stream', '--features full']
+        toolchain: [stable]
+        features: ['', '--features full']
         exclude:
           - os: windows-latest
-            features: '--features capture-stream'
-          - os: windows-latest
             features: '--features full'
+        include:
+          # beta and nightly checks are performed on ubuntu only.
+          - os: ubuntu-latest
+            profile: --release
+            toolchain: beta
+            features: --features full 
+          - os: ubuntu-latest
+            profile: ''
+            toolchain: nightly
+            features: --features full 
     runs-on: ${{ matrix.os }} 
 
     steps:
