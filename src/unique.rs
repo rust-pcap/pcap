@@ -1,7 +1,6 @@
 #![allow(dead_code)]
 
 use std::fmt;
-use std::mem;
 use std::marker::PhantomData;
 use std::ops::Deref;
 
@@ -33,7 +32,7 @@ impl<T: ?Sized> Deref for Unique<T> {
 
     #[inline]
     fn deref(&self) -> &*mut T {
-        unsafe { mem::transmute(&self.pointer) }
+        unsafe { &*(&self.pointer as *const *const T as *const *mut T) }
     }
 }
 

@@ -11,8 +11,6 @@ use super::Packet;
 use super::Error;
 use super::State;
 use super::Capture;
-use tokio;
-use futures;
 
 pub struct SelectableFd {
     fd: RawFd
@@ -49,7 +47,7 @@ pub struct PacketStream<T: State + ? Sized, C> {
 
 impl<T: Activated + ? Sized, C: PacketCodec> PacketStream<T, C> {
     pub fn new(cap: Capture<T>, fd: RawFd, codec: C) -> Result<PacketStream<T, C>, Error> {
-        Ok(PacketStream { cap: cap, fd: tokio::io::PollEvented::new(SelectableFd { fd: fd })?, codec: codec })
+        Ok(PacketStream { cap, fd: tokio::io::PollEvented::new(SelectableFd { fd })?, codec })
     }
 }
 
@@ -62,7 +60,7 @@ impl<'a, T: Activated + ? Sized + Unpin, C: PacketCodec + Unpin> futures::Stream
             Err(Error::IoError(ref e)) if *e == ::std::io::ErrorKind::WouldBlock => {
                 return futures::task::Poll::Pending;
             }
-            Err(e) => return futures::task::Poll::Ready(Some(Err(e.into()))),
+            Err(e) => return futures::task::Poll::Ready(Some(Err(e))),
         };
         let frame_result = stream.codec.decode(p);
         futures::task::Poll::Ready(Some(frame_result))
