@@ -255,7 +255,6 @@ fn test_raw_fd_api() {
             let mut file_in = File::open(&filename).unwrap();
             let mut file_out = unsafe { File::from_raw_fd(fd_out) };
             io::copy(&mut file_in, &mut file_out).unwrap();
-            assert_eq!(unsafe { libc::close(fd_out) }, 0);
         });
 
         // Open the capture with pipe's file descriptor
