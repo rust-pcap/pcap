@@ -21,6 +21,11 @@ jobs:
         profile: ['', --release]
         toolchain: [stable, beta, nightly]
         features: ['']
+        include:
+          - os: ['ubuntu-latest', 'macos-latest']
+            profile: ['', --release]
+            toolchain: stable
+            features: ['', '--features capture-stream', '--features full']
     runs-on: ${{ matrix.os }} 
 
     steps:
