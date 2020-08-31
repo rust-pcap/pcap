@@ -48,6 +48,7 @@ If `PCAP_LIBDIR` environment variable is set when building the crate, it will be
 #### `capture-stream`
 
 Use the `capture-stream` feature to enable support for streamed packet captures.
+It's tested on ubuntu and macosx only.
 
 ```toml
 [dependencies]
