@@ -18,18 +18,14 @@ jobs:
     strategy:
       matrix:
         os: [windows-latest, ubuntu-latest, macos-latest]
-        toolchain: [stable]
+        toolchain: [1.31.1, stable, beta]
         profile: ['', --release]
         features: ['', '--features full']
         exclude:
           - os: windows-latest
             features: '--features full'
         include:
-          # beta and nightly checks are performed on ubuntu only.
-          - os: ubuntu-latest
-            toolchain: beta
-            profile: --release
-            features: --features full 
+          # nightly check is performed on ubuntu only.
           - os: ubuntu-latest
             toolchain: nightly
             profile: ''
