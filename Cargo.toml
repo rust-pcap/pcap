@@ -71,4 +71,4 @@ path = "examples/getstatistics.rs"
 [[example]]
 name = "streamlisten"
 path = "examples/streamlisten.rs"
-required-features = ["capture-stream", "unix"]
+required-features = ["capture-stream"]
