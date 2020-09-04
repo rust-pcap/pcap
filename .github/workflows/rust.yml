@@ -25,6 +25,11 @@ jobs:
           - os: windows-latest
             features: '--features full'
         include:
+          # windows feature test
+          - os: windows-latest
+            toolchain: stable
+            profile: ''
+            features: '--features pcap-fopen-offline-precision'
           # nightly check is performed on ubuntu only.
           - os: ubuntu-latest
             toolchain: nightly
