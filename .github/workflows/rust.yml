@@ -18,7 +18,7 @@ jobs:
     strategy:
       matrix:
         os: [windows-latest, ubuntu-latest, macos-latest]
-        toolchain: [stable, beta]
+        toolchain: ["1.40.0", stable, beta]
         profile: ['', --release]
         features: ['', '--features full']
         exclude:
@@ -54,9 +54,12 @@ jobs:
           toolchain: ${{ matrix.toolchain }}
           components: clippy
           override: true
+      - name: cargo build
+        run: cargo build ${{ matrix.profile }} ${{ matrix.features }}
       - name: cargo test
         run: cargo test ${{ matrix.profile }} ${{ matrix.features }}
       - name: cargo clippy
+        if: matrix.toolchain == 'stable'
         run: cargo clippy ${{ matrix.profile }} ${{ matrix.features }} -- -D warnings
       - name: cargo doc
         run: cargo doc ${{ matrix.profile }} ${{ matrix.features }}
