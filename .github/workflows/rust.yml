@@ -54,6 +54,8 @@ jobs:
           toolchain: ${{ matrix.toolchain }}
           components: clippy
           override: true
+      - name: cargo build
+        run: cargo build ${{ matrix.profile }} ${{ matrix.features }}
       - name: cargo test
         run: cargo test ${{ matrix.profile }} ${{ matrix.features }}
       - name: cargo clippy
