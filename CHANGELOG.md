@@ -5,7 +5,7 @@
 ### Changed
 
 - Opt into Rust 2018.
-- Now minimum supported rustc version is 1.44.1.
+- Now minimum supported rustc version is 1.40.0.
 - Updated dependency from deprecated `tokio-core` to `tokio` 0.2.
 - Updated dependency `futures` from version 0.1 to 0.3.
 - Feature `tokio` renamed to `capture-stream` because Cargo does not allow

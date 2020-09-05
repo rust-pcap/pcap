@@ -18,7 +18,7 @@ jobs:
     strategy:
       matrix:
         os: [windows-latest, ubuntu-latest, macos-latest]
-        toolchain: ["1.39.0", stable]
+        toolchain: ["1.40.0", stable]
         profile: ['', --release]
         features: ['', '--features full']
         exclude:
