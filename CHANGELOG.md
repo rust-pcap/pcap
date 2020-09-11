@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Added
+
+- Add `Derive(Clone)` to `Device` struct (#100).
+
 ### Changed
 
 - Opt into Rust 2018.
