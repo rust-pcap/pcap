@@ -496,7 +496,7 @@ impl Capture<Inactive> {
     ///
     /// // Usage 2: Capture from an element of device list.
     /// let list: Vec<Device> = pcap::Device::list().unwrap();
-    /// let cap2 = Capture::from_device(list[3].clone());
+    /// let cap2 = Capture::from_device(list[0].clone());
     ///
     /// // Usage 3: Capture from `&str` device name
     /// let cap3 = Capture::from_device("eth0");
