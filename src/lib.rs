@@ -164,7 +164,7 @@ impl From<std::io::ErrorKind> for Error {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 /// A network device name and (potentially) pcap's description of it.
 pub struct Device {
     pub name: String,
@@ -485,6 +485,22 @@ pub enum Direction {
 impl Capture<Inactive> {
     /// Opens a capture handle for a device. You can pass a `Device` or an `&str` device
     /// name here. The handle is inactive, but can be activated via `.open()`.
+    ///
+    /// # Example
+    /// ```
+    /// use pcap::*;
+    ///
+    /// // Usage 1: Capture from a single owned device
+    /// let dev: Device = pcap::Device::lookup().unwrap();
+    /// let cap1 = Capture::from_device(dev);
+    ///
+    /// // Usage 2: Capture from an element of device list.
+    /// let list: Vec<Device> = pcap::Device::list().unwrap();
+    /// let cap2 = Capture::from_device(list[0].clone());
+    ///
+    /// // Usage 3: Capture from `&str` device name
+    /// let cap3 = Capture::from_device("eth0");
+    /// ```
     pub fn from_device<D: Into<Device>>(device: D) -> Result<Capture<Inactive>, Error> {
         let device: Device = device.into();
         Capture::new_raw(Some(&device.name),
