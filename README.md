@@ -43,6 +43,12 @@ libpcap should be installed on Mac OS X by default.
 
 If `PCAP_LIBDIR` environment variable is set when building the crate, it will be added to the linker search path - this allows linking against a specific `libpcap`.
 
+## Library Version
+
+The crate will automatically try to detect the installed `libpcap`/`wpcap` version by loading it during the build and calling `pcap_lib_version`. If for some reason this is not suitable, you can specify the desired library version by setting the environment variable `PCAP_VER` to the desired version. The version number is used to determine which library calls to include in the compilation.
+
+Th
+
 ## Optional Features
 
 #### `capture-stream`
@@ -53,29 +59,6 @@ This feature is supported only on ubuntu and macosx.
 ```toml
 [dependencies]
 pcap = { version = "0.7", features = ["capture-stream"] }
-```
-
-#### `pcap-savefile-append`
-
-To get access to the `Capture::savefile_append` function (which allows appending
-to an existing pcap file) you have to depend on the `pcap-savefile-append`
-feature flag. It requires at least libpcap version 1.7.2.
-
-```toml
-[dependencies]
-pcap = { version = "0.7", features = ["pcap-savefile-append"] }
-```
-
-#### `pcap-fopen-offline-precision`
-
-To enable `Capture::from_raw_fd_with_precision` constructor (which allows opening
-an offline capture from a raw file descriptor with a predefined timestamp precision)
-you have to add `pcap-fopen-offline-precision` feature flag. This requires libpcap
-version 1.5.0 or later.
-
-```toml
-[dependencies]
-pcap = { version = "0.7", features = ["pcap-fopen-offline-precision"] }
 ```
 
 ## License
