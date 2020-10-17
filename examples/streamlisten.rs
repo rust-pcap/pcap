@@ -13,7 +13,12 @@ impl PacketCodec for SimpleDumpCodec {
 }
 
 fn new_stream() -> Result<PacketStream<Active, SimpleDumpCodec>, Error> {
-    let cap = Capture::from_device(Device::lookup()?)?
+    // get the default Device
+    let device = Device::lookup()?;
+    println!("Using device {}", device.name);
+
+    let cap = Capture::from_device(device)?
+        .immediate_mode(true)
         .open()?
         .setnonblock()?;
     cap.stream(SimpleDumpCodec {})
