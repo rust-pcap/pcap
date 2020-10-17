@@ -605,7 +605,7 @@ impl<T: Activated + ? Sized> Capture<T> {
 
     /// Create a `Savefile` context for recording captured packets using this `Capture`'s
     /// configurations. The output is written to a raw file descriptor which is opened
-    // in `"w"` mode.
+    /// in `"w"` mode.
     #[cfg(not(windows))]
     pub fn savefile_raw_fd(&self, fd: RawFd) -> Result<Savefile, Error> {
         open_raw_fd(fd, b'w')

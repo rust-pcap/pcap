@@ -110,6 +110,9 @@ fn emit_cfg_flags(version: Version) {
 }
 
 fn main() {
+    println!("cargo:rerun-if-env-changed=LIBPCAP_LIBDIR");
+    println!("cargo:rerun-if-env-changed=LIBPCAP_VER");
+
     if let Ok(libdir) = env::var("LIBPCAP_LIBDIR") {
         println!("cargo:rustc-link-search=native={}", libdir);
     }
