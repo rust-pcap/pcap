@@ -153,7 +153,7 @@ extern "C" {
     pub fn pcap_get_selectable_fd(arg1: *mut pcap_t) -> c_int;
 }
 
-#[cfg(pcap_1_2_1)]
+#[cfg(libpcap_1_2_1)]
 extern "C" {
     // pub fn pcap_free_tstamp_types(arg1: *mut c_int) -> ();
     // pub fn pcap_list_tstamp_types(arg1: *mut pcap_t, arg2: *mut *mut c_int) -> c_int;
@@ -163,7 +163,7 @@ extern "C" {
     // pub fn pcap_tstamp_type_val_to_name(arg1: c_int) -> *const c_char;
 }
 
-#[cfg(pcap_1_5_0)]
+#[cfg(libpcap_1_5_0)]
 extern "C" {
     pub fn pcap_fopen_offline_with_tstamp_precision(arg1: *mut FILE, arg2: c_uint,
                                                     arg3: *mut c_char) -> *mut pcap_t;
@@ -176,12 +176,12 @@ extern "C" {
     pub fn pcap_set_tstamp_precision(arg1: *mut pcap_t, arg2: c_int) -> c_int;
 }
 
-#[cfg(pcap_1_7_2)]
+#[cfg(libpcap_1_7_2)]
 extern "C" {
     pub fn pcap_dump_open_append(arg1: *mut pcap_t, arg2: *const c_char) -> *mut pcap_dumper_t;
 }
 
-#[cfg(pcap_1_9_0)]
+#[cfg(libpcap_1_9_0)]
 extern "C" {
     // pcap_bufsize
     // pcap_createsrcstr
@@ -198,7 +198,7 @@ extern "C" {
     // pcap_setsampling
 }
 
-#[cfg(pcap_1_9_1)]
+#[cfg(libpcap_1_9_1)]
 extern "C" {
     // pcap_datalink_val_to_description_or_dlt
 }

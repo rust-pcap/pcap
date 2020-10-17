@@ -37,7 +37,7 @@ impl Version {
 }
 
 fn get_pcap_lib_version() -> Result<Version, Box<dyn std::error::Error>> {
-    if let Ok(libver) = env::var("PCAP_VER") {
+    if let Ok(libver) = env::var("LIBPCAP_VER") {
         return Version::parse(&libver);
     }
 
@@ -105,12 +105,12 @@ fn emit_cfg_flags(version: Version) {
     ];
 
     for v in api_vers.iter().filter(|&v| v <= &version) {
-        println!("cargo:rustc-cfg=pcap_{}_{}_{}", v.major, v.minor, v.micro);
+        println!("cargo:rustc-cfg=libpcap_{}_{}_{}", v.major, v.minor, v.micro);
     }
 }
 
 fn main() {
-    if let Ok(libdir) = env::var("PCAP_LIBDIR") {
+    if let Ok(libdir) = env::var("LIBPCAP_LIBDIR") {
         println!("cargo:rustc-link-search=native={}", libdir);
     }
 

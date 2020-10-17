@@ -41,13 +41,11 @@ libpcap should be installed on Mac OS X by default.
 
 ## Library Location
 
-If `PCAP_LIBDIR` environment variable is set when building the crate, it will be added to the linker search path - this allows linking against a specific `libpcap`.
+If `LIBPCAP_LIBDIR` environment variable is set when building the crate, it will be added to the linker search path - this allows linking against a specific `libpcap`.
 
 ## Library Version
 
-The crate will automatically try to detect the installed `libpcap`/`wpcap` version by loading it during the build and calling `pcap_lib_version`. If for some reason this is not suitable, you can specify the desired library version by setting the environment variable `PCAP_VER` to the desired version. The version number is used to determine which library calls to include in the compilation.
-
-Th
+The crate will automatically try to detect the installed `libpcap`/`wpcap` version by loading it during the build and calling `pcap_lib_version`. If for some reason this is not suitable, you can specify the desired library version by setting the environment variable `LIBPCAP_VER` to the desired version (e.g. `env LIBPCAP_VER=1.5.0`). The version number is used to determine which library calls to include in the compilation.
 
 ## Optional Features
 
