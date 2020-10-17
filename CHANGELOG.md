@@ -15,6 +15,8 @@
 - Updated dependency `futures` from version 0.1 to 0.3.
 - Feature `tokio` renamed to `capture-stream` because Cargo does not allow
   features and dependencies to have the same name.
+- `PCAP_LIBDIR` renamed to `LIBPCAP_LIBDIR` to distinguish the `pcap` crate
+  from the `libpcap` library.
 
 ### Removed
 
