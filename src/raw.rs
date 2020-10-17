@@ -91,30 +91,12 @@ extern "C" {
     pub fn pcap_set_promisc(arg1: *mut pcap_t, arg2: c_int) -> c_int;
     // pub fn pcap_can_set_rfmon(arg1: *mut pcap_t) -> c_int;
     pub fn pcap_set_timeout(arg1: *mut pcap_t, arg2: c_int) -> c_int;
-    #[cfg(not(windows))]
-    pub fn pcap_set_tstamp_type(arg1: *mut pcap_t, arg2: c_int) -> c_int;
-    // pub fn pcap_set_immediate_mode(arg1: *mut pcap_t, arg2: c_int) -> c_int;
     pub fn pcap_set_buffer_size(arg1: *mut pcap_t, arg2: c_int) -> c_int;
-    #[cfg(not(windows))]
-    pub fn pcap_set_tstamp_precision(arg1: *mut pcap_t, arg2: c_int) -> c_int;
-    // pub fn pcap_get_tstamp_precision(arg1: *mut pcap_t) -> c_int;
     pub fn pcap_activate(arg1: *mut pcap_t) -> c_int;
-    // pub fn pcap_list_tstamp_types(arg1: *mut pcap_t, arg2: *mut *mut c_int) -> c_int;
-    // pub fn pcap_free_tstamp_types(arg1: *mut c_int);
-    // pub fn pcap_tstamp_type_name_to_val(arg1: *const c_char) -> c_int;
-    // pub fn pcap_tstamp_type_val_to_name(arg1: c_int) -> *const c_char;
-    // pub fn pcap_tstamp_type_val_to_description(arg1: c_int) -> *const c_char;
     // pub fn pcap_open_live(arg1: *const c_char, arg2: c_int, arg3: c_int, arg4: c_int,
     //                       arg5: *mut c_char) -> *mut pcap_t;
     pub fn pcap_open_dead(arg1: c_int, arg2: c_int) -> *mut pcap_t;
-    pub fn pcap_open_dead_with_tstamp_precision(arg1: c_int, arg2: c_int,
-                                                 arg3: c_uint) -> *mut pcap_t;
-    pub fn pcap_open_offline_with_tstamp_precision(arg1: *const c_char, arg2: c_uint,
-                                                   arg3: *mut c_char) -> *mut pcap_t;
     pub fn pcap_open_offline(arg1: *const c_char, arg2: *mut c_char) -> *mut pcap_t;
-    #[cfg(feature = "pcap-fopen-offline-precision")]
-    pub fn pcap_fopen_offline_with_tstamp_precision(arg1: *mut FILE, arg2: c_uint,
-                                                    arg3: *mut c_char) -> *mut pcap_t;
     pub fn pcap_fopen_offline(arg1: *mut FILE, arg2: *mut c_char) -> *mut pcap_t;
     pub fn pcap_close(arg1: *mut pcap_t);
     // pub fn pcap_loop(arg1: *mut pcap_t, arg2: c_int,
@@ -158,8 +140,6 @@ extern "C" {
     pub fn pcap_fileno(arg1: *mut pcap_t) -> c_int;
     pub fn pcap_dump_open(arg1: *mut pcap_t, arg2: *const c_char) -> *mut pcap_dumper_t;
     pub fn pcap_dump_fopen(arg1: *mut pcap_t, fp: *mut FILE) -> *mut pcap_dumper_t;
-    #[cfg(feature = "pcap-savefile-append")]
-    pub fn pcap_dump_open_append(arg1: *mut pcap_t, arg2: *const c_char) -> *mut pcap_dumper_t;
     // pub fn pcap_dump_file(arg1: *mut pcap_dumper_t) -> *mut FILE;
     // pub fn pcap_dump_ftell(arg1: *mut pcap_dumper_t) -> c_long;
     // pub fn pcap_dump_flush(arg1: *mut pcap_dumper_t) -> c_int;
@@ -171,6 +151,56 @@ extern "C" {
     // pub fn bpf_image(arg1: *const bpf_insn, arg2: c_int) -> *mut c_char;
     // pub fn bpf_dump(arg1: *const bpf_program, arg2: c_int);
     pub fn pcap_get_selectable_fd(arg1: *mut pcap_t) -> c_int;
+}
+
+#[cfg(libpcap_1_2_1)]
+extern "C" {
+    // pub fn pcap_free_tstamp_types(arg1: *mut c_int) -> ();
+    // pub fn pcap_list_tstamp_types(arg1: *mut pcap_t, arg2: *mut *mut c_int) -> c_int;
+    pub fn pcap_set_tstamp_type(arg1: *mut pcap_t, arg2: c_int) -> c_int;
+    // pub fn pcap_tstamp_type_name_to_val(arg1: *const c_char) -> c_int;
+    // pub fn pcap_tstamp_type_val_to_description(arg1: c_int) -> *const c_char;
+    // pub fn pcap_tstamp_type_val_to_name(arg1: c_int) -> *const c_char;
+}
+
+#[cfg(libpcap_1_5_0)]
+extern "C" {
+    pub fn pcap_fopen_offline_with_tstamp_precision(arg1: *mut FILE, arg2: c_uint,
+                                                    arg3: *mut c_char) -> *mut pcap_t;
+    // pub fn pcap_get_tstamp_precision(arg1: *mut pcap_t) -> c_int;
+    pub fn pcap_open_dead_with_tstamp_precision(arg1: c_int, arg2: c_int,
+                                                arg3: c_uint) -> *mut pcap_t;
+    pub fn pcap_open_offline_with_tstamp_precision(arg1: *const c_char, arg2: c_uint,
+                                                   arg3: *mut c_char) -> *mut pcap_t;
+    // pub fn pcap_set_immediate_mode(arg1: *mut pcap_t, arg2: c_int) -> c_int;
+    pub fn pcap_set_tstamp_precision(arg1: *mut pcap_t, arg2: c_int) -> c_int;
+}
+
+#[cfg(libpcap_1_7_2)]
+extern "C" {
+    pub fn pcap_dump_open_append(arg1: *mut pcap_t, arg2: *const c_char) -> *mut pcap_dumper_t;
+}
+
+#[cfg(libpcap_1_9_0)]
+extern "C" {
+    // pcap_bufsize
+    // pcap_createsrcstr
+    // pcap_dump_ftell64
+    // pcap_findalldevs_ex
+    // pcap_get_required_select_timeout
+    // pcap_open
+    // pcap_parsesrcstr
+    // pcap_remoteact_accept
+    // pcap_remoteact_cleanup
+    // pcap_remoteact_close
+    // pcap_remoteact_list
+    // pcap_set_protocol_linux
+    // pcap_setsampling
+}
+
+#[cfg(libpcap_1_9_1)]
+extern "C" {
+    // pcap_datalink_val_to_description_or_dlt
 }
 
 #[cfg(windows)]

@@ -24,22 +24,17 @@ futures = { version = "0.3", optional = true }
 tempdir = "0.3"
 tokio = { version = "0.2", features = ["rt-core"] }
 
+[build-dependencies]
+libloading = "0.6"
+regex = "1"
+
 [features]
-# This feature enables access to the function Capture::savefile_append.
-# This is disabled by default, because it depends on a relatively recent
-# version of libpcap (1.7.2).
-pcap-savefile-append = []
-
-# This feature enables access to the function Capture::from_raw_fd_with_precision.
-# This is disabled by default, because it requires libpcap >= 1.5.0.
-pcap-fopen-offline-precision = []
-
 # This feature enables access to the function Capture::stream.
 # This is disabled by default, because it depends on a tokio and mio
 capture-stream = ["mio", "tokio", "futures"]
 
 # A shortcut to enable all features.
-full = ["pcap-savefile-append", "pcap-fopen-offline-precision", "capture-stream"]
+full = ["capture-stream"]
 
 [lib]
 name = "pcap"

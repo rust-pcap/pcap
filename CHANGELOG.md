@@ -5,6 +5,7 @@
 ### Added
 
 - Add `Derive(Clone)` to `Device` struct (#100).
+- Build-time `libpcap` version detection.
 
 ### Changed
 
@@ -14,6 +15,13 @@
 - Updated dependency `futures` from version 0.1 to 0.3.
 - Feature `tokio` renamed to `capture-stream` because Cargo does not allow
   features and dependencies to have the same name.
+- `PCAP_LIBDIR` renamed to `LIBPCAP_LIBDIR` to distinguish the `pcap` crate
+  from the `libpcap` library.
+
+### Removed
+
+- Feature flags `pcap-savefile-append`, `pcap-fopen-offline-precision`
+  (replaced by build-time `libpcap` version detection)
 
 ## [0.7.0] - 2017-08-04
 
