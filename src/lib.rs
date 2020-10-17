@@ -416,6 +416,16 @@ impl<T: State + ? Sized> Capture<T> {
         })
     }
 
+    /// Set the minumum amount of data received by the kernel in a single call.
+    ///
+    /// Note that this value is set to 0 when the capture is set to immediate mode. You should not
+    /// call `min_to_copy` on captures in immediate mode if you want them to stay in immediate mode.
+    #[cfg(windows)]
+    pub fn min_to_copy(self, to: i32) -> Capture<T> {
+        unsafe { raw::pcap_setmintocopy(*self.handle, to as _); }
+        self
+    }
+
     #[inline]
     fn check_err(&self, success: bool) -> Result<(), Error> {
         if success {
@@ -534,6 +544,29 @@ impl Capture<Inactive> {
     /// Set promiscuous mode on or off. By default, this is off.
     pub fn promisc(self, to: bool) -> Capture<Inactive> {
         unsafe { raw::pcap_set_promisc(*self.handle, to as _) };
+        self
+    }
+
+    /// Set immediate mode on or off. By default, this is off.
+    ///
+    /// Note that in WinPcap immediate mode is set by passing a 0 argument to `min_to_copy`.
+    /// Immediate mode will be unset if `min_to_copy` is later called with a non-zero argument.
+    /// Immediate mode is unset by resetting `min_to_copy` to the WinPcap default possibly changing
+    /// a previously set value. When using `min_to_copy`, it is best to avoid `immediate_mode`.
+    #[cfg(any(libpcap_1_5_0, windows))]
+    pub fn immediate_mode(self, to: bool) -> Capture<Inactive> {
+        // Prior to 1.5.0 when `pcap_set_immediate_mode` was introduced, the necessary steps to set
+        // immediate mode were more complicated, depended on the OS, and in some configurations had
+        // to be set on an active capture. See
+        // https://www.tcpdump.org/manpages/pcap_set_immediate_mode.3pcap.html. Since we do not
+        // expect pre-1.5.0 version on unix systems in the wild, we simply ignore those cases.
+        #[cfg(libpcap_1_5_0)]
+        unsafe { raw::pcap_set_immediate_mode(*self.handle, to as _) };
+
+        // In WinPcap we use `pcap_setmintocopy` as it does not have `pcap_set_immediate_mode`.
+        #[cfg(all(windows, not(libpcap_1_5_0)))]
+        unsafe { raw::pcap_setmintocopy(*self.handle, if to { 0 } else { raw::WINPCAP_MINTOCOPY_DEFAULT }) };
+
         self
     }
 

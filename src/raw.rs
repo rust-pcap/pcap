@@ -172,7 +172,7 @@ extern "C" {
                                                 arg3: c_uint) -> *mut pcap_t;
     pub fn pcap_open_offline_with_tstamp_precision(arg1: *const c_char, arg2: c_uint,
                                                    arg3: *mut c_char) -> *mut pcap_t;
-    // pub fn pcap_set_immediate_mode(arg1: *mut pcap_t, arg2: c_int) -> c_int;
+    pub fn pcap_set_immediate_mode(arg1: *mut pcap_t, arg2: c_int) -> c_int;
     pub fn pcap_set_tstamp_precision(arg1: *mut pcap_t, arg2: c_int) -> c_int;
 }
 
@@ -205,7 +205,13 @@ extern "C" {
 
 #[cfg(windows)]
 #[link(name = "wpcap")]
-extern "C" {}
+const WINPCAP_MINTOCOPY_DEFAULT: i32 = 16000;
+
+#[cfg(windows)]
+#[link(name = "wpcap")]
+extern "C" {
+    pub fn pcap_setmintocopy(arg1: *mut pcap_t, arg2: c_int) -> c_int;
+}
 
 #[cfg(not(windows))]
 #[link(name = "pcap")]
