@@ -1,29 +1,37 @@
 use pcap::*;
 
 fn main() {
-	{
-		// open capture from default device
-		let mut cap = Capture::from_device(Device::lookup().unwrap()).unwrap().open().unwrap();
+    {
+        // open capture from default device
+        let device = Device::lookup().unwrap();
+        println!("Using device {}", device.name);
 
-		// open savefile using the capture
-		let mut savefile = cap.savefile("test.pcap").unwrap();
+        // Setup Capture
+        let mut cap = Capture::from_device(device)
+            .unwrap()
+            .immediate_mode(true)
+            .open()
+            .unwrap();
 
-		// get a packet from the interface
-		let p = cap.next().unwrap();
+        // open savefile using the capture
+        let mut savefile = cap.savefile("test.pcap").unwrap();
 
-		// print the packet out
-		println!("packet received on network: {:?}", p);
+        // get a packet from the interface
+        let p = cap.next().unwrap();
 
-		// write the packet to the savefile
-		savefile.write(&p);
-	}
+        // print the packet out
+        println!("packet received on network: {:?}", p);
 
-	// open a new capture from the test.pcap file we wrote to above
-	let mut cap = Capture::from_file("test.pcap").unwrap();
+        // write the packet to the savefile
+        savefile.write(&p);
+    }
 
-	// get a packet
-	let p = cap.next().unwrap();
+    // open a new capture from the test.pcap file we wrote to above
+    let mut cap = Capture::from_file("test.pcap").unwrap();
 
-	// print that packet out -- it should be the same as the one we printed above
-	println!("packet obtained from file: {:?}", p);
+    // get a packet
+    let p = cap.next().unwrap();
+
+    // print that packet out -- it should be the same as the one we printed above
+    println!("packet obtained from file: {:?}", p);
 }
