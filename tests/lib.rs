@@ -80,13 +80,10 @@ impl Packets {
                 len: u32,
                 data: &[u8]) {
         self.headers.push(PacketHeader {
-                              ts: libc::timeval {
-                                  tv_sec: tv_sec,
-                                  tv_usec: tv_usec,
-                              },
-                              caplen: caplen,
-                              len: len,
-                          });
+            ts: libc::timeval { tv_sec, tv_usec },
+            caplen,
+            len,
+        });
         self.data.push(data.to_vec());
     }
 
@@ -135,7 +132,7 @@ fn capture_dead_savefile() {
 }
 
 #[test]
-#[cfg(pcap_1_7_2)]
+#[cfg(libpcap_1_7_2)]
 fn capture_dead_savefile_append() {
     let mut packets1 = Packets::new();
     packets1.push(1460408319, 1234, 1, 1, &[1]);
@@ -194,7 +191,7 @@ fn test_raw_fd_api() {
 
     assert_eq!(Capture::from_raw_fd(-999).err().unwrap(),
                Error::InvalidRawFd);
-    #[cfg(pcap_1_5_0)]
+    #[cfg(libpcap_1_5_0)]
     {
         assert_eq!(Capture::from_raw_fd_with_precision(-999, Precision::Micro).err().unwrap(),
                    Error::InvalidRawFd);
@@ -231,12 +228,12 @@ fn test_raw_fd_api() {
     File::open(&filename).unwrap().read_to_end(&mut v2).unwrap();
     assert_eq!(v1, v2);
 
-    #[cfg(pcap_1_5_0)]
+    #[cfg(libpcap_1_5_0)]
     fn from_raw_fd_with_precision(fd: RawFd, precision: Precision) -> Capture<Offline> {
         Capture::from_raw_fd_with_precision(fd, precision).unwrap()
     }
 
-    #[cfg(not(pcap_1_5_0))]
+    #[cfg(not(libpcap_1_5_0))]
     fn from_raw_fd_with_precision(fd: RawFd, _: Precision) -> Capture<Offline> {
         Capture::from_raw_fd(fd).unwrap()
     }
