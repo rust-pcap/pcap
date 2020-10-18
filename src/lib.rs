@@ -452,23 +452,25 @@ impl Capture<Offline> {
         })
     }
 
-    /// Opens an offline capture handle from a pcap dump file, given a file descriptor.
+    /// Opens an offline capture handle from a pcap dump file, given a file descriptor. Unsafe,
+    /// because the returned Capture assumes it is the sole owner of the file descriptor.
     #[cfg(not(windows))]
-    pub fn from_raw_fd(fd: RawFd) -> Result<Capture<Offline>, Error> {
+    pub unsafe fn from_raw_fd(fd: RawFd) -> Result<Capture<Offline>, Error> {
         open_raw_fd(fd, b'r')
-            .and_then(|file| Capture::new_raw(None, |_, err| unsafe {
+            .and_then(|file| Capture::new_raw(None, |_, err|
                 raw::pcap_fopen_offline(file, err)
-            }))
+            ))
     }
 
-    /// Opens an offline capture handle from a pcap dump file, given a file descriptor.
-    /// Takes an additional precision argument specifying the time stamp precision desired.
+    /// Opens an offline capture handle from a pcap dump file, given a file descriptor. Takes an
+    /// additional precision argument specifying the time stamp precision desired. Unsafe, because
+    /// the returned Capture assumes it is the sole owner of the file descriptor.
     #[cfg(all(not(windows), libpcap_1_5_0))]
-    pub fn from_raw_fd_with_precision(fd: RawFd, precision: Precision) -> Result<Capture<Offline>, Error> {
+    pub unsafe fn from_raw_fd_with_precision(fd: RawFd, precision: Precision) -> Result<Capture<Offline>, Error> {
         open_raw_fd(fd, b'r')
-            .and_then(|file| Capture::new_raw(None, |_, err| unsafe {
+            .and_then(|file| Capture::new_raw(None, |_, err|
                 raw::pcap_fopen_offline_with_tstamp_precision(file, precision as _, err)
-            }))
+            ))
     }
 }
 
@@ -637,13 +639,14 @@ impl<T: Activated + ? Sized> Capture<T> {
     }
 
     /// Create a `Savefile` context for recording captured packets using this `Capture`'s
-    /// configurations. The output is written to a raw file descriptor which is opened
-    /// in `"w"` mode.
+    /// configurations. The output is written to a raw file descriptor which is opened in `"w"`
+    /// mode. Unsafe, because the returned Savefile assumes it is the sole owner of the file
+    /// descriptor.
     #[cfg(not(windows))]
-    pub fn savefile_raw_fd(&self, fd: RawFd) -> Result<Savefile, Error> {
+    pub unsafe fn savefile_raw_fd(&self, fd: RawFd) -> Result<Savefile, Error> {
         open_raw_fd(fd, b'w')
             .and_then(|file| {
-                let handle = unsafe { raw::pcap_dump_fopen(*self.handle, file) };
+                let handle = raw::pcap_dump_fopen(*self.handle, file);
                 self.check_err(!handle.is_null()).map(|_| Savefile::new(handle))
             })
     }
@@ -840,9 +843,10 @@ impl Drop for Savefile {
 }
 
 #[cfg(not(windows))]
-pub fn open_raw_fd(fd: RawFd, mode: u8) -> Result<*mut libc::FILE, Error> {
+/// Unsafe, because the returned FILE assumes it is the sole owner of the file descriptor.
+pub unsafe fn open_raw_fd(fd: RawFd, mode: u8) -> Result<*mut libc::FILE, Error> {
     let mode = vec![mode, 0];
-    unsafe { libc::fdopen(fd, mode.as_ptr() as _).as_mut() }.map(|f| f as _).ok_or(InvalidRawFd)
+    libc::fdopen(fd, mode.as_ptr() as _).as_mut().map(|f| f as _).ok_or(InvalidRawFd)
 }
 
 #[inline]
