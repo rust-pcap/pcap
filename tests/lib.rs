@@ -206,7 +206,7 @@ fn test_raw_fd_api() {
 
     let filename = dir.path().join("test2.pcap");
     let packets_c = packets.clone();
-    thread::spawn(move || {
+    let pipe_thread = thread::spawn(move || {
         // Write all packets to the pipe
         let cap = Capture::dead(Linktype(1)).unwrap();
         let mut save = cap.savefile_raw_fd(fd_out).unwrap();
@@ -228,6 +228,9 @@ fn test_raw_fd_api() {
     File::open(&filename).unwrap().read_to_end(&mut v2).unwrap();
     assert_eq!(v1, v2);
 
+    // Join thread.
+    pipe_thread.join().unwrap();
+
     #[cfg(libpcap_1_5_0)]
     fn from_raw_fd_with_precision(fd: RawFd, precision: Precision) -> Capture<Offline> {
         Capture::from_raw_fd_with_precision(fd, precision).unwrap()
@@ -245,7 +248,7 @@ fn test_raw_fd_api() {
         let (fd_in, fd_out) = (pipe[0], pipe[1]);
 
         let filename = tmpfile.clone();
-        thread::spawn(move || {
+        let pipe_thread = thread::spawn(move || {
             // Cat the pcap into the pipe in a separate thread.
             // Hypothetically, we could do any sort of processing here,
             // like decoding from a gzip stream.
@@ -263,6 +266,9 @@ fn test_raw_fd_api() {
 
         // Verify that packets match
         packets.verify(&mut cap);
+
+        // Join thread.
+        pipe_thread.join().unwrap();
     }
 }
 
