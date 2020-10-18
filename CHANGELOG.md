@@ -18,6 +18,7 @@
   features and dependencies to have the same name.
 - `PCAP_LIBDIR` renamed to `LIBPCAP_LIBDIR` to distinguish the `pcap` crate
   from the `libpcap` library.
+- All methods that construct objects out of a `RawFd` are now unsafe.
 
 ### Removed
 
