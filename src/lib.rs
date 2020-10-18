@@ -452,8 +452,11 @@ impl Capture<Offline> {
         })
     }
 
-    /// Opens an offline capture handle from a pcap dump file, given a file descriptor. Unsafe,
-    /// because the returned Capture assumes it is the sole owner of the file descriptor.
+    /// Opens an offline capture handle from a pcap dump file, given a file descriptor.
+    ///
+    /// # Safety
+    ///
+    /// Unsafe, because the returned Capture assumes it is the sole owner of the file descriptor.
     #[cfg(not(windows))]
     pub unsafe fn from_raw_fd(fd: RawFd) -> Result<Capture<Offline>, Error> {
         open_raw_fd(fd, b'r')
@@ -463,8 +466,11 @@ impl Capture<Offline> {
     }
 
     /// Opens an offline capture handle from a pcap dump file, given a file descriptor. Takes an
-    /// additional precision argument specifying the time stamp precision desired. Unsafe, because
-    /// the returned Capture assumes it is the sole owner of the file descriptor.
+    /// additional precision argument specifying the time stamp precision desired.
+    ///
+    /// # Safety
+    ///
+    /// Unsafe, because the returned Capture assumes it is the sole owner of the file descriptor.
     #[cfg(all(not(windows), libpcap_1_5_0))]
     pub unsafe fn from_raw_fd_with_precision(fd: RawFd, precision: Precision) -> Result<Capture<Offline>, Error> {
         open_raw_fd(fd, b'r')
@@ -640,8 +646,11 @@ impl<T: Activated + ? Sized> Capture<T> {
 
     /// Create a `Savefile` context for recording captured packets using this `Capture`'s
     /// configurations. The output is written to a raw file descriptor which is opened in `"w"`
-    /// mode. Unsafe, because the returned Savefile assumes it is the sole owner of the file
-    /// descriptor.
+    /// mode.
+    ///
+    /// # Safety
+    ///
+    /// Unsafe, because the returned Savefile assumes it is the sole owner of the file descriptor.
     #[cfg(not(windows))]
     pub unsafe fn savefile_raw_fd(&self, fd: RawFd) -> Result<Savefile, Error> {
         open_raw_fd(fd, b'w')
@@ -843,6 +852,8 @@ impl Drop for Savefile {
 }
 
 #[cfg(not(windows))]
+/// # Safety
+///
 /// Unsafe, because the returned FILE assumes it is the sole owner of the file descriptor.
 pub unsafe fn open_raw_fd(fd: RawFd, mode: u8) -> Result<*mut libc::FILE, Error> {
     let mode = vec![mode, 0];
