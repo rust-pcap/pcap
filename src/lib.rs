@@ -463,7 +463,7 @@ impl Capture<Offline> {
 
     /// Opens an offline capture handle from a pcap dump file, given a file descriptor.
     /// Takes an additional precision argument specifying the time stamp precision desired.
-    #[cfg(libpcap_1_5_0)]
+    #[cfg(all(not(windows), libpcap_1_5_0))]
     pub fn from_raw_fd_with_precision(fd: RawFd, precision: Precision) -> Result<Capture<Offline>, Error> {
         open_raw_fd(fd, b'r')
             .and_then(|file| Capture::new_raw(None, |_, err| unsafe {
