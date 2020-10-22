@@ -87,7 +87,7 @@ pub enum Error {
 }
 
 impl Error {
-    fn new(ptr: *const libc::c_char) -> Error {
+    unsafe fn new(ptr: *const libc::c_char) -> Error {
         match cstr_to_string(ptr) {
             Err(e) => e as Error,
             Ok(string) => PcapError(string.unwrap_or_default()),
@@ -232,14 +232,14 @@ pub struct Linktype(pub i32);
 impl Linktype {
     /// Gets the name of the link type, such as EN10MB
     pub fn get_name(&self) -> Result<String, Error> {
-        cstr_to_string(unsafe { raw::pcap_datalink_val_to_name(self.0) })
+        unsafe { cstr_to_string(raw::pcap_datalink_val_to_name(self.0)) }
             ?
             .ok_or(InvalidLinktype)
     }
 
     /// Gets the description of a link type.
     pub fn get_description(&self) -> Result<String, Error> {
-        cstr_to_string(unsafe { raw::pcap_datalink_val_to_description(self.0) })
+        unsafe { cstr_to_string(raw::pcap_datalink_val_to_description(self.0)) }
             ?
             .ok_or(InvalidLinktype)
     }
@@ -391,13 +391,11 @@ pub struct Capture<T: State + ? Sized> {
 }
 
 impl<T: State + ? Sized> Capture<T> {
-    fn new(handle: *mut raw::pcap_t) -> Capture<T> {
-        unsafe {
-            Capture {
-                nonblock: false,
-                handle: Unique::new(handle),
-                _marker: PhantomData,
-            }
+    unsafe fn from_handle(handle: *mut raw::pcap_t) -> Capture<T> {
+        Capture {
+            nonblock: false,
+            handle: Unique::new(handle),
+            _marker: PhantomData,
         }
     }
 
@@ -412,7 +410,9 @@ impl<T: State + ? Sized> Capture<T> {
                     func(path.as_ptr(), err)
                 }
             };
-            unsafe { handle.as_mut() }.map(|h| Capture::new(h)).ok_or_else(|| Error::new(err))
+            unsafe { handle.as_mut() }
+                .map(|h| unsafe { Capture::from_handle(h) })
+                .ok_or_else(|| unsafe { Error::new(err) })
         })
     }
 
@@ -431,7 +431,7 @@ impl<T: State + ? Sized> Capture<T> {
         if success {
             Ok(())
         } else {
-            Err(Error::new(unsafe { raw::pcap_geterr(*self.handle) }))
+            Err(unsafe { Error::new(raw::pcap_geterr(*self.handle)) })
         }
     }
 }
@@ -641,7 +641,7 @@ impl<T: Activated + ? Sized> Capture<T> {
     pub fn savefile<P: AsRef<Path>>(&self, path: P) -> Result<Savefile, Error> {
         let name = CString::new(path.as_ref().to_str().unwrap())?;
         let handle = unsafe { raw::pcap_dump_open(*self.handle, name.as_ptr()) };
-        self.check_err(!handle.is_null()).map(|_| Savefile::new(handle))
+        self.check_err(!handle.is_null()).map(|_| unsafe { Savefile::from_handle(handle) })
     }
 
     /// Create a `Savefile` context for recording captured packets using this `Capture`'s
@@ -656,7 +656,7 @@ impl<T: Activated + ? Sized> Capture<T> {
         open_raw_fd(fd, b'w')
             .and_then(|file| {
                 let handle = raw::pcap_dump_fopen(*self.handle, file);
-                self.check_err(!handle.is_null()).map(|_| Savefile::new(handle))
+                self.check_err(!handle.is_null()).map(|_| Savefile::from_handle(handle))
             })
     }
 
@@ -670,7 +670,7 @@ impl<T: Activated + ? Sized> Capture<T> {
     pub fn savefile_append<P: AsRef<Path>>(&self, path: P) -> Result<Savefile, Error> {
         let name = CString::new(path.as_ref().to_str().unwrap())?;
         let handle = unsafe { raw::pcap_dump_open_append(*self.handle, name.as_ptr()) };
-        self.check_err(!handle.is_null()).map(|_| Savefile::new(handle))
+        self.check_err(!handle.is_null()).map(|_| unsafe { Savefile::from_handle(handle) })
     }
 
     /// Set the direction of the capture
@@ -791,7 +791,7 @@ impl Capture<Dead> {
     /// Creates a "fake" capture handle for the given link type.
     pub fn dead(linktype: Linktype) -> Result<Capture<Dead>, Error> {
         unsafe { raw::pcap_open_dead(linktype.0, 65535).as_mut() }
-        .map(|h| Capture::new(h))
+            .map(|h| unsafe { Capture::from_handle(h) })
             .ok_or(InsufficientMemory)
     }
 }
@@ -840,8 +840,8 @@ impl Savefile {
 }
 
 impl Savefile {
-    fn new(handle: *mut raw::pcap_dumper_t) -> Savefile {
-        unsafe { Savefile { handle: Unique::new(handle) } }
+    unsafe fn from_handle(handle: *mut raw::pcap_dumper_t) -> Savefile {
+        Savefile { handle: Unique::new(handle) }
     }
 }
 
@@ -861,11 +861,11 @@ pub unsafe fn open_raw_fd(fd: RawFd, mode: u8) -> Result<*mut libc::FILE, Error>
 }
 
 #[inline]
-fn cstr_to_string(ptr: *const libc::c_char) -> Result<Option<String>, Error> {
+unsafe fn cstr_to_string(ptr: *const libc::c_char) -> Result<Option<String>, Error> {
     let string = if ptr.is_null() {
         None
     } else {
-        Some(unsafe { CStr::from_ptr(ptr as _) }.to_str()?.to_owned())
+        Some(CStr::from_ptr(ptr as _).to_str()?.to_owned())
     };
     Ok(string)
 }

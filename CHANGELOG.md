@@ -19,6 +19,8 @@
 - `PCAP_LIBDIR` renamed to `LIBPCAP_LIBDIR` to distinguish the `pcap` crate
   from the `libpcap` library.
 - All methods that construct objects out of a `RawFd` are now unsafe.
+- All methods that take a raw pointer are now unsafe. Some of these functions
+  were renamed from `new` to `from_handle` to underline this.
 
 ### Removed
 
