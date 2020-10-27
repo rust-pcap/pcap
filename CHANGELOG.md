@@ -7,6 +7,7 @@
 - Add `Derive(Clone)` to `Device` struct (#100).
 - Build-time `libpcap` version detection.
 - Add support for immediate mode.
+- Add const value for Linktype (#145)
 
 ### Changed
 
