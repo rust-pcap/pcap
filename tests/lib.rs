@@ -189,14 +189,14 @@ fn test_raw_fd_api() {
     packets.foreach(|p| save.write(p));
     drop(save);
 
-    assert_eq!(Capture::from_raw_fd(-999).err().unwrap(),
+    assert_eq!(unsafe { Capture::from_raw_fd(-999) }.err().unwrap(),
                Error::InvalidRawFd);
     #[cfg(libpcap_1_5_0)]
     {
-        assert_eq!(Capture::from_raw_fd_with_precision(-999, Precision::Micro).err().unwrap(),
+        assert_eq!(unsafe { Capture::from_raw_fd_with_precision(-999, Precision::Micro) }.err().unwrap(),
                    Error::InvalidRawFd);
     }
-    assert_eq!(cap.savefile_raw_fd(-999).err().unwrap(),
+    assert_eq!(unsafe { cap.savefile_raw_fd(-999) }.err().unwrap(),
                Error::InvalidRawFd);
 
     // Create an unnamed pipe
@@ -209,7 +209,7 @@ fn test_raw_fd_api() {
     let pipe_thread = thread::spawn(move || {
         // Write all packets to the pipe
         let cap = Capture::dead(Linktype(1)).unwrap();
-        let mut save = cap.savefile_raw_fd(fd_out).unwrap();
+        let mut save = unsafe { cap.savefile_raw_fd(fd_out) }.unwrap();
         packets_c.foreach(|p| save.write(p));
         // fd_out will be closed by savefile destructor
     });
@@ -232,12 +232,12 @@ fn test_raw_fd_api() {
     pipe_thread.join().unwrap();
 
     #[cfg(libpcap_1_5_0)]
-    fn from_raw_fd_with_precision(fd: RawFd, precision: Precision) -> Capture<Offline> {
+    unsafe fn from_raw_fd_with_precision(fd: RawFd, precision: Precision) -> Capture<Offline> {
         Capture::from_raw_fd_with_precision(fd, precision).unwrap()
     }
 
     #[cfg(not(libpcap_1_5_0))]
-    fn from_raw_fd_with_precision(fd: RawFd, _: Precision) -> Capture<Offline> {
+    unsafe fn from_raw_fd_with_precision(fd: RawFd, _: Precision) -> Capture<Offline> {
         Capture::from_raw_fd(fd).unwrap()
     }
 
@@ -259,9 +259,9 @@ fn test_raw_fd_api() {
 
         // Open the capture with pipe's file descriptor
         let mut cap = if *with_tstamp {
-            from_raw_fd_with_precision(fd_in, Precision::Micro)
+            unsafe { from_raw_fd_with_precision(fd_in, Precision::Micro) }
         } else {
-            Capture::from_raw_fd(fd_in).unwrap()
+            unsafe { Capture::from_raw_fd(fd_in) }.unwrap()
         };
 
         // Verify that packets match

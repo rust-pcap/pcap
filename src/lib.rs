@@ -87,7 +87,7 @@ pub enum Error {
 }
 
 impl Error {
-    fn new(ptr: *const libc::c_char) -> Error {
+    unsafe fn new(ptr: *const libc::c_char) -> Error {
         match cstr_to_string(ptr) {
             Err(e) => e as Error,
             Ok(string) => PcapError(string.unwrap_or_default()),
@@ -232,14 +232,14 @@ pub struct Linktype(pub i32);
 impl Linktype {
     /// Gets the name of the link type, such as EN10MB
     pub fn get_name(&self) -> Result<String, Error> {
-        cstr_to_string(unsafe { raw::pcap_datalink_val_to_name(self.0) })
+        unsafe { cstr_to_string(raw::pcap_datalink_val_to_name(self.0)) }
             ?
             .ok_or(InvalidLinktype)
     }
 
     /// Gets the description of a link type.
     pub fn get_description(&self) -> Result<String, Error> {
-        cstr_to_string(unsafe { raw::pcap_datalink_val_to_description(self.0) })
+        unsafe { cstr_to_string(raw::pcap_datalink_val_to_description(self.0)) }
             ?
             .ok_or(InvalidLinktype)
     }
@@ -391,13 +391,11 @@ pub struct Capture<T: State + ? Sized> {
 }
 
 impl<T: State + ? Sized> Capture<T> {
-    fn new(handle: *mut raw::pcap_t) -> Capture<T> {
-        unsafe {
-            Capture {
-                nonblock: false,
-                handle: Unique::new(handle),
-                _marker: PhantomData,
-            }
+    unsafe fn from_handle(handle: *mut raw::pcap_t) -> Capture<T> {
+        Capture {
+            nonblock: false,
+            handle: Unique::new(handle),
+            _marker: PhantomData,
         }
     }
 
@@ -412,7 +410,9 @@ impl<T: State + ? Sized> Capture<T> {
                     func(path.as_ptr(), err)
                 }
             };
-            unsafe { handle.as_mut() }.map(|h| Capture::new(h)).ok_or_else(|| Error::new(err))
+            unsafe { handle.as_mut() }
+                .map(|h| unsafe { Capture::from_handle(h) })
+                .ok_or_else(|| unsafe { Error::new(err) })
         })
     }
 
@@ -431,7 +431,7 @@ impl<T: State + ? Sized> Capture<T> {
         if success {
             Ok(())
         } else {
-            Err(Error::new(unsafe { raw::pcap_geterr(*self.handle) }))
+            Err(unsafe { Error::new(raw::pcap_geterr(*self.handle)) })
         }
     }
 }
@@ -453,22 +453,30 @@ impl Capture<Offline> {
     }
 
     /// Opens an offline capture handle from a pcap dump file, given a file descriptor.
+    ///
+    /// # Safety
+    ///
+    /// Unsafe, because the returned Capture assumes it is the sole owner of the file descriptor.
     #[cfg(not(windows))]
-    pub fn from_raw_fd(fd: RawFd) -> Result<Capture<Offline>, Error> {
+    pub unsafe fn from_raw_fd(fd: RawFd) -> Result<Capture<Offline>, Error> {
         open_raw_fd(fd, b'r')
-            .and_then(|file| Capture::new_raw(None, |_, err| unsafe {
+            .and_then(|file| Capture::new_raw(None, |_, err|
                 raw::pcap_fopen_offline(file, err)
-            }))
+            ))
     }
 
-    /// Opens an offline capture handle from a pcap dump file, given a file descriptor.
-    /// Takes an additional precision argument specifying the time stamp precision desired.
+    /// Opens an offline capture handle from a pcap dump file, given a file descriptor. Takes an
+    /// additional precision argument specifying the time stamp precision desired.
+    ///
+    /// # Safety
+    ///
+    /// Unsafe, because the returned Capture assumes it is the sole owner of the file descriptor.
     #[cfg(all(not(windows), libpcap_1_5_0))]
-    pub fn from_raw_fd_with_precision(fd: RawFd, precision: Precision) -> Result<Capture<Offline>, Error> {
+    pub unsafe fn from_raw_fd_with_precision(fd: RawFd, precision: Precision) -> Result<Capture<Offline>, Error> {
         open_raw_fd(fd, b'r')
-            .and_then(|file| Capture::new_raw(None, |_, err| unsafe {
+            .and_then(|file| Capture::new_raw(None, |_, err|
                 raw::pcap_fopen_offline_with_tstamp_precision(file, precision as _, err)
-            }))
+            ))
     }
 }
 
@@ -633,18 +641,22 @@ impl<T: Activated + ? Sized> Capture<T> {
     pub fn savefile<P: AsRef<Path>>(&self, path: P) -> Result<Savefile, Error> {
         let name = CString::new(path.as_ref().to_str().unwrap())?;
         let handle = unsafe { raw::pcap_dump_open(*self.handle, name.as_ptr()) };
-        self.check_err(!handle.is_null()).map(|_| Savefile::new(handle))
+        self.check_err(!handle.is_null()).map(|_| unsafe { Savefile::from_handle(handle) })
     }
 
     /// Create a `Savefile` context for recording captured packets using this `Capture`'s
-    /// configurations. The output is written to a raw file descriptor which is opened
-    /// in `"w"` mode.
+    /// configurations. The output is written to a raw file descriptor which is opened in `"w"`
+    /// mode.
+    ///
+    /// # Safety
+    ///
+    /// Unsafe, because the returned Savefile assumes it is the sole owner of the file descriptor.
     #[cfg(not(windows))]
-    pub fn savefile_raw_fd(&self, fd: RawFd) -> Result<Savefile, Error> {
+    pub unsafe fn savefile_raw_fd(&self, fd: RawFd) -> Result<Savefile, Error> {
         open_raw_fd(fd, b'w')
             .and_then(|file| {
-                let handle = unsafe { raw::pcap_dump_fopen(*self.handle, file) };
-                self.check_err(!handle.is_null()).map(|_| Savefile::new(handle))
+                let handle = raw::pcap_dump_fopen(*self.handle, file);
+                self.check_err(!handle.is_null()).map(|_| Savefile::from_handle(handle))
             })
     }
 
@@ -658,7 +670,7 @@ impl<T: Activated + ? Sized> Capture<T> {
     pub fn savefile_append<P: AsRef<Path>>(&self, path: P) -> Result<Savefile, Error> {
         let name = CString::new(path.as_ref().to_str().unwrap())?;
         let handle = unsafe { raw::pcap_dump_open_append(*self.handle, name.as_ptr()) };
-        self.check_err(!handle.is_null()).map(|_| Savefile::new(handle))
+        self.check_err(!handle.is_null()).map(|_| unsafe { Savefile::from_handle(handle) })
     }
 
     /// Set the direction of the capture
@@ -779,7 +791,7 @@ impl Capture<Dead> {
     /// Creates a "fake" capture handle for the given link type.
     pub fn dead(linktype: Linktype) -> Result<Capture<Dead>, Error> {
         unsafe { raw::pcap_open_dead(linktype.0, 65535).as_mut() }
-        .map(|h| Capture::new(h))
+            .map(|h| unsafe { Capture::from_handle(h) })
             .ok_or(InsufficientMemory)
     }
 }
@@ -828,8 +840,8 @@ impl Savefile {
 }
 
 impl Savefile {
-    fn new(handle: *mut raw::pcap_dumper_t) -> Savefile {
-        unsafe { Savefile { handle: Unique::new(handle) } }
+    unsafe fn from_handle(handle: *mut raw::pcap_dumper_t) -> Savefile {
+        Savefile { handle: Unique::new(handle) }
     }
 }
 
@@ -840,17 +852,20 @@ impl Drop for Savefile {
 }
 
 #[cfg(not(windows))]
-pub fn open_raw_fd(fd: RawFd, mode: u8) -> Result<*mut libc::FILE, Error> {
+/// # Safety
+///
+/// Unsafe, because the returned FILE assumes it is the sole owner of the file descriptor.
+pub unsafe fn open_raw_fd(fd: RawFd, mode: u8) -> Result<*mut libc::FILE, Error> {
     let mode = vec![mode, 0];
-    unsafe { libc::fdopen(fd, mode.as_ptr() as _).as_mut() }.map(|f| f as _).ok_or(InvalidRawFd)
+    libc::fdopen(fd, mode.as_ptr() as _).as_mut().map(|f| f as _).ok_or(InvalidRawFd)
 }
 
 #[inline]
-fn cstr_to_string(ptr: *const libc::c_char) -> Result<Option<String>, Error> {
+unsafe fn cstr_to_string(ptr: *const libc::c_char) -> Result<Option<String>, Error> {
     let string = if ptr.is_null() {
         None
     } else {
-        Some(unsafe { CStr::from_ptr(ptr as _) }.to_str()?.to_owned())
+        Some(CStr::from_ptr(ptr as _).to_str()?.to_owned())
     };
     Ok(string)
 }
