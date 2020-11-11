@@ -47,7 +47,7 @@ jobs:
           cinst -y winpcap --version 4.1.3.20161116
           (New-Object System.Net.WebClient).DownloadFile("https://www.winpcap.org/install/bin/WpdPack_4_1_2.zip", "C:/WpdPack.zip")
           Expand-Archive -LiteralPath C:/WpdPack.zip -DestinationPath C:/
-          echo "::set-env name=LIB::C:/WpdPack/Lib/x64"
+          echo "LIB=C:/WpdPack/Lib/x64" >> $env:GITHUB_ENV
       - name: Select rust toolchain
         uses: actions-rs/toolchain@v1
         with:
