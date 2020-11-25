@@ -20,6 +20,9 @@ mio = { version = "0.6", optional = true }
 tokio = { version = "0.2", features = ["io-driver"], optional = true }
 futures = { version = "0.3", optional = true }
 
+[target.'cfg(target_os = "windows")'.dependencies]
+widestring = "0.2"
+
 [dev-dependencies]
 tempdir = "0.3"
 tokio = { version = "0.2", features = ["rt-core"] }
