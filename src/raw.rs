@@ -129,7 +129,7 @@ extern "C" {
     pub fn pcap_list_datalinks(arg1: *mut pcap_t, arg2: *mut *mut c_int) -> c_int;
     pub fn pcap_set_datalink(arg1: *mut pcap_t, arg2: c_int) -> c_int;
     pub fn pcap_free_datalinks(arg1: *mut c_int);
-    // pub fn pcap_datalink_name_to_val(arg1: *const c_char) -> c_int;
+    pub fn pcap_datalink_name_to_val(arg1: *const c_char) -> c_int;
     pub fn pcap_datalink_val_to_name(arg1: c_int) -> *const c_char;
     pub fn pcap_datalink_val_to_description(arg1: c_int) -> *const c_char;
     // pub fn pcap_snapshot(arg1: *mut pcap_t) -> c_int;

@@ -272,6 +272,17 @@ impl Linktype {
             .ok_or(InvalidLinktype)
     }
 
+    /// Gets the linktype from a name string
+    pub fn from_name(name: &str) -> Result<Linktype, Error> {
+        let name = CString::new(name)?;
+        let val = unsafe{raw::pcap_datalink_name_to_val(name.as_ptr())};
+        if val == -1 {
+            return Err(InvalidLinktype);
+        }
+
+        Ok(Linktype(val))
+    }
+
     pub const NULL: Self = Self(0);
     pub const ETHERNET: Self = Self(1);
     pub const AX25: Self = Self(3);
@@ -976,19 +987,6 @@ impl<T: Activated + ? Sized> Capture<T> {
         }
     }
 
-    /// Compiles the string into a filter program using `pcap_compile`.
-    pub fn compile(&self, program: &str) -> Result<BpfProgram, Error> {
-        let program = CString::new(program).unwrap();
-
-        unsafe {
-            let mut bpf_program: raw::bpf_program = ::std::mem::zeroed();
-            if -1 == raw::pcap_compile(*self.handle, &mut bpf_program, program.as_ptr(), 0, 0) {
-                return Err(Error::new(raw::pcap_geterr(*self.handle)));
-            }
-            Ok(BpfProgram(bpf_program))
-        }
-    }
-
     /// Get capture statistics about this capture. The values represent packet statistics from the
     /// start of the run to the time of the call.
     ///
@@ -1031,6 +1029,19 @@ impl Capture<Dead> {
         unsafe { raw::pcap_open_dead(linktype.0, 65535).as_mut() }
             .map(|h| unsafe { Capture::from_handle(h) })
             .ok_or(InsufficientMemory)
+    }
+
+    /// Compiles the string into a filter program using `pcap_compile`.
+    pub fn compile(&self, program: &str) -> Result<BpfProgram, Error> {
+        let program = CString::new(program).unwrap();
+
+        unsafe {
+            let mut bpf_program: raw::bpf_program = mem::zeroed();
+            if -1 == raw::pcap_compile(*self.handle, &mut bpf_program, program.as_ptr(), 0, 0) {
+                return Err(Error::new(raw::pcap_geterr(*self.handle)));
+            }
+            Ok(BpfProgram(bpf_program))
+        }
     }
 }
 
@@ -1180,6 +1191,12 @@ impl Clone for BpfProgram {
 impl Drop for BpfProgram {
     fn drop(&mut self) {
         unsafe { raw::pcap_freecode(&mut self.0) }
+    }
+}
+
+impl fmt::Display for BpfInstruction {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{} {} {} {}", self.0.code, self.0.jt, self.0.jf, self.0.k)
     }
 }
 
