@@ -288,3 +288,23 @@ fn test_error() {
     // Trying to get stats from offline capture should error.
     assert!(capture.stats().err().is_some());
 }
+
+#[test]
+fn test_compile() {
+    let mut capture = capture_from_test_file("packet_snaplen_65535.pcap");
+    let packet = capture.next().unwrap();
+
+    let bpf_capture = Capture::dead(Linktype::ETHERNET).unwrap();
+
+    let program = bpf_capture.compile("dst host 8.8.8.8").unwrap();
+    let instructions = program.get_instructions();
+
+    assert!(instructions.len() > 0);
+    assert!(program.filter(packet.data));
+
+    let program = bpf_capture.compile("src host 8.8.8.8").unwrap();
+    let instructions = program.get_instructions();
+
+    assert!(instructions.len() > 0);
+    assert!(!program.filter(packet.data));
+}

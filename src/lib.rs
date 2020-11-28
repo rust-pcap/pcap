@@ -272,6 +272,17 @@ impl Linktype {
             .ok_or(InvalidLinktype)
     }
 
+    /// Gets the linktype from a name string
+    pub fn from_name(name: &str) -> Result<Linktype, Error> {
+        let name = CString::new(name)?;
+        let val = unsafe{raw::pcap_datalink_name_to_val(name.as_ptr())};
+        if val == -1 {
+            return Err(InvalidLinktype);
+        }
+
+        Ok(Linktype(val))
+    }
+
     pub const NULL: Self = Self(0);
     pub const ETHERNET: Self = Self(1);
     pub const AX25: Self = Self(3);
@@ -1019,6 +1030,19 @@ impl Capture<Dead> {
             .map(|h| unsafe { Capture::from_handle(h) })
             .ok_or(InsufficientMemory)
     }
+
+    /// Compiles the string into a filter program using `pcap_compile`.
+    pub fn compile(&self, program: &str) -> Result<BpfProgram, Error> {
+        let program = CString::new(program).unwrap();
+
+        unsafe {
+            let mut bpf_program: raw::bpf_program = mem::zeroed();
+            if -1 == raw::pcap_compile(*self.handle, &mut bpf_program, program.as_ptr(), 0, 0) {
+                return Err(Error::new(raw::pcap_geterr(*self.handle)));
+            }
+            Ok(BpfProgram(bpf_program))
+        }
+    }
 }
 
 #[cfg(not(windows))]
@@ -1122,3 +1146,58 @@ fn test_struct_size() {
     use std::mem::size_of;
     assert_eq!(size_of::<PacketHeader>(), size_of::<raw::pcap_pkthdr>());
 }
+
+pub struct BpfInstruction(raw::bpf_insn);
+pub struct BpfProgram(raw::bpf_program);
+
+impl BpfProgram {
+    /// checks whether a filter matches a packet
+    pub fn filter(&self, buf: &[u8]) -> bool {
+        let header: raw::pcap_pkthdr = raw::pcap_pkthdr {
+            ts: libc::timeval { tv_sec: 0, tv_usec: 0 },
+            caplen: buf.len() as u32,
+            len: buf.len() as u32,
+        };
+        unsafe {
+            raw::pcap_offline_filter(&self.0, &header, buf.as_ptr()) > 0
+        }
+    }
+
+    pub fn get_instructions(&self) -> &[BpfInstruction] {
+        unsafe {
+            slice::from_raw_parts(self.0.bf_insns as *const BpfInstruction,
+                 self.0.bf_len as usize)
+        }
+    }
+}
+
+impl Clone for BpfProgram {
+   // make a deep copy of the underlying program
+   fn clone(&self) -> Self {
+      let len = self.0.bf_len as usize;
+      let size = len * mem::size_of::<raw::bpf_insn>();
+      let storage = unsafe {
+         let storage = libc::malloc(size) as *mut raw::bpf_insn;
+         ptr::copy_nonoverlapping(self.0.bf_insns, storage, len);
+         storage
+      };
+      BpfProgram(raw::bpf_program {
+            bf_len: self.0.bf_len,
+            bf_insns: storage,
+      })
+   }
+}
+
+impl Drop for BpfProgram {
+    fn drop(&mut self) {
+        unsafe { raw::pcap_freecode(&mut self.0) }
+    }
+}
+
+impl fmt::Display for BpfInstruction {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{} {} {} {}", self.0.code, self.0.jt, self.0.jf, self.0.k)
+    }
+}
+
+unsafe impl Send for BpfProgram {}

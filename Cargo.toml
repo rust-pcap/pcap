@@ -66,3 +66,7 @@ path = "examples/getstatistics.rs"
 name = "streamlisten"
 path = "examples/streamlisten.rs"
 required-features = ["capture-stream"]
+
+[[example]]
+name = "nfbpfcompile"
+path = "examples/nfbpfcompile.rs"
