@@ -1165,7 +1165,7 @@ impl BpfProgram {
 
     pub fn get_instructions(&self) -> &[BpfInstruction] {
         unsafe {
-            slice::from_raw_parts(mem::transmute(self.0.bf_insns),
+            slice::from_raw_parts(self.0.bf_insns as *const BpfInstruction,
                  self.0.bf_len as usize)
         }
     }
