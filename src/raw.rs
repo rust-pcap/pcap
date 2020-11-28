@@ -122,8 +122,8 @@ extern "C" {
     // pub fn pcap_compile_nopcap(arg1: c_int, arg2: c_int, arg3: *mut bpf_program,
     //                            arg4: *const c_char, arg5: c_int, arg6: c_uint) -> c_int;
     pub fn pcap_freecode(arg1: *mut bpf_program);
-    // pub fn pcap_offline_filter(arg1: *const bpf_program, arg2: *const pcap_pkthdr,
-    //                            arg3: *const c_uchar) -> c_int;
+    pub fn pcap_offline_filter(arg1: *const bpf_program, arg2: *const pcap_pkthdr,
+                               arg3: *const c_uchar) -> c_int;
     pub fn pcap_datalink(arg1: *mut pcap_t) -> c_int;
     // pub fn pcap_datalink_ext(arg1: *mut pcap_t) -> c_int;
     pub fn pcap_list_datalinks(arg1: *mut pcap_t, arg2: *mut *mut c_int) -> c_int;
