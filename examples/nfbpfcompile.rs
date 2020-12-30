@@ -2,8 +2,7 @@
 ///! it compiles a pcap expression in to a BPF filter, then serializes it using
 ///! a simple, safe encoding.
 ///!
-
-use pcap::{Capture, Linktype, BpfProgram};
+use pcap::{BpfProgram, Capture, Linktype};
 
 use std::env;
 use std::process;
@@ -29,7 +28,7 @@ fn main() {
         Err(_) => {
             println!("Invalid linklayer type {}", layertype);
             process::exit(1);
-        },
+        }
     };
 
     let capture = Capture::dead(lt).unwrap();
@@ -41,7 +40,8 @@ fn main() {
         }
     };
     let instructions = program.get_instructions();
-    let def: String = instructions.iter()
+    let def: String = instructions
+        .iter()
         .map(|ref op| format!("{}", op))
         .collect::<Vec<_>>()
         .join(",");

@@ -61,7 +61,8 @@ fn get_pcap_lib_version() -> Result<Version, Box<dyn std::error::Error>> {
 
     #[cfg(not(windows))]
     {
-        let re = regex::Regex::new(r"libpcap version ([[:digit:]]+)\.([[:digit:]]+)\.([[:digit:]]+)")?;
+        let re =
+            regex::Regex::new(r"libpcap version ([[:digit:]]+)\.([[:digit:]]+)\.([[:digit:]]+)")?;
         let captures = re.captures(v_str).ok_or_else(|| err.clone())?;
 
         let major_str = captures.get(1).ok_or_else(|| err.clone())?.as_str();
@@ -105,7 +106,10 @@ fn emit_cfg_flags(version: Version) {
     ];
 
     for v in api_vers.iter().filter(|&v| v <= &version) {
-        println!("cargo:rustc-cfg=libpcap_{}_{}_{}", v.major, v.minor, v.micro);
+        println!(
+            "cargo:rustc-cfg=libpcap_{}_{}_{}",
+            v.major, v.minor, v.micro
+        );
     }
 }
 
