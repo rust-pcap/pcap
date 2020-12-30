@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## [0.8.1] - 2020-12-30
+
+### Changed
+
+- Fix docs.rs build.
+
 ## [0.8.0] - 2020-12-30
 
 ### Added

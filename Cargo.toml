@@ -1,7 +1,7 @@
 [package]
 
 name = "pcap"
-version = "0.8.0"
+version = "0.8.1"
 authors = ["Sean Bowe <ewillbefull@gmail.com>", "Wojciech Kozlowski <wk@wojciechkozlowski.eu>", "Hideki Sekine"]
 edition = "2018"
 description = "A packet capture API around pcap/wpcap"
@@ -39,6 +39,9 @@ capture-stream = ["mio", "tokio", "futures"]
 # A shortcut to enable all features.
 full = ["capture-stream"]
 
+# Flag for docs.rs builds where libpcap is not present.
+docs-rs = []
+
 [lib]
 name = "pcap"
 
@@ -70,3 +73,6 @@ required-features = ["capture-stream"]
 [[example]]
 name = "nfbpfcompile"
 path = "examples/nfbpfcompile.rs"
+
+[package.metadata.docs.rs]
+features = ["docs-rs"]
