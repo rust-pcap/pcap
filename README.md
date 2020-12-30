@@ -56,7 +56,7 @@ This feature is supported only on ubuntu and macosx.
 
 ```toml
 [dependencies]
-pcap = { version = "0.7", features = ["capture-stream"] }
+pcap = { version = "0.8", features = ["capture-stream"] }
 ```
 
 ## License

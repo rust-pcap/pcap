@@ -2,12 +2,15 @@
 
 ## [Unreleased]
 
+## [0.8.0] - 2020-12-30
+
 ### Added
 
 - Add `Derive(Clone)` to `Device` struct (#100).
 - Build-time `libpcap` version detection.
 - Add support for immediate mode.
 - Add const value for Linktype (#145)
+- Add support for BPF compile
 
 ### Changed
 
