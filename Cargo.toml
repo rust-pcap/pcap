@@ -1,8 +1,8 @@
 [package]
 
 name = "pcap"
-version = "0.7.0"
-authors = ["Sean Bowe <ewillbefull@gmail.com>"]
+version = "0.8.0"
+authors = ["Sean Bowe <ewillbefull@gmail.com>", "Wojciech Kozlowski <wk@wojciechkozlowski.eu>", "Hideki Sekine"]
 edition = "2018"
 description = "A packet capture API around pcap/wpcap"
 keywords = ["pcap", "packet", "sniffing"]
