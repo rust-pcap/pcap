@@ -4,15 +4,6 @@ fn main() {
         println!("Found device! {:?}", device);
 
         // now you can create a Capture with this Device if you want.
-        let mut cap = pcap::Capture::from_device(device)
-            .unwrap()
-            .immediate_mode(true)
-            .open()
-            .unwrap();
-
-        // get a packet from this capture
-        let packet = cap.next();
-
-        println!("got a packet! {:?}", packet);
+        // see example/easylisten.rs for how
     }
 }
