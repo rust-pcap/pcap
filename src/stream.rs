@@ -44,7 +44,7 @@ impl Evented for SelectableFd {
 
 pub trait PacketCodec {
     type Type;
-    fn decode<'a>(&mut self, packet: Packet<'a>) -> Result<Self::Type, Error>;
+    fn decode(&mut self, packet: Packet) -> Result<Self::Type, Error>;
 }
 
 pub struct PacketStream<T: State + ?Sized, C> {
