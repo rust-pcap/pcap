@@ -1142,6 +1142,20 @@ impl Savefile {
     }
 }
 
+impl Savefile {
+    pub fn flush<T>(&mut self, cap: &Capture<T>) -> Result<(), Error> 
+where T: State + ?Sized
+    {
+        unsafe {
+            if raw::pcap_dump_flush(*self.handle) == 0 {
+                return Ok(());
+            } else {
+                return Err(Error::new(raw::pcap_geterr(*cap.handle)));
+            }
+        }
+    }
+}
+
 impl Drop for Savefile {
     fn drop(&mut self) {
         unsafe { raw::pcap_dump_close(*self.handle) }
