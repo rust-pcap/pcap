@@ -1145,7 +1145,7 @@ impl Savefile {
 impl Savefile {
     pub fn flush<T>(&mut self, cap: &Capture<T>) -> Result<(), Error> 
     where 
-        T: State + ?Sized
+        T: State + ?Sized,
     {
         unsafe {
             if raw::pcap_dump_flush(*self.handle) == 0 {
