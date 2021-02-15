@@ -1148,9 +1148,9 @@ where T: State + ?Sized
     {
         unsafe {
             if raw::pcap_dump_flush(*self.handle) == 0 {
-                return Ok(());
+                Ok(())
             } else {
-                return Err(Error::new(raw::pcap_geterr(*cap.handle)));
+                Err(Error::new(raw::pcap_geterr(*cap.handle)))
             }
         }
     }
