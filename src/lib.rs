@@ -1143,8 +1143,8 @@ impl Savefile {
 }
 
 impl Savefile {
-    pub fn flush<T>(&mut self, cap: &Capture<T>) -> Result<(), Error> 
-    where 
+    pub fn flush<T>(&mut self, cap: &Capture<T>) -> Result<(), Error>
+    where
         T: State + ?Sized,
     {
         unsafe {
