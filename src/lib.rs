@@ -1174,15 +1174,11 @@ unsafe fn cstr_to_string(ptr: *const libc::c_char) -> Result<Option<String>, Err
 
 #[cfg(target_os = "windows")]
 #[inline]
-fn wstr_to_string(ptr: *const libc::c_char) -> Result<Option<String>, Error> {
+unsafe fn wstr_to_string(ptr: *const libc::c_char) -> Result<Option<String>, Error> {
     let string = if ptr.is_null() {
         None
     } else {
-        Some(
-            unsafe { WideCString::from_ptr_str(ptr as _) }
-                .to_string()
-                .unwrap(),
-        )
+        Some(WideCString::from_ptr_str(ptr as _).to_string().unwrap())
     };
     Ok(string)
 }
