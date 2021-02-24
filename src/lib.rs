@@ -1173,6 +1173,7 @@ unsafe fn cstr_to_string(ptr: *const libc::c_char) -> Result<Option<String>, Err
 }
 
 #[cfg(target_os = "windows")]
+#[allow(clippy::unnecessary_wraps)]
 #[inline]
 unsafe fn wstr_to_string(ptr: *const libc::c_char) -> Result<Option<String>, Error> {
     let string = if ptr.is_null() {
