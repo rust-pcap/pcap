@@ -59,7 +59,7 @@ fn unify_activated() {
     }
 
     fn also_maybe(a: &mut Capture<dyn Activated>) {
-        a.filter("whatever filter string, this won't be run anyway")
+        a.filter("whatever filter string, this won't be run anyway", false)
             .unwrap();
     }
 }
@@ -313,15 +313,29 @@ fn test_compile() {
 
     let bpf_capture = Capture::dead(Linktype::ETHERNET).unwrap();
 
-    let program = bpf_capture.compile("dst host 8.8.8.8").unwrap();
+    let program = bpf_capture.compile("dst host 8.8.8.8", false).unwrap();
     let instructions = program.get_instructions();
 
     assert!(instructions.len() > 0);
     assert!(program.filter(packet.data));
 
-    let program = bpf_capture.compile("src host 8.8.8.8").unwrap();
+    let program = bpf_capture.compile("src host 8.8.8.8", false).unwrap();
     let instructions = program.get_instructions();
 
     assert!(instructions.len() > 0);
     assert!(!program.filter(packet.data));
+}
+
+#[test]
+fn test_compile_optimized() {
+    let bpf_capture = Capture::dead(Linktype::ETHERNET).unwrap();
+
+    let program_str = "ip and ip and tcp";
+    let program_unopt = bpf_capture.compile(program_str, false).unwrap();
+    let instr_unopt = program_unopt.get_instructions();
+
+    let program_opt = bpf_capture.compile(program_str, true).unwrap();
+    let instr_opt = program_opt.get_instructions();
+
+    assert!(instr_opt.len() < instr_unopt.len());
 }

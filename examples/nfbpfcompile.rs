@@ -32,7 +32,7 @@ fn main() {
     };
 
     let capture = Capture::dead(lt).unwrap();
-    let program: BpfProgram = match capture.compile(&prog) {
+    let program: BpfProgram = match capture.compile(&prog, true) {
         Ok(p) => p,
         Err(e) => {
             println!("{:?}", e);
