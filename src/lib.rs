@@ -1018,11 +1018,15 @@ impl<T: Activated + ?Sized> Capture<T> {
     /// this is compiled using `pcap_compile()`.
     ///
     /// See http://biot.com/capstats/bpf.html for more information about this syntax.
-    pub fn filter(&mut self, program: &str) -> Result<(), Error> {
+    pub fn filter(&mut self, program: &str, optimize: bool) -> Result<(), Error> {
         let program = CString::new(program)?;
         unsafe {
             let mut bpf_program: raw::bpf_program = mem::zeroed();
-            let ret = raw::pcap_compile(*self.handle, &mut bpf_program, program.as_ptr(), 1, 0);
+            let ret = raw::pcap_compile(
+                *self.handle, 
+                &mut bpf_program, 
+                program.as_ptr(), 
+                optimize as libc::c_int, 0);
             self.check_err(ret != -1)?;
             let ret = raw::pcap_setfilter(*self.handle, &mut bpf_program);
             raw::pcap_freecode(&mut bpf_program);
@@ -1075,12 +1079,16 @@ impl Capture<Dead> {
     }
 
     /// Compiles the string into a filter program using `pcap_compile`.
-    pub fn compile(&self, program: &str) -> Result<BpfProgram, Error> {
+    pub fn compile(&self, program: &str, optimize: bool) -> Result<BpfProgram, Error> {
         let program = CString::new(program).unwrap();
 
         unsafe {
             let mut bpf_program: raw::bpf_program = mem::zeroed();
-            if -1 == raw::pcap_compile(*self.handle, &mut bpf_program, program.as_ptr(), 1, 0) {
+            if -1 == raw::pcap_compile(
+                *self.handle, 
+                &mut bpf_program, 
+                program.as_ptr(), 
+                optimize as libc::c_int, 0) {
                 return Err(Error::new(raw::pcap_geterr(*self.handle)));
             }
             Ok(BpfProgram(bpf_program))
