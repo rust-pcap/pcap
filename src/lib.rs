@@ -1023,10 +1023,12 @@ impl<T: Activated + ?Sized> Capture<T> {
         unsafe {
             let mut bpf_program: raw::bpf_program = mem::zeroed();
             let ret = raw::pcap_compile(
-                *self.handle, 
-                &mut bpf_program, 
-                program.as_ptr(), 
-                optimize as libc::c_int, 0);
+                *self.handle,
+                &mut bpf_program,
+                program.as_ptr(),
+                optimize as libc::c_int,
+                0,
+            );
             self.check_err(ret != -1)?;
             let ret = raw::pcap_setfilter(*self.handle, &mut bpf_program);
             raw::pcap_freecode(&mut bpf_program);
@@ -1084,11 +1086,15 @@ impl Capture<Dead> {
 
         unsafe {
             let mut bpf_program: raw::bpf_program = mem::zeroed();
-            if -1 == raw::pcap_compile(
-                *self.handle, 
-                &mut bpf_program, 
-                program.as_ptr(), 
-                optimize as libc::c_int, 0) {
+            if -1
+                == raw::pcap_compile(
+                    *self.handle,
+                    &mut bpf_program,
+                    program.as_ptr(),
+                    optimize as libc::c_int,
+                    0,
+                )
+            {
                 return Err(Error::new(raw::pcap_geterr(*self.handle)));
             }
             Ok(BpfProgram(bpf_program))
