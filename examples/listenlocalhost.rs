@@ -8,7 +8,7 @@ fn main() {
         .unwrap();
 
     // filter out all packets that don't have 127.0.0.1 as a source or destination.
-    cap.filter("host 127.0.0.1").unwrap();
+    cap.filter("host 127.0.0.1", true).unwrap();
 
     while let Ok(packet) = cap.next() {
         println!("got packet! {:?}", packet);
