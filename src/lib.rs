@@ -242,9 +242,9 @@ impl Device {
     }
 }
 
-impl<'a> Into<Device> for &'a str {
-    fn into(self) -> Device {
-        Device::new(self.into(), None)
+impl From<&str> for Device {
+    fn from(name: &str) -> Self {
+        Device::new(name.into(), None)
     }
 }
 
