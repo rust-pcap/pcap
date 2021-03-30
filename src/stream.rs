@@ -57,7 +57,7 @@ impl<T: Activated + ?Sized, C: PacketCodec> PacketStream<T, C> {
     pub fn new(cap: Capture<T>, fd: RawFd, codec: C) -> Result<PacketStream<T, C>, Error> {
         Ok(PacketStream {
             cap,
-            fd: tokio::io::PollEvented::new(SelectableFd { fd })?,
+            fd: tokio::io::PollEvented::new_with_ready(SelectableFd { fd }, mio::Ready::readable())?,
             codec,
         })
     }
