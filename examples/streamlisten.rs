@@ -7,8 +7,18 @@ pub struct SimpleDumpCodec;
 impl PacketCodec for SimpleDumpCodec {
     type Type = String;
 
-    fn decode<'p>(&mut self, packet: Packet<'p>) -> Result<Self::Type, Error> {
+    fn decode(&mut self, packet: Packet) -> Result<Self::Type, Error> {
         Ok(format!("{:?}", packet))
+    }
+}
+
+async fn start_new_stream() -> PacketStream<Active, SimpleDumpCodec> {
+    match new_stream() {
+        Ok(stream) => stream,
+        Err(e) => {
+            println!("{:?}", e);
+            std::process::exit(1);
+        }
     }
 }
 
@@ -25,19 +35,12 @@ fn new_stream() -> Result<PacketStream<Active, SimpleDumpCodec>, Error> {
 }
 
 fn main() {
-    let mut rt = tokio::runtime::Builder::new()
+    let rt = tokio::runtime::Builder::new_current_thread()
         .enable_io()
-        .basic_scheduler()
         .build()
         .unwrap();
 
-    let stream = rt.enter(|| match new_stream() {
-        Ok(stream) => stream,
-        Err(e) => {
-            println!("{:?}", e);
-            std::process::exit(1);
-        }
-    });
+    let stream = rt.block_on(start_new_stream());
 
     let fut = stream.for_each(move |s| {
         println!("{:?}", s);

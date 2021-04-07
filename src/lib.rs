@@ -984,15 +984,14 @@ impl<T: Activated + ?Sized> Capture<T> {
     fn next_noblock<'a>(
         &'a mut self,
         cx: &mut core::task::Context,
-        fd: &mut tokio::io::PollEvented<stream::SelectableFd>,
+        fd: &mut tokio::io::unix::AsyncFd<stream::SelectableFd>,
     ) -> Result<Packet<'a>, Error> {
-        if let futures::task::Poll::Pending = fd.poll_read_ready(cx, mio::Ready::readable()) {
+        if let futures::task::Poll::Pending = fd.poll_read_ready(cx) {
             Err(IoError(io::ErrorKind::WouldBlock))
         } else {
             match self.next() {
                 Ok(p) => Ok(p),
                 Err(TimeoutExpired) => {
-                    fd.clear_read_ready(cx, mio::Ready::readable())?;
                     Err(IoError(io::ErrorKind::WouldBlock))
                 }
                 Err(e) => Err(e),
