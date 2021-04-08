@@ -43,9 +43,7 @@ impl Evented for SelectableFd {
 }
 
 impl std::os::unix::io::AsRawFd for SelectableFd {
-    fn as_raw_fd(
-        &self
-    ) -> RawFd {
+    fn as_raw_fd(&self) -> RawFd {
         self.fd
     }
 }
@@ -65,7 +63,10 @@ impl<T: Activated + ?Sized, C: PacketCodec> PacketStream<T, C> {
     pub fn new(cap: Capture<T>, fd: RawFd, codec: C) -> Result<PacketStream<T, C>, Error> {
         Ok(PacketStream {
             cap,
-            fd: tokio::io::unix::AsyncFd::with_interest(SelectableFd { fd }, tokio::io::Interest::READABLE)?,
+            fd: tokio::io::unix::AsyncFd::with_interest(
+                SelectableFd { fd },
+                tokio::io::Interest::READABLE,
+            )?,
             codec,
         })
     }

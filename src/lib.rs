@@ -991,9 +991,7 @@ impl<T: Activated + ?Sized> Capture<T> {
         } else {
             match self.next() {
                 Ok(p) => Ok(p),
-                Err(TimeoutExpired) => {
-                    Err(IoError(io::ErrorKind::WouldBlock))
-                }
+                Err(TimeoutExpired) => Err(IoError(io::ErrorKind::WouldBlock)),
                 Err(e) => Err(e),
             }
         }
