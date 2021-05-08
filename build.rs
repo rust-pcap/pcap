@@ -86,10 +86,10 @@ fn get_pcap_lib_version() -> Result<Version, Box<dyn std::error::Error>> {
     #[cfg(windows)]
     {
         let re = regex::Regex::new(r"based on libpcap version ([[:digit:]]+)\.([[:digit:]]+)")?;
-        let captures = re.captures(v_str).ok_or(err.clone())?;
+        let captures = re.captures(v_str).ok_or_else(|| err.clone())?;
 
-        let major_str = captures.get(1).ok_or(err.clone())?.as_str();
-        let minor_str = captures.get(2).ok_or(err.clone())?.as_str();
+        let major_str = captures.get(1).ok_or_else(|| err.clone())?.as_str();
+        let minor_str = captures.get(2).ok_or_else(|| err.clone())?.as_str();
 
         Ok(Version::new(
             major_str.parse::<usize>()?,
