@@ -2,8 +2,8 @@
 
 ## [Unreleased]
 
-- Updated dependency from `tokio` 0.2 to 1.0
-- New minimum supported rustc version is 1.45.0
+- Updated dependency `tokio` from version 0.2 to 1.0
+- `capture-stream` requires rustc version 1.45.0 due to dependency on `tokio`.
 
 ## [0.8.1] - 2020-12-30
 
