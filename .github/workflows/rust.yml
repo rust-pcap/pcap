@@ -18,19 +18,24 @@ jobs:
     strategy:
       matrix:
         os: [windows-latest, ubuntu-latest, macos-latest]
-        toolchain: ["1.40.0", stable, beta]
+        toolchain: ["1.40.0", "1.45.0", stable, beta]
         profile: ['', --release]
         features: ['', '--features full']
         exclude:
           - os: windows-latest
             features: '--features full'
+          # Tokio 1.0 (and this capture-stream) requires 1.45
+          - toolchain: "1.40.0"
+            features: '--features full'
+          - toolchain: "1.45.0"
+            features: ''
         include:
           # nightly check is performed on ubuntu only.
           - os: ubuntu-latest
             toolchain: nightly
             profile: ''
             features: --features full 
-    runs-on: ${{ matrix.os }} 
+    runs-on: ${{ matrix.os }}
 
     steps:
       - name: Check out repo
