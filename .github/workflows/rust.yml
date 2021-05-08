@@ -25,9 +25,9 @@ jobs:
           - os: windows-latest
             features: '--features full'
           # Tokio 1.0 (and this capture-stream) requires 1.45
-          - toolchain: "1.40.0"
-            features: '--features full'
           - toolchain: "1.45.0"
+            features: '--features full'
+          - toolchain: "1.40.0"
             features: ''
         include:
           # nightly check is performed on ubuntu only.
