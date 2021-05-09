@@ -42,6 +42,12 @@ impl Evented for SelectableFd {
     }
 }
 
+impl std::os::unix::io::AsRawFd for SelectableFd {
+    fn as_raw_fd(&self) -> RawFd {
+        self.fd
+    }
+}
+
 pub trait PacketCodec {
     type Type;
     fn decode(&mut self, packet: Packet) -> Result<Self::Type, Error>;
@@ -49,7 +55,7 @@ pub trait PacketCodec {
 
 pub struct PacketStream<T: State + ?Sized, C> {
     cap: Capture<T>,
-    fd: tokio::io::PollEvented<SelectableFd>,
+    fd: tokio::io::unix::AsyncFd<SelectableFd>,
     codec: C,
 }
 
@@ -57,7 +63,10 @@ impl<T: Activated + ?Sized, C: PacketCodec> PacketStream<T, C> {
     pub fn new(cap: Capture<T>, fd: RawFd, codec: C) -> Result<PacketStream<T, C>, Error> {
         Ok(PacketStream {
             cap,
-            fd: tokio::io::PollEvented::new(SelectableFd { fd })?,
+            fd: tokio::io::unix::AsyncFd::with_interest(
+                SelectableFd { fd },
+                tokio::io::Interest::READABLE,
+            )?,
             codec,
         })
     }
