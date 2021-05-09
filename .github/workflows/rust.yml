@@ -24,7 +24,7 @@ jobs:
         exclude:
           - os: windows-latest
             features: '--features full'
-          # Tokio 1.0 (and this capture-stream) requires 1.45
+          # Tokio 1.0 (and thus capture-stream) requires 1.45; do not run on 1.40
           - toolchain: "1.40.0"
             features: '--features full'
           - toolchain: "1.45.0"
