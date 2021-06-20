@@ -4,6 +4,7 @@
 
 - Updated dependency `tokio` from version 0.2 to 1.0
 - `capture-stream` requires rustc version 1.45.0 due to dependency on `tokio`.
+- add `savefile.flush` support.
 
 ## [0.8.1] - 2020-12-30
 
