@@ -98,6 +98,8 @@ pub enum Error {
     #[cfg(not(windows))]
     /// An invalid raw file descriptor was provided
     InvalidRawFd,
+    /// Errno error
+    ErrnoError(errno::Errno),
 }
 
 impl Error {
@@ -124,6 +126,7 @@ impl fmt::Display for Error {
             IoError(ref e) => write!(f, "io error occurred: {:?}", e),
             #[cfg(not(windows))]
             InvalidRawFd => write!(f, "invalid raw file descriptor provided"),
+            ErrnoError(ref e) => write!(f, "libpcap os errno: {}", e),
         }
     }
 }
@@ -143,6 +146,7 @@ impl std::error::Error for Error {
             IoError(..) => "io error occurred",
             #[cfg(not(windows))]
             InvalidRawFd => "invalid raw file descriptor provided",
+            ErrnoError(..) => "internal error, providing errno",
         }
     }
 
@@ -1142,6 +1146,15 @@ impl Savefile {
                 packet.data.as_ptr(),
             );
         }
+    }
+
+    /// Flushes all the packets that haven't been written to the savefile
+    pub fn flush(&mut self) -> Result<(), Error> {
+        if unsafe { raw::pcap_dump_flush(*self.handle as _) } != 0 {
+            return Err(Error::ErrnoError(errno::errno()));
+        }
+
+        Ok(())
     }
 }
 
