@@ -986,7 +986,7 @@ impl<T: Activated + ?Sized> Capture<T> {
         cx: &mut core::task::Context,
         fd: &mut tokio::io::unix::AsyncFd<stream::SelectableFd>,
     ) -> Result<Packet<'a>, Error> {
-        if let futures::task::Poll::Pending = fd.poll_read_ready(cx) {
+        if fd.poll_read_ready(cx).is_pending() {
             Err(IoError(io::ErrorKind::WouldBlock))
         } else {
             match self.next() {
