@@ -20,8 +20,6 @@ See examples for usage.
 
 # Building
 
-As of 0.8.0 this crate uses Rust 2018 and requires a compiler version >= 1.40.0.
-
 As of 0.9.0 if using the `capture-stream` feature this crate requires a compiler version >= 1.45.0.
 
 ## Windows
@@ -58,7 +56,7 @@ This feature is supported only on ubuntu and macosx.
 
 ```toml
 [dependencies]
-pcap = { version = "0.8", features = ["capture-stream"] }
+pcap = { version = "0.9", features = ["capture-stream"] }
 ```
 
 ## License
