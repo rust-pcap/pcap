@@ -37,7 +37,9 @@ impl Version {
     }
 }
 
-fn get_pcap_lib_version(libdirpath: Option<PathBuf>) -> Result<Version, Box<dyn std::error::Error>> {
+fn get_pcap_lib_version(
+    libdirpath: Option<PathBuf>,
+) -> Result<Version, Box<dyn std::error::Error>> {
     #[cfg(feature = "docs-rs")]
     return Ok(Version {
         major: 2,
