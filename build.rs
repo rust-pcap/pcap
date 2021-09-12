@@ -1,6 +1,7 @@
 use std::env;
 use std::ffi::CStr;
 use std::os::raw::c_char;
+use std::path::PathBuf;
 
 #[derive(PartialEq, Eq, PartialOrd, Ord)]
 struct Version {
@@ -36,7 +37,9 @@ impl Version {
     }
 }
 
-fn get_pcap_lib_version() -> Result<Version, Box<dyn std::error::Error>> {
+fn get_pcap_lib_version(
+    libdirpath: Option<PathBuf>,
+) -> Result<Version, Box<dyn std::error::Error>> {
     #[cfg(feature = "docs-rs")]
     return Ok(Version {
         major: 2,
@@ -49,11 +52,15 @@ fn get_pcap_lib_version() -> Result<Version, Box<dyn std::error::Error>> {
     }
 
     #[cfg(all(unix, not(target_os = "macos")))]
-    let libfile = "libpcap.so";
+    let mut libfile = PathBuf::from("libpcap.so");
     #[cfg(target_os = "macos")]
-    let libfile = "libpcap.dylib";
+    let mut libfile = PathBuf::from("libpcap.dylib");
     #[cfg(windows)]
-    let libfile = "wpcap.dll";
+    let mut libfile = PathBuf::from("wpcap.dll");
+
+    if let Some(libdir) = libdirpath {
+        libfile = libdir.join(libfile);
+    }
 
     let lib = libloading::Library::new(libfile)?;
 
@@ -124,10 +131,12 @@ fn main() {
     println!("cargo:rerun-if-env-changed=LIBPCAP_LIBDIR");
     println!("cargo:rerun-if-env-changed=LIBPCAP_VER");
 
+    let mut libdirpath: Option<PathBuf> = None;
     if let Ok(libdir) = env::var("LIBPCAP_LIBDIR") {
         println!("cargo:rustc-link-search=native={}", libdir);
+        libdirpath = Some(PathBuf::from(&libdir));
     }
 
-    let version = get_pcap_lib_version().unwrap();
+    let version = get_pcap_lib_version(libdirpath).unwrap();
     emit_cfg_flags(version);
 }
