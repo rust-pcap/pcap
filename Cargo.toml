@@ -26,6 +26,7 @@ widestring = "0.2"
 
 [dev-dependencies]
 tempdir = "0.3"
+tokio = { version = "1.0", features = ["macros", "rt-multi-thread"] }
 
 [build-dependencies]
 libloading = "0.6"
@@ -68,6 +69,11 @@ path = "examples/getstatistics.rs"
 [[example]]
 name = "streamlisten"
 path = "examples/streamlisten.rs"
+required-features = ["capture-stream"]
+
+[[example]]
+name = "streamlisten_mt"
+path = "examples/streamlisten_mt.rs"
 required-features = ["capture-stream"]
 
 [[example]]
