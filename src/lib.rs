@@ -196,7 +196,7 @@ pub struct Device {
     pub name: String,
     /// A textual description of the interface, if available
     pub desc: Option<String>,
-    /// Addresses assocated with this interface
+    /// Addresses associated with this interface
     pub addresses: Vec<Address>,
 }
 
