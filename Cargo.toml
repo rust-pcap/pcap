@@ -23,6 +23,7 @@ errno = "0.2"
 
 [target.'cfg(target_os = "windows")'.dependencies]
 widestring = "0.2"
+winapi = {version = "0.3", features = ["ws2def", "ws2ipdef"]} 
 
 [dev-dependencies]
 tempdir = "0.3"
