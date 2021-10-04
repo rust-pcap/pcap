@@ -48,6 +48,8 @@
 
 use unique::Unique;
 
+#[cfg(feature = "capture-stream")]
+use core::task::Poll::Ready;
 use std::borrow::Borrow;
 use std::ffi::{self, CStr, CString};
 use std::fmt;
@@ -61,8 +63,6 @@ use std::os::unix::io::{AsRawFd, RawFd};
 use std::path::Path;
 use std::ptr;
 use std::slice;
-#[cfg(feature = "capture-stream")]
-use core::task::Poll::Ready;
 
 use self::Error::*;
 
@@ -1006,13 +1006,14 @@ impl<T: Activated + ?Sized> Capture<T> {
                     //
                     if let Ready(Ok(mut guard)) = ready {
                         guard.clear_ready();
-                        #[allow(unused_must_use)] {
+                        #[allow(unused_must_use)]
+                        {
                             fd.poll_read_ready(cx);
                         }
                     }
 
                     Err(IoError(io::ErrorKind::WouldBlock))
-                },
+                }
                 Err(e) => Err(e),
             }
         }
