@@ -26,9 +26,9 @@ As of 0.9.0 the `capture-stream` feature requires a compiler version >= 1.45.0.
 
 ## Windows
 
-Install [WinPcap](http://www.winpcap.org/install/default.htm).
+Install [Npcap](https://nmap.org/).
 
-Download the WinPcap [Developer's Pack](https://www.winpcap.org/devel.htm).
+Download the [Npcap SDK](https://nmap.org/npcap/).
 Add the `/Lib` or `/Lib/x64` folder to your `LIB` environment variable.
 
 ## Linux
