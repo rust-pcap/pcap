@@ -71,7 +71,7 @@ use widestring::WideCString;
 #[cfg(target_os = "windows")]
 use winapi::shared::{
     ws2def::{AF_INET, AF_INET6, SOCKADDR_IN},
-    ws2ipdef::SOCKADDR_IN6
+    ws2ipdef::SOCKADDR_IN6,
 };
 
 mod raw;
@@ -292,16 +292,12 @@ impl Address {
     }
 
     unsafe fn new(ptr: *const raw::pcap_addr_t) -> Option<Address> {
-        if let Some(addr) = Self::convert_sockaddr((*ptr).addr) {
-            Some(Address {
-                addr,
-                netmask: Self::convert_sockaddr((*ptr).netmask),
-                broadcast_addr: Self::convert_sockaddr((*ptr).broadaddr),
-                dst_addr: Self::convert_sockaddr((*ptr).dstaddr),
-            })
-        } else {
-            None
-        }
+        Self::convert_sockaddr((*ptr).addr).map(|addr| Address {
+            addr,
+            netmask: Self::convert_sockaddr((*ptr).netmask),
+            broadcast_addr: Self::convert_sockaddr((*ptr).broadaddr),
+            dst_addr: Self::convert_sockaddr((*ptr).dstaddr),
+        })
     }
 
     #[cfg(not(target_os = "windows"))]
@@ -334,7 +330,7 @@ impl Address {
         match (*ptr).sa_family as i32 {
             AF_INET => {
                 let ptr: *const SOCKADDR_IN = std::mem::transmute(ptr);
-                let addr : [u8;4] = std::mem::transmute(*(*ptr).sin_addr.S_un.S_addr());
+                let addr: [u8; 4] = std::mem::transmute(*(*ptr).sin_addr.S_un.S_addr());
                 Some(IpAddr::from(addr))
             }
             AF_INET6 => {
