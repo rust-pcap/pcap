@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Added
+
+- Add support for device addresses.
+
 ## [0.9.0] - 2021-09-05
 
 ### Added
