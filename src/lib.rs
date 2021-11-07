@@ -48,6 +48,8 @@
 
 use unique::Unique;
 
+#[cfg(feature = "capture-stream")]
+use core::task::Poll::Ready;
 use std::borrow::Borrow;
 use std::ffi::{self, CStr, CString};
 use std::fmt;
@@ -1082,12 +1084,28 @@ impl<T: Activated + ?Sized> Capture<T> {
         cx: &mut core::task::Context,
         fd: &mut tokio::io::unix::AsyncFd<stream::SelectableFd>,
     ) -> Result<Packet<'a>, Error> {
-        if fd.poll_read_ready(cx).is_pending() {
+        let ready = fd.poll_read_ready(cx);
+        if ready.is_pending() {
             Err(IoError(io::ErrorKind::WouldBlock))
         } else {
             match self.next() {
                 Ok(p) => Ok(p),
-                Err(TimeoutExpired) => Err(IoError(io::ErrorKind::WouldBlock)),
+                Err(TimeoutExpired) => {
+                    // Per https://docs.rs/tokio/1.12.0/tokio/io/unix/struct.AsyncFd.html
+                    // ... it is critical to ensure that this ready flag
+                    // is cleared when (and only when) the file descriptor
+                    // ceases to be ready.
+                    //
+                    if let Ready(Ok(mut guard)) = ready {
+                        guard.clear_ready();
+                        #[allow(unused_must_use)]
+                        {
+                            fd.poll_read_ready(cx);
+                        }
+                    }
+
+                    Err(IoError(io::ErrorKind::WouldBlock))
+                }
                 Err(e) => Err(e),
             }
         }

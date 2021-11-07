@@ -1,7 +1,3 @@
-// This example explicitly creates and uses a single-threaded tokio
-// runtime.  See streamlisten_mt.rs for an example using tokio macros
-// and multiple threads.
-//
 use futures::StreamExt;
 use pcap::stream::{PacketCodec, PacketStream};
 use pcap::{Active, Capture, Device, Error, Packet};
@@ -38,17 +34,13 @@ fn new_stream() -> Result<PacketStream<Active, SimpleDumpCodec>, Error> {
     cap.stream(SimpleDumpCodec {})
 }
 
-fn main() {
-    let rt = tokio::runtime::Builder::new_current_thread()
-        .enable_io()
-        .build()
-        .unwrap();
-
-    let stream = rt.block_on(start_new_stream());
+#[tokio::main(flavor = "multi_thread", worker_threads = 10)]
+async fn main() {
+    let stream = start_new_stream().await;
 
     let fut = stream.for_each(move |s| {
         println!("{:?}", s);
         futures::future::ready(())
     });
-    rt.block_on(fut);
+    fut.await;
 }
