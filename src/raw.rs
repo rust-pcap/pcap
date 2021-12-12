@@ -231,8 +231,11 @@ extern "C" {
     pub fn pcap_setmintocopy(arg1: *mut pcap_t, arg2: c_int) -> c_int;
 }
 
-#[cfg(not(windows))]
-#[link(name = "pcap")]
+#[cfg_attr(
+    all(not(windows), feature = "static"),
+    link(name = "pcap", kind = "static")
+)]
+#[cfg_attr(all(not(windows), not(feature = "static")), link(name = "pcap"))]
 extern "C" {
     // pub fn pcap_inject(arg1: *mut pcap_t, arg2: *const c_void, arg3: size_t) -> c_int;
     pub fn pcap_set_rfmon(arg1: *mut pcap_t, arg2: c_int) -> c_int;

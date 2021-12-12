@@ -43,6 +43,9 @@ full = ["capture-stream"]
 # Flag for docs.rs builds where libpcap is not present.
 docs-rs = []
 
+# Flag - link with libpcap.a
+static = []
+
 [lib]
 name = "pcap"
 
