@@ -45,6 +45,21 @@
 //!     }
 //! }
 //! ```
+//!
+//! # Abstracting over different capture types
+//!
+//! You can abstract over live captures (`Capture<Active>`) and file captures
+//! (`Capture<Offline>`) using generics and the [`Activated`] trait, for example:
+//!
+//! ```
+//! use pcap::{Activated, Capture};
+//!
+//! fn read_packets<T: Activated>(mut capture: Capture<T>) {
+//!     while let Ok(packet) = capture.next() {
+//!         println!("received packet! {:?}", packet);
+//!     }
+//! }
+//! ```
 
 use unique::Unique;
 
