@@ -24,6 +24,8 @@ As of 0.8.0 this crate uses Rust 2018 and requires a compiler version >= 1.40.0.
 
 As of 0.9.0 the `capture-stream` feature requires a compiler version >= 1.45.0.
 
+As of 0.9.2 the `capture-stream` feature requires a compiler version >= 1.47.0.
+
 ## Windows
 
 Install [WinPcap](http://www.winpcap.org/install/default.htm).

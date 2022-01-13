@@ -332,7 +332,7 @@ impl Address {
         match (*ptr).sa_family as i32 {
             AF_INET => {
                 let ptr: *const SOCKADDR_IN = std::mem::transmute(ptr);
-                let addr: [u8; 4] = std::mem::transmute(*(*ptr).sin_addr.S_un.S_addr());
+                let addr: [u8; 4] = (*(*ptr).sin_addr.S_un.S_addr()).to_ne_bytes();
                 Some(IpAddr::from(addr))
             }
             AF_INET6 => {
@@ -626,27 +626,27 @@ pub enum Dead {}
 /// may or may not have particular capabilities. This trait is implemented by phantom
 /// types which allows us to punt these invariants to the type system to avoid runtime
 /// errors.
-pub unsafe trait Activated: State {}
+pub trait Activated: State {}
 
-unsafe impl Activated for Active {}
+impl Activated for Active {}
 
-unsafe impl Activated for Offline {}
+impl Activated for Offline {}
 
-unsafe impl Activated for Dead {}
+impl Activated for Dead {}
 
 /// `Capture`s can be in different states at different times, and in these states they
 /// may or may not have particular capabilities. This trait is implemented by phantom
 /// types which allows us to punt these invariants to the type system to avoid runtime
 /// errors.
-pub unsafe trait State {}
+pub trait State {}
 
-unsafe impl State for Inactive {}
+impl State for Inactive {}
 
-unsafe impl State for Active {}
+impl State for Active {}
 
-unsafe impl State for Offline {}
+impl State for Offline {}
 
-unsafe impl State for Dead {}
+impl State for Dead {}
 
 /// This is a pcap capture handle which is an abstraction over the `pcap_t` provided by pcap.
 /// There are many ways to instantiate and interact with a pcap handle, so phantom types are
