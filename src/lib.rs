@@ -332,7 +332,7 @@ impl Address {
         match (*ptr).sa_family as i32 {
             AF_INET => {
                 let ptr: *const SOCKADDR_IN = std::mem::transmute(ptr);
-                let addr: [u8; 4] = std::mem::transmute(*(*ptr).sin_addr.S_un.S_addr());
+                let addr: [u8; 4] = (*(*ptr).sin_addr.S_un.S_addr()).to_ne_bytes();
                 Some(IpAddr::from(addr))
             }
             AF_INET6 => {
