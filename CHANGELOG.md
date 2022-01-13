@@ -7,6 +7,7 @@
 ### Added
 
 - Add support for device addresses.
+- `capture-stream` requires rustc version 1.47.0 due to dependency on `tokio`.
 
 ## [0.9.0] - 2021-09-05
 
