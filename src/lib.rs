@@ -91,10 +91,12 @@ use winapi::shared::{
     ws2ipdef::SOCKADDR_IN6,
 };
 
+mod capture;
 mod raw;
 #[cfg(feature = "capture-stream")]
 pub mod stream;
 mod unique;
+pub use capture::*;
 
 /// An error received from pcap
 #[derive(Debug, PartialEq)]
