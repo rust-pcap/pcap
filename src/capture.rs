@@ -1,11 +1,12 @@
 use crate::Error;
+use crate::Packet;
 use crate::State;
 use crate::{raw, Capture, PacketHeader};
 use libc::c_int;
 use libc::c_uchar;
 
 /// The type for the function to pass into pcap_loop
-pub type HandlerFunc = fn(&PacketHeader, pkt_data: &[u8]) -> ();
+pub type HandlerFunc = fn(Packet) -> ();
 
 /// An internal function to convert the callback capture into rust safe function,
 /// #Safety
@@ -22,7 +23,7 @@ unsafe extern "C" fn capturer(
     // let header = &*(&*raw_header as *const raw::pcap_pkthdr as *const PacketHeader);
     let pkt_data = std::slice::from_raw_parts(raw_pkt_data, header.caplen as _);
 
-    callback(&header, pkt_data);
+    callback(Packet::new(&header, pkt_data));
 }
 
 ///Processes packets from a live capture or ``savefile`` until max packets are processed,

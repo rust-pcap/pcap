@@ -1146,7 +1146,15 @@ impl<T: Activated + ?Sized> Capture<T> {
     /// this is compiled using `pcap_compile()`.
     ///
     /// See http://biot.com/capstats/bpf.html for more information about this syntax.
-    pub fn filter(&mut self, program: &str, optimize: bool) -> Result<(), Error> {
+    pub fn filter(&mut self, filter: &mut BpfProgram) -> Result<(), Error> {
+        unsafe {
+            let ret = raw::pcap_setfilter(*self.handle, &mut filter.0);
+            raw::pcap_freecode(&mut filter.0);
+            self.check_err(ret != -1)
+        }
+    }
+
+    pub fn compile_filter(&mut self, program: &str, optimize: bool) -> Result<BpfProgram, Error> {
         let program = CString::new(program)?;
         unsafe {
             let mut bpf_program: raw::bpf_program = mem::zeroed();
@@ -1157,10 +1165,9 @@ impl<T: Activated + ?Sized> Capture<T> {
                 optimize as libc::c_int,
                 0,
             );
+
             self.check_err(ret != -1)?;
-            let ret = raw::pcap_setfilter(*self.handle, &mut bpf_program);
-            raw::pcap_freecode(&mut bpf_program);
-            self.check_err(ret != -1)
+            Ok(BpfProgram(bpf_program))
         }
     }
 
