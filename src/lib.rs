@@ -63,13 +63,9 @@
 
 use unique::Unique;
 
-#[cfg(feature = "capture-stream")]
-use core::task::Poll::Ready;
 use std::borrow::Borrow;
 use std::ffi::{self, CStr, CString};
 use std::fmt;
-#[cfg(feature = "capture-stream")]
-use std::io;
 use std::marker::PhantomData;
 use std::mem;
 use std::net::IpAddr;
@@ -1093,40 +1089,7 @@ impl<T: Activated + ?Sized> Capture<T> {
         }
     }
 
-    #[cfg(feature = "capture-stream")]
-    fn next_noblock<'a>(
-        &'a mut self,
-        cx: &mut core::task::Context,
-        fd: &mut tokio::io::unix::AsyncFd<stream::SelectableFd>,
-    ) -> Result<Packet<'a>, Error> {
-        let ready = fd.poll_read_ready(cx);
-        if ready.is_pending() {
-            Err(IoError(io::ErrorKind::WouldBlock))
-        } else {
-            match self.next() {
-                Ok(p) => Ok(p),
-                Err(TimeoutExpired) => {
-                    // Per https://docs.rs/tokio/1.12.0/tokio/io/unix/struct.AsyncFd.html
-                    // ... it is critical to ensure that this ready flag
-                    // is cleared when (and only when) the file descriptor
-                    // ceases to be ready.
-                    //
-                    if let Ready(Ok(mut guard)) = ready {
-                        guard.clear_ready();
-                        #[allow(unused_must_use)]
-                        {
-                            fd.poll_read_ready(cx);
-                        }
-                    }
-
-                    Err(IoError(io::ErrorKind::WouldBlock))
-                }
-                Err(e) => Err(e),
-            }
-        }
-    }
-
-    #[cfg(feature = "capture-stream")]
+    #[cfg(all(unix, feature = "capture-stream"))]
     pub fn stream<C: stream::PacketCodec>(
         self,
         codec: C,
@@ -1134,10 +1097,7 @@ impl<T: Activated + ?Sized> Capture<T> {
         if !self.nonblock {
             return Err(NonNonBlock);
         }
-        unsafe {
-            let fd = raw::pcap_get_selectable_fd(*self.handle);
-            stream::PacketStream::new(self, fd, codec)
-        }
+        stream::PacketStream::new(SelectableCapture(self), codec)
     }
 
     /// Adds a filter to the capture using the given BPF program string. Internally
@@ -1230,17 +1190,28 @@ impl Capture<Dead> {
 
 #[cfg(not(windows))]
 impl AsRawFd for Capture<Active> {
+    /// Returns the file descriptor for a live capture.
     fn as_raw_fd(&self) -> RawFd {
-        unsafe {
-            let fd = raw::pcap_fileno(*self.handle);
+        let fd = unsafe { raw::pcap_fileno(*self.handle) };
+        assert!(fd != -1, "Unable to get file descriptor for live capture");
+        fd
+    }
+}
 
-            match fd {
-                -1 => {
-                    panic!("Unable to get file descriptor for live capture");
-                }
-                fd => fd,
-            }
-        }
+/// Newtype [`Capture`] wrapper that exposes `pcap_get_selectable_fd()`.
+struct SelectableCapture<T: State + ?Sized>(Capture<T>);
+
+#[cfg(unix)]
+impl<T: Activated + ?Sized> AsRawFd for SelectableCapture<T> {
+    /// Returns the file descriptor for a live capture.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the network device does not support `select()`.
+    fn as_raw_fd(&self) -> RawFd {
+        let fd = unsafe { raw::pcap_get_selectable_fd(*self.0.handle) };
+        assert!(fd != -1, "Unable to get file descriptor for live capture");
+        fd
     }
 }
 
