@@ -76,6 +76,11 @@ path = "examples/streamlisten_mt.rs"
 required-features = ["capture-stream"]
 
 [[example]]
+name = "streamecho"
+path = "examples/streamecho.rs"
+required-features = ["capture-stream"]
+
+[[example]]
 name = "nfbpfcompile"
 path = "examples/nfbpfcompile.rs"
 
