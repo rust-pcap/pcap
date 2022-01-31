@@ -1089,7 +1089,13 @@ impl<T: Activated + ?Sized> Capture<T> {
         }
     }
 
-    #[cfg(all(unix, feature = "capture-stream"))]
+    /// Returns this capture as a [`futures::Stream`] of packets.
+    ///
+    /// # Errors
+    ///
+    /// If this capture is set to be blocking, or if the network device
+    /// does not support `select()`, an error will be returned.
+    #[cfg(feature = "capture-stream")]
     pub fn stream<C: stream::PacketCodec>(
         self,
         codec: C,
@@ -1097,7 +1103,7 @@ impl<T: Activated + ?Sized> Capture<T> {
         if !self.nonblock {
             return Err(NonNonBlock);
         }
-        stream::PacketStream::new(SelectableCapture(self), codec)
+        stream::PacketStream::new(SelectableCapture::new(self)?, codec)
     }
 
     /// Adds a filter to the capture using the given BPF program string. Internally
@@ -1199,19 +1205,27 @@ impl AsRawFd for Capture<Active> {
 }
 
 /// Newtype [`Capture`] wrapper that exposes `pcap_get_selectable_fd()`.
-struct SelectableCapture<T: State + ?Sized>(Capture<T>);
+#[cfg(feature = "capture-stream")]
+struct SelectableCapture<T: State + ?Sized> {
+    inner: Capture<T>,
+    fd: RawFd,
+}
 
-#[cfg(unix)]
+#[cfg(feature = "capture-stream")]
+impl<T: Activated + ?Sized> SelectableCapture<T> {
+    fn new(capture: Capture<T>) -> Result<Self, Error> {
+        let fd = unsafe { raw::pcap_get_selectable_fd(*capture.handle) };
+        if fd == -1 {
+            return Err(InvalidRawFd);
+        }
+        Ok(Self { inner: capture, fd })
+    }
+}
+
+#[cfg(all(unix, feature = "capture-stream"))]
 impl<T: Activated + ?Sized> AsRawFd for SelectableCapture<T> {
-    /// Returns the file descriptor for a live capture.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the network device does not support `select()`.
     fn as_raw_fd(&self) -> RawFd {
-        let fd = unsafe { raw::pcap_get_selectable_fd(*self.0.handle) };
-        assert!(fd != -1, "Unable to get file descriptor for live capture");
-        fd
+        self.fd
     }
 }
 

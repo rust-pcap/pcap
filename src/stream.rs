@@ -1,4 +1,6 @@
 //! Support for asynchronous packet iteration.
+//!
+//! See [`Capture::stream`](super::Capture::stream).
 use super::Activated;
 use super::Capture;
 use super::Error;
@@ -34,7 +36,7 @@ impl<T: Activated + ?Sized, C> PacketStream<T, C> {
     /// The caller must ensure the capture will not be set to be
     /// blocking.
     pub fn inner_mut(&mut self) -> &mut Capture<T> {
-        &mut self.inner.get_mut().0
+        &mut self.inner.get_mut().inner
     }
 }
 
@@ -47,7 +49,7 @@ impl<T: Activated + ?Sized, C: PacketCodec> futures::Stream for PacketStream<T, 
         let codec = &mut stream.codec;
         loop {
             let mut guard = ready!(stream.inner.poll_read_ready_mut(cx))?;
-            match guard.try_io(|inner| match inner.get_mut().0.next() {
+            match guard.try_io(|inner| match inner.get_mut().inner.next() {
                 Ok(p) => Ok(Ok(codec.decode(p))),
                 Err(e @ Error::TimeoutExpired) => Err(io::Error::new(io::ErrorKind::WouldBlock, e)),
                 Err(e) => Ok(Err(e)),
