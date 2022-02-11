@@ -58,9 +58,20 @@ The crate will automatically try to detect the installed `libpcap`/`wpcap` versi
 Use the `capture-stream` feature to enable support for streamed packet captures.
 This feature is supported only on ubuntu and macosx. 
 
+#### `static`
+
+Use the `static` feature to link statically with `libpcap.a`.
+This feature is supported only on Linux and macOS. 
+
+To build all examples with a static libpcap on Ubuntu:
+
+```
+LIBPCAP_LIBDIR=/usr/lib/x86_64-linux-gnu/ cargo build --features static --examples
+```
+
 ```toml
 [dependencies]
-pcap = { version = "0.9", features = ["capture-stream"] }
+pcap = { version = "0.9", features = ["capture-stream", "static"] }
 ```
 
 ## License

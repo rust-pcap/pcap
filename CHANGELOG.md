@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Added
+
+- Add `static` feature flag to link statically with libpcap.a on Linux/MacOS
+
 ### Changed
 
 - `capture-stream` requires rustc version 1.47.0 due to dependency on `tokio`.
