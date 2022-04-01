@@ -1140,8 +1140,9 @@ impl<T: Activated + ?Sized> Capture<T> {
         }
     }
 
-    /// Adds a filter to the capture using the given BPF program string. Internally
-    /// this is compiled using `pcap_compile()`.
+    /// Sets the pcap capture filter using the given BPF program string. Internally
+    /// this is compiled using `pcap_compile()`. `optimize` specifies controls whether
+    /// optimization on the resulting code is performed.
     ///
     /// See http://biot.com/capstats/bpf.html for more information about this syntax.
     pub fn filter(&mut self, program: &str, optimize: bool) -> Result<(), Error> {
