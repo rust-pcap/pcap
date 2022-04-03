@@ -1,4 +1,6 @@
-use libc::{c_char, c_int, c_uchar, c_uint, c_ushort, sockaddr, timeval, FILE};
+use std::convert::TryInto;
+
+use libc::{c_int, c_uchar, c_uint};
 
 use crate::raw;
 use crate::Error;
@@ -17,6 +19,14 @@ impl SendQueue {
         Ok(Self { squeue })
     }
 
+    pub fn maxlen(&self) -> c_int {
+        unsafe { (*self.squeue).maxlen() }
+    }
+
+    pub fn len(&self) -> c_int {
+        unsafe { (*self.squeue).len() }
+    }
+
     pub fn queue(
         &mut self,
         pkt_header: *const raw::pcap_pkthdr,
@@ -29,10 +39,11 @@ impl SendQueue {
     }
 
     pub fn transmit(&mut self, dev: &mut Capture<Active>, sync: c_int) -> Result<(), Error> {
-        let res = raw::pcap_sendqueue_transmit(*dev.handle, self.squeue, sync);
+        let res = unsafe { raw::pcap_sendqueue_transmit(*dev.handle, self.squeue, sync) };
 
-        if res < self.squeue.len {
-            return Err(Error::new(raw::pcap_geterr(*dev.handle)));
+        // ToDo: Fix unwrap()
+        if res < self.len().try_into().unwrap() {
+            return unsafe { Err(Error::new(raw::pcap_geterr(*dev.handle))) };
         }
 
         Ok(())

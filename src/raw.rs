@@ -78,7 +78,22 @@ pub struct pcap_addr_t {
 }
 
 #[cfg(windows)]
-pub enum pcap_send_queue {}
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct pcap_send_queue {
+    maxlen: c_int,
+    len: c_int,
+    buffer: *mut c_char,
+}
+
+impl pcap_send_queue {
+    pub fn maxlen(&self) -> c_int {
+        self.maxlen
+    }
+    pub fn len(&self) -> c_int {
+        self.len
+    }
+}
 
 pub type pcap_handler =
     Option<extern "C" fn(arg1: *mut c_uchar, arg2: *const pcap_pkthdr, arg3: *const c_uchar) -> ()>;
