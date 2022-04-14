@@ -222,7 +222,6 @@ extern "C" {
 }
 
 #[cfg(windows)]
-#[link(name = "wpcap")]
 pub const WINPCAP_MINTOCOPY_DEFAULT: c_int = 16000;
 
 #[cfg(windows)]
