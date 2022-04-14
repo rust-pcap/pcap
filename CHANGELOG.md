@@ -2,9 +2,11 @@
 
 ## [Unreleased]
 
+## [0.9.2] - 2022-04-15
+
 ### Changed
 
-- `capture-stream` requires rustc version 1.47.0 due to dependency on `tokio`.
+- `capture-stream` requires rustc version 1.49.0 due to dependency on `tokio`.
 
 ## [0.9.1] - 2021-11-07
 
