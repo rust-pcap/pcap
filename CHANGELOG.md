@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+### Added
+
+ - [doc](https://docs.rs/pcap/latest/pcap/) will now include all features
+
+### Removed
+
+- `docs-rs` feature
+- `full` feature
+
 ## [0.9.2] - 2022-04-15
 
 ### Changed

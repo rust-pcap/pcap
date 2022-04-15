@@ -36,12 +36,6 @@ regex = "1"
 # This is disabled by default, because it depends on a tokio
 capture-stream = ["tokio", "futures"]
 
-# A shortcut to enable all features.
-full = ["capture-stream"]
-
-# Flag for docs.rs builds where libpcap is not present.
-docs-rs = []
-
 [lib]
 name = "pcap"
 
@@ -85,4 +79,4 @@ name = "nfbpfcompile"
 path = "examples/nfbpfcompile.rs"
 
 [package.metadata.docs.rs]
-features = ["docs-rs"]
+all-features = true

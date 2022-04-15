@@ -20,13 +20,13 @@ jobs:
         os: [windows-latest, ubuntu-latest, macos-latest]
         toolchain: ["1.40.0", "1.49.0", stable, beta]
         profile: ['', --release]
-        features: ['', '--features full']
+        features: ['', '--all-features']
         exclude:
           - os: windows-latest
-            features: '--features full'
+            features: '--all-features'
           # Tokio 1.0 (and thus capture-stream) requires 1.49; do not run on 1.40
           - toolchain: "1.40.0"
-            features: '--features full'
+            features: '--all-features'
           - toolchain: "1.49.0"
             features: ''
         include:
@@ -34,7 +34,7 @@ jobs:
           - os: ubuntu-latest
             toolchain: nightly
             profile: ''
-            features: --features full 
+            features: --all-features
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -67,7 +67,7 @@ jobs:
         if: matrix.toolchain == 'stable'
         run: cargo clippy ${{ matrix.profile }} ${{ matrix.features }} -- -D warnings
       - name: cargo doc
-        run: cargo doc ${{ matrix.profile }} ${{ matrix.features }}
+        run: env DOCS_RS=true cargo doc ${{ matrix.profile }} ${{ matrix.features }}
       - name: cargo fmt
         if: matrix.toolchain == 'stable'
         run: cargo fmt -- --check
