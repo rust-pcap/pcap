@@ -18,17 +18,15 @@ jobs:
     strategy:
       matrix:
         os: [windows-latest, ubuntu-latest, macos-latest]
-        toolchain: ["1.40.0", "1.49.0", stable, beta]
+        toolchain: ["1.40.0", stable, beta]
         profile: ['', --release]
         features: ['', '--all-features']
         exclude:
+          # capture-stream is not supported on Windows or compiler versions too old for Tokio.
           - os: windows-latest
             features: '--all-features'
-          # Tokio 1.0 (and thus capture-stream) requires 1.49; do not run on 1.40
           - toolchain: "1.40.0"
             features: '--all-features'
-          - toolchain: "1.49.0"
-            features: ''
         include:
           # nightly check is performed on ubuntu only.
           - os: ubuntu-latest

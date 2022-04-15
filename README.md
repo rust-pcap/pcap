@@ -22,9 +22,7 @@ See examples for usage.
 
 As of 0.8.0 this crate uses Rust 2018 and requires a compiler version >= 1.40.0.
 
-As of 0.9.0 the `capture-stream` feature requires a compiler version >= 1.45.0.
-
-As of 0.9.2 the `capture-stream` feature requires a compiler version >= 1.49.0.
+The feature `capture-stream` depends on `tokio`, but we only lock `tokio` version to `1.0`. Therefore, when `capture-stream` is enabled, this crate requires a compiler version new enough to compile the `tokio` crate.
 
 ## Windows
 
