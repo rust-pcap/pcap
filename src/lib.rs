@@ -735,7 +735,6 @@ impl<T: State + ?Sized> Capture<T> {
         self
     }
 
-    #[inline]
     fn check_err(&self, success: bool) -> Result<(), Error> {
         if success {
             Ok(())
@@ -1296,7 +1295,6 @@ pub unsafe fn open_raw_fd(fd: RawFd, mode: u8) -> Result<*mut libc::FILE, Error>
         .ok_or(InvalidRawFd)
 }
 
-#[inline]
 unsafe fn cstr_to_string(ptr: *const libc::c_char) -> Result<Option<String>, Error> {
     let string = if ptr.is_null() {
         None
@@ -1308,7 +1306,6 @@ unsafe fn cstr_to_string(ptr: *const libc::c_char) -> Result<Option<String>, Err
 
 #[cfg(target_os = "windows")]
 #[allow(clippy::unnecessary_wraps)]
-#[inline]
 unsafe fn wstr_to_string(ptr: *const libc::c_char) -> Result<Option<String>, Error> {
     let string = if ptr.is_null() {
         None
@@ -1318,7 +1315,6 @@ unsafe fn wstr_to_string(ptr: *const libc::c_char) -> Result<Option<String>, Err
     Ok(string)
 }
 
-#[inline]
 fn with_errbuf<T, F>(func: F) -> Result<T, Error>
 where
     F: FnOnce(*mut libc::c_char) -> Result<T, Error>,
