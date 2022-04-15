@@ -19,9 +19,8 @@ impl PacketCodec for BoxCodec {
     }
 }
 
-fn new_stream() -> Result<PacketStream<Active, BoxCodec>, Error> {
+fn new_stream(device: Device) -> Result<PacketStream<Active, BoxCodec>, Error> {
     // get the default Device
-    let device = Device::lookup()?;
     println!("Using device {}", device.name);
 
     let cap = Capture::from_device(device)?
@@ -33,7 +32,8 @@ fn new_stream() -> Result<PacketStream<Active, BoxCodec>, Error> {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn error::Error>> {
-    let mut stream = new_stream()?;
+    let device = Device::lookup()?.ok_or("no device available")?;
+    let mut stream = new_stream(device)?;
 
     loop {
         // Here in the event loop we may await a bunch of other

@@ -64,6 +64,7 @@
 use unique::Unique;
 
 use std::borrow::Borrow;
+use std::convert::TryFrom;
 use std::ffi::{self, CStr, CString};
 use std::fmt;
 use std::marker::PhantomData;
@@ -77,9 +78,6 @@ use std::ptr;
 use std::slice;
 
 use self::Error::*;
-
-#[cfg(target_os = "windows")]
-use widestring::WideCString;
 
 #[cfg(target_os = "windows")]
 use winapi::shared::{
@@ -228,54 +226,67 @@ impl Device {
     }
 
     /// Returns the default Device suitable for captures according to pcap_lookupdev,
-    /// or an error from pcap.
-    #[cfg(not(target_os = "windows"))]
-    pub fn lookup() -> Result<Device, Error> {
-        with_errbuf(|err| unsafe {
-            cstr_to_string(raw::pcap_lookupdev(err))?
-                .map(|name| Device::new(name, None, Vec::new()))
-                .ok_or_else(|| Error::new(err))
-        })
-    }
-    #[cfg(target_os = "windows")]
-    pub fn lookup() -> Result<Device, Error> {
-        with_errbuf(|err| unsafe {
-            wstr_to_string(raw::pcap_lookupdev(err))?
-                .map(|name| Device::new(name, None, Vec::new()))
-                .ok_or_else(|| Error::new(err))
-        })
+    /// or an error from pcap. Note that there may be no suitable devices.
+    pub fn lookup() -> Result<Option<Device>, Error> {
+        unsafe {
+            Device::with_all_devs(|all_devs| {
+                let dev = all_devs;
+                Ok(if !dev.is_null() {
+                    Some(Device::try_from(&*dev)?)
+                } else {
+                    None
+                })
+            })
+        }
     }
 
     /// Returns a vector of `Device`s known by pcap via pcap_findalldevs.
     pub fn list() -> Result<Vec<Device>, Error> {
-        with_errbuf(|err| unsafe {
-            let mut dev_buf: *mut raw::pcap_if_t = ptr::null_mut();
-            if raw::pcap_findalldevs(&mut dev_buf, err) != 0 {
-                return Err(Error::new(err));
-            }
-            let result = (|| {
+        unsafe {
+            Device::with_all_devs(|all_devs| {
                 let mut devices = vec![];
-                let mut cur = dev_buf;
-                while !cur.is_null() {
-                    let dev = &*cur;
-                    devices.push(Device::new(
-                        cstr_to_string(dev.name)?.ok_or(InvalidString)?,
-                        cstr_to_string(dev.description)?,
-                        Address::new_vec(dev.addresses),
-                    ));
-                    cur = dev.next;
+                let mut dev = all_devs;
+                while !dev.is_null() {
+                    devices.push(Device::try_from(&*dev)?);
+                    dev = (*dev).next;
                 }
                 Ok(devices)
-            })();
-            raw::pcap_freealldevs(dev_buf);
-            result
-        })
+            })
+        }
+    }
+
+    unsafe fn with_all_devs<T, F>(func: F) -> Result<T, Error>
+    where
+        F: FnOnce(*mut raw::pcap_if_t) -> Result<T, Error>,
+    {
+        let all_devs = with_errbuf(|err| {
+            let mut all_devs: *mut raw::pcap_if_t = ptr::null_mut();
+            if raw::pcap_findalldevs(&mut all_devs, err) != 0 {
+                return Err(Error::new(err));
+            }
+            Ok(all_devs)
+        })?;
+        let result = func(all_devs);
+        raw::pcap_freealldevs(all_devs);
+        result
     }
 }
 
 impl From<&str> for Device {
     fn from(name: &str) -> Self {
         Device::new(name.into(), None, Vec::new())
+    }
+}
+
+impl TryFrom<&raw::pcap_if_t> for Device {
+    type Error = Error;
+
+    fn try_from(dev: &raw::pcap_if_t) -> Result<Self, Error> {
+        Ok(Device::new(
+            unsafe { cstr_to_string(dev.name)?.ok_or(InvalidString)? },
+            unsafe { cstr_to_string(dev.description)? },
+            unsafe { Address::new_vec(dev.addresses) },
+        ))
     }
 }
 
@@ -862,7 +873,9 @@ impl Capture<Inactive> {
     /// use pcap::*;
     ///
     /// // Usage 1: Capture from a single owned device
-    /// let dev: Device = pcap::Device::lookup().unwrap();
+    /// let dev: Device = pcap::Device::lookup()
+    ///     .expect("device lookup failed")
+    ///     .expect("no device available");
     /// let cap1 = Capture::from_device(dev);
     ///
     /// // Usage 2: Capture from an element of device list.
@@ -1300,17 +1313,6 @@ unsafe fn cstr_to_string(ptr: *const libc::c_char) -> Result<Option<String>, Err
         None
     } else {
         Some(CStr::from_ptr(ptr as _).to_str()?.to_owned())
-    };
-    Ok(string)
-}
-
-#[cfg(target_os = "windows")]
-#[allow(clippy::unnecessary_wraps)]
-unsafe fn wstr_to_string(ptr: *const libc::c_char) -> Result<Option<String>, Error> {
-    let string = if ptr.is_null() {
-        None
-    } else {
-        Some(WideCString::from_ptr_str(ptr as _).to_string().unwrap())
     };
     Ok(string)
 }
