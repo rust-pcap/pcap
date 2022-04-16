@@ -30,7 +30,6 @@ impl<T: ?Sized> Unique<T> {
 impl<T: ?Sized> Deref for Unique<T> {
     type Target = *mut T;
 
-    #[inline]
     fn deref(&self) -> &*mut T {
         unsafe { &*(&self.pointer as *const *const T as *const *mut T) }
     }
