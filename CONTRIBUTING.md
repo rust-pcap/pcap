@@ -51,4 +51,5 @@ xdg-open target/debug/coverage/index.html
 ### More information
 
 For more information on LLVM code coverage in Rust: https://doc.rust-lang.org/rustc/instrument-coverage.html
+
 For more information on `grcov`: https://github.com/mozilla/grcov
