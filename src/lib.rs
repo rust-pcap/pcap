@@ -704,6 +704,11 @@ pub struct Capture<T: State + ?Sized> {
     _marker: PhantomData<T>,
 }
 
+// A Capture is safe to Send as it encapsulates the entire lifetime of `raw::pcap_t *`, but it is
+// not safe to Sync as libpcap does not promise thread-safe access to the same `raw::pcap_t *` from
+// multiple threads.
+unsafe impl<T: State + ?Sized> Send for Capture<T> {}
+
 impl<T: State + ?Sized> From<NonNull<raw::pcap_t>> for Capture<T> {
     fn from(handle: NonNull<raw::pcap_t>) -> Self {
         Capture {
@@ -1272,6 +1277,11 @@ impl<T: Activated> From<Capture<T>> for Capture<dyn Activated> {
 pub struct Savefile {
     handle: NonNull<raw::pcap_dumper_t>,
 }
+
+// Just like a Capture, a Savefile is safe to Send as it encapsulates the entire lifetime of
+// `raw::pcap_dumper_t *`, but it is not safe to Sync as libpcap does not promise thread-safe access
+// to the same `raw::pcap_dumper_t *` from multiple threads.
+unsafe impl Send for Savefile {}
 
 impl Savefile {
     /// Write a packet to a capture file
