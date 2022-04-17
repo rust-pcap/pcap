@@ -9,6 +9,7 @@
 ### Changed
 
 - `Device::lookup` now returns `Result<Option<Device>, Error>` rather than `Result<Device, Error>`. `Ok(None)` means that the lookup succeeded, but no suitable devices were available. This is consistent with libpcap.
+- `Capture` and `Savefile` no longer implement the `Sync` trait. The underlying `libpcap` library does not promise thread-safe access for the same capture object from multiple threads.
 
 ### Removed
 
