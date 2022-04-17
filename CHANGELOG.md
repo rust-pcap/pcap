@@ -11,6 +11,7 @@
 
 ### Changed
 
+- MSRV is now `1.41.0`
 - `PacketStream` have been moved from mod `stream` to the `root` of the crate
 - `PacketCodec` have been moved from mod `stream` to the `root` of the crate
 - `PacketCodec::decode()` no longer return a `Result`
