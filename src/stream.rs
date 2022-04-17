@@ -20,7 +20,7 @@ pub trait PacketCodec {
 
 pub struct PacketStream<T: Activated + ?Sized, C> {
     inner: AsyncFd<SelectableCapture<T>>,
-    codec: C,
+    pub codec: C,
 }
 
 impl<T: Activated + ?Sized, C> PacketStream<T, C> {

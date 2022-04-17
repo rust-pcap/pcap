@@ -5,10 +5,10 @@
 ### Added
 
  - [doc](https://docs.rs/pcap/latest/pcap/) will now include all features
-
 ### Changed
 
 - `Device::lookup` now returns `Result<Option<Device>, Error>` rather than `Result<Device, Error>`. `Ok(None)` means that the lookup succeeded, but no suitable devices were available. This is consistent with libpcap.
+- `PacketStream`'s `codec` is now public.
 
 ### Removed
 
