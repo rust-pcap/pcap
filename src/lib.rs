@@ -87,7 +87,15 @@ mod raw;
 #[cfg(windows)]
 pub mod sendqueue;
 #[cfg(feature = "capture-stream")]
-pub mod stream;
+mod stream;
+#[cfg(feature = "capture-stream")]
+pub use stream::PacketStream;
+
+mod iterator;
+pub use iterator::PacketIter;
+
+mod codec;
+pub use codec::PacketCodec;
 
 /// An error received from pcap
 #[derive(Debug, PartialEq, Eq)]
@@ -1123,7 +1131,11 @@ impl<T: Activated + ?Sized> Capture<T> {
     /// Blocks until a packet is returned from the capture handle or an error occurs.
     ///
     /// pcap captures packets and places them into a buffer which this function reads
-    /// from. This buffer has a finite length, so if the buffer fills completely new
+    /// from.
+    ///
+    /// # Warning
+    ///
+    /// This buffer has a finite length, so if the buffer fills completely new
     /// packets will be discarded temporarily. This means that in realtime situations,
     /// you probably want to minimize the time between calls of this next() method.
     #[allow(clippy::should_implement_trait)]
@@ -1159,6 +1171,11 @@ impl<T: Activated + ?Sized> Capture<T> {
         }
     }
 
+    /// Return an iterator that call [`Self::next()`] forever. Require a [`PacketCodec`]
+    pub fn iter<C: PacketCodec>(self, codec: C) -> PacketIter<T, C> {
+        PacketIter::new(self, codec)
+    }
+
     /// Returns this capture as a [`futures::Stream`] of packets.
     ///
     /// # Errors
@@ -1166,14 +1183,11 @@ impl<T: Activated + ?Sized> Capture<T> {
     /// If this capture is set to be blocking, or if the network device
     /// does not support `select()`, an error will be returned.
     #[cfg(feature = "capture-stream")]
-    pub fn stream<C: stream::PacketCodec>(
-        self,
-        codec: C,
-    ) -> Result<stream::PacketStream<T, C>, Error> {
+    pub fn stream<C: PacketCodec>(self, codec: C) -> Result<PacketStream<T, C>, Error> {
         if !self.nonblock {
             return Err(NonNonBlock);
         }
-        stream::PacketStream::new(SelectableCapture::new(self)?, codec)
+        PacketStream::new(SelectableCapture::new(self)?, codec)
     }
 
     /// Sets the filter on the capture using the given BPF program string. Internally this is

@@ -3,8 +3,7 @@
 //! For brewity replies are sent with the same headers as the incoming
 //! packets.
 use futures::StreamExt;
-use pcap::stream::{PacketCodec, PacketStream};
-use pcap::{Active, Capture, Device, Error, Packet};
+use pcap::{Active, Capture, Device, Error, Packet, PacketCodec, PacketStream};
 use std::error;
 
 // Simple codec that returns owned copies, since the result may not
@@ -12,10 +11,10 @@ use std::error;
 pub struct BoxCodec;
 
 impl PacketCodec for BoxCodec {
-    type Type = Box<[u8]>;
+    type Item = Box<[u8]>;
 
-    fn decode(&mut self, packet: Packet) -> Result<Self::Type, Error> {
-        Ok(packet.data.into())
+    fn decode(&mut self, packet: Packet) -> Self::Item {
+        packet.data.into()
     }
 }
 
