@@ -1,4 +1,4 @@
-name: pcap
+name: CI
 
 on:
   push:

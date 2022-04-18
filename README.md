@@ -1,8 +1,9 @@
 # pcap
-[![CI](https://github.com/rust-pcap/pcap/workflows/pcap/badge.svg)](https://github.com/rust-pcap/pcap/actions/workflows/pcap.yml) [![Coverage](https://rust-pcap.github.io/pcap/badges/flat.svg)](https://rust-pcap.github.io/pcap/index.html) [![Crates.io](https://img.shields.io/crates/v/pcap.svg)](https://crates.io/crates/pcap) [![Docs.rs](https://docs.rs/pcap/badge.svg)](https://docs.rs/pcap)
 
 This is a **Rust language** crate for accessing the packet sniffing capabilities of pcap (or wpcap on Windows).
 If you need anything feel free to post an issue or submit a pull request!
+
+[![CI](https://github.com/rust-pcap/pcap/workflows/CI/badge.svg)](https://github.com/rust-pcap/pcap/actions/workflows/ci.yml) [![Coverage](https://rust-pcap.github.io/pcap/badges/flat.svg)](https://rust-pcap.github.io/pcap/index.html) [![Crates.io](https://img.shields.io/crates/v/pcap.svg)](https://crates.io/crates/pcap) [![Docs.rs](https://docs.rs/pcap/badge.svg)](https://docs.rs/pcap)
 
 ## Features:
 
