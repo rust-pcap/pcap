@@ -1,5 +1,3 @@
-name: Rust CI
-
 on:
   push:
     branches: [ main ]
