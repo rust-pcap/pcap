@@ -45,5 +45,5 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add -A
-          git commit -m "Code coverage for "$(git rev-parse main)
+          git commit -m "Code coverage for "$(git rev-parse --short main)
           git push
