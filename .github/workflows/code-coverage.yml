@@ -1,4 +1,4 @@
-name: codecov
+name: code-coverage
 
 on:
   push:
@@ -33,11 +33,11 @@ jobs:
         run: RUSTFLAGS="-C instrument-coverage" LLVM_PROFILE_FILE="target/debug/profraw/pcap-%p-%m.profraw" cargo test --all-features
       - name: grcov
         run: grcov target/debug/profraw -s src/ --binary-path ./target/debug/ -t html --branch --ignore-not-existing -o ./target/debug/coverage/
-      - name: Check out codecov branch
+      - name: Check out code-coverage branch
         uses: actions/checkout@v2
         with:
           clean: false
-          ref: codecov
+          ref: code-coverage
       - name: Update, commit, and push
         run: |
           rm *.html
@@ -45,5 +45,5 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add -A
-          git commit -m "Code coverage for "$(git rev-parse main)
+          git commit -m "Code coverage for "$(git rev-parse --short main)
           git push
