@@ -1,4 +1,4 @@
-name: Code Coverage
+name: codecov
 
 on:
   push:
