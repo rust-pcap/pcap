@@ -1,4 +1,4 @@
-# pcap [![Build](https://github.com/rust-pcap/pcap/actions/workflows/pcap.yml/badge.svg)](https://github.com/rust-pcap/pcap/actions/workflows/pcap.yml) [![Coverage](https://rust-pcap.github.io/pcap/badges/flat.svg)](https://rust-pcap.github.io/pcap/index.html) [![Crates.io](https://img.shields.io/crates/v/pcap.svg)](https://crates.io/crates/pcap) [![Docs.rs](https://docs.rs/pcap/badge.svg)](https://docs.rs/pcap)
+# pcap [![Build](https://github.com/rust-pcap/pcap/workflows/pcap/badge.svg)](https://github.com/rust-pcap/pcap/actions/workflows/pcap.yml) [![Coverage](https://rust-pcap.github.io/pcap/badges/flat.svg)](https://rust-pcap.github.io/pcap/index.html) [![Crates.io](https://img.shields.io/crates/v/pcap.svg)](https://crates.io/crates/pcap) [![Docs.rs](https://docs.rs/pcap/badge.svg)](https://docs.rs/pcap)
 
 ### [Documentation](https://docs.rs/pcap)
 
