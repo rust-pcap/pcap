@@ -2,6 +2,8 @@
 
 ## Code coverage
 
+The current code coverage for the `main` branch is automatically published on every push to `main` on https://rust-pcap.github.io/pcap/.
+
 ### Pre-requisites
 
 To obtain code coverage locally you will need the nightly compiler toolchain, [compatible LLVM coverage tools](https://doc.rust-lang.org/rustc/instrument-coverage.html#installing-llvm-coverage-tools), and [`grcov`](https://github.com/mozilla/grcov).
@@ -35,12 +37,12 @@ cargo clean
 
 Compile and run the tests. We set `RUSTFLAGS="-C instrument-coverage"` to enable source-based code coverage and `LLVM_PROFILE_FILE="target/debug/coverage/profraw/pcap-%p-%m.profraw"` to make sure each test gets its own profile information.
 ```
-RUSTFLAGS="-C instrument-coverage" LLVM_PROFILE_FILE="target/debug/coverage/profraw/pcap-%p-%m.profraw" cargo test --all-features
+RUSTFLAGS="-C instrument-coverage" LLVM_PROFILE_FILE="target/debug/profraw/pcap-%p-%m.profraw" cargo test --all-features
 ```
 
 And finally, run `grcov` to obtain a report.
 ```
-grcov target/debug/coverage/profraw -s . --binary-path ./target/debug/ -t html --branch --ignore-not-existing --ignore build.rs --ignore tests/\* --ignore examples/\* -o ./target/debug/coverage/
+grcov target/debug/profraw -s src/ --binary-path ./target/debug/ -t html --branch --ignore-not-existing -o ./target/debug/coverage/
 ```
 
 The code coverage report will be available in `target/debug/coverage/index.html` which you can explore in your browser.

@@ -1,4 +1,4 @@
-# pcap [![Build status](https://api.travis-ci.org/ebfull/pcap.svg)](https://travis-ci.org/ebfull/pcap) [![Crates.io](https://img.shields.io/crates/v/pcap.svg)](https://crates.io/crates/pcap) [![Docs.rs](https://docs.rs/pcap/badge.svg)](https://docs.rs/pcap) #
+# pcap [![Build](https://github.com/rust-pcap/pcap/actions/workflows/rust.yml/badge.svg)](https://github.com/rust-pcap/pcap/actions/workflows/rust.yml) [![Coverage](https://rust-pcap.github.io/pcap/badges/flat.svg)](https://rust-pcap.github.io/pcap/index.html) [![Crates.io](https://img.shields.io/crates/v/pcap.svg)](https://crates.io/crates/pcap) [![Docs.rs](https://docs.rs/pcap/badge.svg)](https://docs.rs/pcap)
 
 ### [Documentation](https://docs.rs/pcap)
 
