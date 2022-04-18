@@ -1,0 +1,49 @@
+name: Code Coverage
+
+on:
+  push:
+    branches: [ main ]
+
+env:
+  RUST_BACKTRACE: 1
+  CARGO_TERM_VERBOSE: true
+  CARGO_TERM_COLOR: always
+
+jobs:
+  code-coverage:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v2
+      - name: Install libpcap (ubuntu)
+        run: sudo apt-get install libpcap-dev
+      - name: Select rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: 'nightly'
+          components: llvm-tools-preview
+          override: true
+      - name: Install grcov
+        # This is slower, but the grcov-provided binary does not produce correct badges.
+        run: cargo install grcov
+      - name: cargo build
+        run: RUSTFLAGS="-C instrument-coverage" cargo build --all-features
+      - name: cargo test
+        run: RUSTFLAGS="-C instrument-coverage" LLVM_PROFILE_FILE="target/debug/profraw/pcap-%p-%m.profraw" cargo test --all-features
+      - name: grcov
+        run: grcov target/debug/profraw -s src/ --binary-path ./target/debug/ -t html --branch --ignore-not-existing -o ./target/debug/coverage/
+      - name: Check out codecov branch
+        uses: actions/checkout@v2
+        with:
+          clean: false
+          ref: codecov
+      - name: Update, commit, and push
+        run: |
+          rm *.html
+          cp -r ./target/debug/coverage/* ./
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add -A
+          git commit -m "Code coverage for "$(git rev-parse main)
+          git push
