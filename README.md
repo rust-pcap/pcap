@@ -1,9 +1,12 @@
-# pcap [![Build status](https://api.travis-ci.org/ebfull/pcap.svg)](https://travis-ci.org/ebfull/pcap) [![Crates.io](https://img.shields.io/crates/v/pcap.svg)](https://crates.io/crates/pcap) [![Docs.rs](https://docs.rs/pcap/badge.svg)](https://docs.rs/pcap) #
-
-### [Documentation](https://docs.rs/pcap)
+# pcap
 
 This is a **Rust language** crate for accessing the packet sniffing capabilities of pcap (or wpcap on Windows).
 If you need anything feel free to post an issue or submit a pull request!
+
+[![CI](https://github.com/rust-pcap/pcap/workflows/CI/badge.svg)](https://github.com/rust-pcap/pcap/actions/workflows/ci.yml)
+[![Coverage](https://rust-pcap.github.io/pcap/badges/flat.svg)](https://rust-pcap.github.io/pcap/index.html)
+[![Crates.io](https://img.shields.io/crates/v/pcap.svg)](https://crates.io/crates/pcap)
+[![Docs.rs](https://docs.rs/pcap/badge.svg)](https://docs.rs/pcap)
 
 ## Features:
 
@@ -22,9 +25,7 @@ See examples for usage.
 
 As of 0.8.0 this crate uses Rust 2018 and requires a compiler version >= 1.40.0.
 
-As of 0.9.0 the `capture-stream` feature requires a compiler version >= 1.45.0.
-
-As of 0.9.2 the `capture-stream` feature requires a compiler version >= 1.47.0.
+The feature `capture-stream` depends on `tokio`, but we only lock `tokio` version to `1.0`. Therefore, when `capture-stream` is enabled, this crate requires a compiler version new enough to compile the `tokio` crate.
 
 ## Windows
 
