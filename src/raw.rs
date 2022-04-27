@@ -86,6 +86,7 @@ pub struct pcap_send_queue {
     buffer: *mut c_char,
 }
 
+#[cfg(windows)]
 impl pcap_send_queue {
     pub fn maxlen(&self) -> c_int {
         self.maxlen
