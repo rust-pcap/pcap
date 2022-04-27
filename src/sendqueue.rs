@@ -16,13 +16,6 @@ pub struct SendQueue {
 impl SendQueue {
     pub fn new(memsize: c_uint) -> Result<Self, Error> {
         let squeue = unsafe { raw::pcap_sendqueue_alloc(memsize) };
-
-        /*
-        if squeue == std::ptr::null_mut() {
-            return Err(Error::InsufficientMemory);
-        }
-        */
-
         let squeue = if let Some(squeue) = NonNull::new(squeue) {
             squeue
         } else {
