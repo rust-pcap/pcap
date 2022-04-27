@@ -1,13 +1,15 @@
 use std::convert::TryInto;
+use std::time::{SystemTime, UNIX_EPOCH};
 
-use libc::{c_int, c_uchar, c_uint};
+use libc::{c_int, c_uint};
 
 use crate::raw;
 use crate::Error;
 use crate::{Active, Capture};
 
-struct SendQueue {
+pub struct SendQueue {
     squeue: *mut raw::pcap_send_queue,
+    sync: c_int,
 }
 
 impl SendQueue {
@@ -16,7 +18,7 @@ impl SendQueue {
         if squeue == std::ptr::null_mut() {
             return Err(Error::InsufficientMemory);
         }
-        Ok(Self { squeue })
+        Ok(Self { squeue, sync: 0 })
     }
 
     pub fn maxlen(&self) -> c_int {
@@ -27,19 +29,41 @@ impl SendQueue {
         unsafe { (*self.squeue).len() }
     }
 
-    pub fn queue(
-        &mut self,
-        pkt_header: *const raw::pcap_pkthdr,
-        pkt_data: *const c_uchar,
-    ) -> Result<(), Error> {
-        let res = unsafe { raw::pcap_sendqueue_queue(self.squeue, pkt_header, pkt_data) };
-        if res == -1 {}
+    pub fn sync(&mut self, sync: bool) {
+        self.sync = if sync { 1 } else { 0 }
+    }
+
+    /// Add a packet to the queue.
+    pub fn queue(&mut self, buf: &[u8]) -> Result<(), Error> {
+        let start = SystemTime::now();
+        let since_the_epoch = start
+            .duration_since(UNIX_EPOCH)
+            .expect("Time went backwards");
+
+        let s = since_the_epoch.as_secs();
+        let us = since_the_epoch.subsec_micros();
+
+        let pkthdr = raw::pcap_pkthdr {
+            ts: libc::timeval {
+                tv_sec: s as i32,
+                tv_usec: us as i32,
+            },
+            caplen: buf.len() as u32,
+            len: buf.len() as u32,
+        };
+
+        let ph = &pkthdr as *const _;
+        let res = unsafe { raw::pcap_sendqueue_queue(self.squeue, ph, buf.as_ptr()) };
+        if res == -1 {
+            return Err(Error::InsufficientMemory);
+        }
 
         Ok(())
     }
 
-    pub fn transmit(&mut self, dev: &mut Capture<Active>, sync: c_int) -> Result<(), Error> {
-        let res = unsafe { raw::pcap_sendqueue_transmit(*dev.handle, self.squeue, sync) };
+    /// Transmit the contents of the queue.
+    pub fn transmit(&mut self, dev: &mut Capture<Active>) -> Result<(), Error> {
+        let res = unsafe { raw::pcap_sendqueue_transmit(*dev.handle, self.squeue, self.sync) };
 
         // ToDo: Fix unwrap()
         if res < self.len().try_into().unwrap() {
