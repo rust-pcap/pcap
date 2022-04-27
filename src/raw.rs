@@ -99,7 +99,7 @@ pub type pcap_handler =
     Option<extern "C" fn(arg1: *mut c_uchar, arg2: *const pcap_pkthdr, arg3: *const c_uchar) -> ()>;
 
 extern "C" {
-    pub fn pcap_lookupdev(arg1: *mut c_char) -> *mut c_char;
+    // [OBSOLETE] pub fn pcap_lookupdev(arg1: *mut c_char) -> *mut c_char;
     // pub fn pcap_lookupnet(arg1: *const c_char, arg2: *mut c_uint, arg3: *mut c_uint,
     //                       arg4: *mut c_char) -> c_int;
     pub fn pcap_create(arg1: *const c_char, arg2: *mut c_char) -> *mut pcap_t;
@@ -240,7 +240,6 @@ extern "C" {
 }
 
 #[cfg(windows)]
-#[link(name = "wpcap")]
 pub const WINPCAP_MINTOCOPY_DEFAULT: c_int = 16000;
 
 #[cfg(windows)]

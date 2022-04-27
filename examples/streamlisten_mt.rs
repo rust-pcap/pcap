@@ -1,6 +1,7 @@
 use futures::StreamExt;
 use pcap::stream::{PacketCodec, PacketStream};
 use pcap::{Active, Capture, Device, Error, Packet};
+use std::error;
 
 pub struct SimpleDumpCodec;
 
@@ -12,8 +13,8 @@ impl PacketCodec for SimpleDumpCodec {
     }
 }
 
-async fn start_new_stream() -> PacketStream<Active, SimpleDumpCodec> {
-    match new_stream() {
+async fn start_new_stream(device: Device) -> PacketStream<Active, SimpleDumpCodec> {
+    match new_stream(device) {
         Ok(stream) => stream,
         Err(e) => {
             println!("{:?}", e);
@@ -22,9 +23,8 @@ async fn start_new_stream() -> PacketStream<Active, SimpleDumpCodec> {
     }
 }
 
-fn new_stream() -> Result<PacketStream<Active, SimpleDumpCodec>, Error> {
+fn new_stream(device: Device) -> Result<PacketStream<Active, SimpleDumpCodec>, Error> {
     // get the default Device
-    let device = Device::lookup()?;
     println!("Using device {}", device.name);
 
     let cap = Capture::from_device(device)?
@@ -35,12 +35,14 @@ fn new_stream() -> Result<PacketStream<Active, SimpleDumpCodec>, Error> {
 }
 
 #[tokio::main(flavor = "multi_thread", worker_threads = 10)]
-async fn main() {
-    let stream = start_new_stream().await;
+async fn main() -> Result<(), Box<dyn error::Error>> {
+    let device = Device::lookup()?.ok_or("no device available")?;
+    let stream = start_new_stream(device).await;
 
     let fut = stream.for_each(move |s| {
         println!("{:?}", s);
         futures::future::ready(())
     });
     fut.await;
+    Ok(())
 }
