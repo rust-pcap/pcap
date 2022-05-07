@@ -810,12 +810,12 @@ impl Capture<Offline> {
 
     /// Get the major version number of the pcap dump file format.
     pub fn major_version(&self) -> i32 {
-        return unsafe { raw::pcap_major_version(self.handle.as_ptr()) };
+        unsafe { raw::pcap_major_version(self.handle.as_ptr()) }
     }
 
     /// Get the minor version number of the pcap dump file format.
     pub fn minor_version(&self) -> i32 {
-        return unsafe { raw::pcap_minor_version(self.handle.as_ptr()) };
+        unsafe { raw::pcap_minor_version(self.handle.as_ptr()) }
     }
 
     /// Get the (major, minor) version number of the pcap dump file format.
