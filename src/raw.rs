@@ -94,6 +94,9 @@ impl pcap_send_queue {
     pub fn len(&self) -> c_int {
         self.len
     }
+    pub fn reset(&mut self) {
+        self.len = 0;
+    }
 }
 
 pub type pcap_handler =

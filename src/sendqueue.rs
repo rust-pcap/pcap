@@ -78,6 +78,10 @@ impl SendQueue {
 
         Ok(())
     }
+
+    pub fn reset(&mut self) {
+        unsafe { *self.squeue.as_ptr() }.reset();
+    }
 }
 
 impl Drop for SendQueue {
