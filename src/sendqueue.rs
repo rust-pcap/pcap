@@ -1,4 +1,3 @@
-use std::convert::TryInto;
 use std::ptr::NonNull;
 use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -16,20 +15,16 @@ pub struct SendQueue {
 impl SendQueue {
     pub fn new(memsize: c_uint) -> Result<Self, Error> {
         let squeue = unsafe { raw::pcap_sendqueue_alloc(memsize) };
-        let squeue = if let Some(squeue) = NonNull::new(squeue) {
-            squeue
-        } else {
-            return Err(Error::InsufficientMemory);
-        };
+        let squeue = NonNull::new(squeue).ok_or(Error::InsufficientMemory)?;
 
         Ok(Self { squeue, sync: 0 })
     }
 
-    pub fn maxlen(&self) -> c_int {
+    pub fn maxlen(&self) -> c_uint {
         unsafe { (*self.squeue.as_ptr()).maxlen }
     }
 
-    pub fn len(&self) -> c_int {
+    pub fn len(&self) -> c_uint {
         unsafe { (*self.squeue.as_ptr()).len }
     }
 
@@ -71,8 +66,7 @@ impl SendQueue {
             raw::pcap_sendqueue_transmit(dev.handle.as_ptr(), self.squeue.as_ptr(), self.sync)
         };
 
-        // ToDo: Fix unwrap()
-        if res < self.len().try_into().unwrap() {
+        if res < self.len() {
             return unsafe { Err(Error::new(raw::pcap_geterr(dev.handle.as_ptr()))) };
         }
 

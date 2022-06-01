@@ -81,8 +81,8 @@ pub struct pcap_addr_t {
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct pcap_send_queue {
-    pub maxlen: c_int,
-    pub len: c_int,
+    pub maxlen: c_uint,
+    pub len: c_uint,
     pub buffer: *mut c_char,
 }
 
