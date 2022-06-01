@@ -26,11 +26,11 @@ impl SendQueue {
     }
 
     pub fn maxlen(&self) -> c_int {
-        unsafe { (*self.squeue.as_ptr()).maxlen() }
+        unsafe { (*self.squeue.as_ptr()).maxlen }
     }
 
     pub fn len(&self) -> c_int {
-        unsafe { (*self.squeue.as_ptr()).len() }
+        unsafe { (*self.squeue.as_ptr()).len }
     }
 
     pub fn sync(&mut self, sync: bool) {
@@ -80,7 +80,7 @@ impl SendQueue {
     }
 
     pub fn reset(&mut self) {
-        unsafe { *self.squeue.as_ptr() }.reset();
+        unsafe { *self.squeue.as_ptr() }.len = 0;
     }
 }
 

@@ -81,22 +81,9 @@ pub struct pcap_addr_t {
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct pcap_send_queue {
-    maxlen: c_int,
-    len: c_int,
-    buffer: *mut c_char,
-}
-
-#[cfg(windows)]
-impl pcap_send_queue {
-    pub fn maxlen(&self) -> c_int {
-        self.maxlen
-    }
-    pub fn len(&self) -> c_int {
-        self.len
-    }
-    pub fn reset(&mut self) {
-        self.len = 0;
-    }
+    pub maxlen: c_int,
+    pub len: c_int,
+    pub buffer: *mut c_char,
 }
 
 pub type pcap_handler =
