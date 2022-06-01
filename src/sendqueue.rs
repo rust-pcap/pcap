@@ -1,7 +1,7 @@
 use std::ptr::NonNull;
 use std::time::{SystemTime, UNIX_EPOCH};
 
-use libc::{c_int, c_uint};
+use libc::c_uint;
 
 use crate::raw;
 use crate::Error;
@@ -9,7 +9,7 @@ use crate::{Active, Capture};
 
 pub struct SendQueue {
     squeue: NonNull<raw::pcap_send_queue>,
-    sync: c_int,
+    sync: bool,
 }
 
 impl SendQueue {
@@ -17,7 +17,10 @@ impl SendQueue {
         let squeue = unsafe { raw::pcap_sendqueue_alloc(memsize) };
         let squeue = NonNull::new(squeue).ok_or(Error::InsufficientMemory)?;
 
-        Ok(Self { squeue, sync: 0 })
+        Ok(Self {
+            squeue,
+            sync: false,
+        })
     }
 
     pub fn maxlen(&self) -> c_uint {
@@ -29,7 +32,7 @@ impl SendQueue {
     }
 
     pub fn sync(&mut self, sync: bool) {
-        self.sync = if sync { 1 } else { 0 }
+        self.sync = sync;
     }
 
     /// Add a packet to the queue.
@@ -63,7 +66,11 @@ impl SendQueue {
     /// Transmit the contents of the queue.
     pub fn transmit(&mut self, dev: &mut Capture<Active>) -> Result<(), Error> {
         let res = unsafe {
-            raw::pcap_sendqueue_transmit(dev.handle.as_ptr(), self.squeue.as_ptr(), self.sync)
+            raw::pcap_sendqueue_transmit(
+                dev.handle.as_ptr(),
+                self.squeue.as_ptr(),
+                self.sync as i32, // ok, because doc says only valid values are zero and non-zero
+            )
         };
 
         if res < self.len() {
