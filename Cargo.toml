@@ -1,22 +1,20 @@
 [package]
 
 name = "pcap"
-version = "0.9.1"
+version = "0.9.2"
 authors = ["Sean Bowe <ewillbefull@gmail.com>", "Wojciech Kozlowski <wk@wojciechkozlowski.eu>", "Hideki Sekine"]
 edition = "2018"
 description = "A packet capture API around pcap/wpcap"
 keywords = ["pcap", "packet", "sniffing"]
 readme = "README.md"
-homepage = "https://github.com/ebfull/pcap"
-repository = "https://github.com/ebfull/pcap"
+homepage = "https://github.com/rust-pcap/pcap"
+repository = "https://github.com/rust-pcap/pcap"
 documentation = "https://docs.rs/pcap"
 license = "MIT OR Apache-2.0"
 build = "build.rs"
 
 [dependencies]
 libc = "0.2"
-clippy = { version = "0.0.*", optional = true }
-mio = { version = "0.6", optional = true }
 tokio = { version = "1.0", features = ["net", "rt", "macros", "rt-multi-thread"], optional = true }
 futures = { version = "0.3", optional = true }
 errno = "0.2"
@@ -34,14 +32,8 @@ regex = "1"
 
 [features]
 # This feature enables access to the function Capture::stream.
-# This is disabled by default, because it depends on a tokio and mio
-capture-stream = ["mio", "tokio", "futures"]
-
-# A shortcut to enable all features.
-full = ["capture-stream"]
-
-# Flag for docs.rs builds where libpcap is not present.
-docs-rs = []
+# This is disabled by default, because it depends on a tokio
+capture-stream = ["tokio", "futures"]
 
 [lib]
 name = "pcap"
@@ -77,8 +69,13 @@ path = "examples/streamlisten_mt.rs"
 required-features = ["capture-stream"]
 
 [[example]]
+name = "streamecho"
+path = "examples/streamecho.rs"
+required-features = ["capture-stream"]
+
+[[example]]
 name = "nfbpfcompile"
 path = "examples/nfbpfcompile.rs"
 
 [package.metadata.docs.rs]
-features = ["docs-rs"]
+all-features = true

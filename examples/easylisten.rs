@@ -1,6 +1,8 @@
 fn main() {
     // get the default Device
-    let device = pcap::Device::lookup().unwrap();
+    let device = pcap::Device::lookup()
+        .expect("device lookup failed")
+        .expect("no device available");
     println!("Using device {}", device.name);
 
     // Setup Capture
