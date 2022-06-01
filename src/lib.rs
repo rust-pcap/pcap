@@ -86,14 +86,9 @@ use self::Error::*;
 use widestring::WideCString;
 
 #[cfg(target_os = "windows")]
-use winapi::shared::{
-    ws2def::{AF_INET, AF_INET6, SOCKADDR_IN},
-    ws2ipdef::SOCKADDR_IN6,
-};
+use windows_sys::Win32::Networking::WinSock::{AF_INET, AF_INET6, SOCKADDR_IN, SOCKADDR_IN6};
 
 mod raw;
-#[cfg(windows)]
-pub mod sendqueue;
 #[cfg(feature = "capture-stream")]
 pub mod stream;
 mod unique;
@@ -346,15 +341,15 @@ impl Address {
             return None;
         }
 
-        match (*ptr).sa_family as i32 {
+        match (*ptr).sa_family as u32 {
             AF_INET => {
                 let ptr: *const SOCKADDR_IN = std::mem::transmute(ptr);
-                let addr: [u8; 4] = (*(*ptr).sin_addr.S_un.S_addr()).to_ne_bytes();
+                let addr: [u8; 4] = ((*ptr).sin_addr.S_un.S_addr).to_ne_bytes();
                 Some(IpAddr::from(addr))
             }
             AF_INET6 => {
                 let ptr: *const SOCKADDR_IN6 = std::mem::transmute(ptr);
-                let addr = *(*ptr).sin6_addr.u.Byte();
+                let addr = (*ptr).sin6_addr.u.Byte;
                 Some(IpAddr::from(addr))
             }
 
