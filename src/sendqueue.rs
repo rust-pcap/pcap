@@ -8,9 +8,11 @@ use crate::raw;
 use crate::Error;
 use crate::{Active, Capture};
 
-pub struct SendQueue {
-    squeue: NonNull<raw::pcap_send_queue>,
-    sync: bool,
+pub struct SendQueue(NonNull<raw::pcap_send_queue>);
+
+pub enum Sync {
+    Off = 0,
+    On = 1,
 }
 
 impl SendQueue {
@@ -18,22 +20,15 @@ impl SendQueue {
         let squeue = unsafe { raw::pcap_sendqueue_alloc(memsize) };
         let squeue = NonNull::new(squeue).ok_or(Error::InsufficientMemory)?;
 
-        Ok(Self {
-            squeue,
-            sync: false,
-        })
+        Ok(Self(squeue))
     }
 
     pub fn maxlen(&self) -> c_uint {
-        unsafe { (*self.squeue.as_ptr()).maxlen }
+        unsafe { (*self.0.as_ptr()).maxlen }
     }
 
     pub fn len(&self) -> c_uint {
-        unsafe { (*self.squeue.as_ptr()).len }
-    }
-
-    pub fn sync(&mut self, sync: bool) {
-        self.sync = sync;
+        unsafe { (*self.0.as_ptr()).len }
     }
 
     /// Add a packet to the queue.
@@ -59,7 +54,7 @@ impl SendQueue {
         };
 
         let ph = &pkthdr as *const _;
-        let res = unsafe { raw::pcap_sendqueue_queue(self.squeue.as_ptr(), ph, buf.as_ptr()) };
+        let res = unsafe { raw::pcap_sendqueue_queue(self.0.as_ptr(), ph, buf.as_ptr()) };
         if res == -1 {
             return Err(Error::InsufficientMemory);
         }
@@ -68,13 +63,9 @@ impl SendQueue {
     }
 
     /// Transmit the contents of the queue.
-    pub fn transmit(&mut self, dev: &mut Capture<Active>) -> Result<(), Error> {
+    pub fn transmit(&mut self, dev: &mut Capture<Active>, sync: Sync) -> Result<(), Error> {
         let res = unsafe {
-            raw::pcap_sendqueue_transmit(
-                dev.handle.as_ptr(),
-                self.squeue.as_ptr(),
-                self.sync as i32, // ok, because doc says only valid values are zero and non-zero
-            )
+            raw::pcap_sendqueue_transmit(dev.handle.as_ptr(), self.0.as_ptr(), sync as i32)
         };
 
         if res < self.len() {
@@ -85,14 +76,14 @@ impl SendQueue {
     }
 
     pub fn reset(&mut self) {
-        unsafe { *self.squeue.as_ptr() }.len = 0;
+        unsafe { *self.0.as_ptr() }.len = 0;
     }
 }
 
 impl Drop for SendQueue {
     fn drop(&mut self) {
         unsafe {
-            raw::pcap_sendqueue_destroy(self.squeue.as_ptr());
+            raw::pcap_sendqueue_destroy(self.0.as_ptr());
         }
     }
 }
