@@ -62,6 +62,8 @@ impl SendQueue {
     }
 
     /// Transmit the contents of the queue.
+    ///
+    /// If entire queue was transmitted successfull the queue will be automatically reset.
     pub fn transmit(&mut self, dev: &mut Capture<Active>, sync: Sync) -> Result<(), Error> {
         let res = unsafe {
             raw::pcap_sendqueue_transmit(dev.handle.as_ptr(), self.0.as_ptr(), sync as i32)
@@ -69,6 +71,8 @@ impl SendQueue {
 
         if res < self.len() {
             return unsafe { Err(Error::new(raw::pcap_geterr(dev.handle.as_ptr()))) };
+        } else {
+            self.reset();
         }
 
         Ok(())
