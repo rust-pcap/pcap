@@ -5,6 +5,7 @@
 ### Added
 
  - [doc](https://docs.rs/pcap/latest/pcap/) will now include all features
+ - Add support for sendqueues on Windows.
 
 ### Changed
 
