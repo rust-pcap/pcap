@@ -1,3 +1,4 @@
+use std::convert::TryInto;
 use std::ptr::NonNull;
 use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -45,13 +46,16 @@ impl SendQueue {
         let s = since_the_epoch.as_secs();
         let us = since_the_epoch.subsec_micros();
 
+        let caplen = buf.len().try_into().ok().ok_or(Error::BufferOverflow)?;
+        let len = buf.len().try_into().ok().ok_or(Error::BufferOverflow)?;
+
         let pkthdr = raw::pcap_pkthdr {
             ts: libc::timeval {
                 tv_sec: s as i32,
                 tv_usec: us as i32,
             },
-            caplen: buf.len() as u32,
-            len: buf.len() as u32,
+            caplen,
+            len,
         };
 
         let ph = &pkthdr as *const _;

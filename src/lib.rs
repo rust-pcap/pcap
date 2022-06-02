@@ -117,6 +117,8 @@ pub enum Error {
     InvalidRawFd,
     /// Errno error
     ErrnoError(errno::Errno),
+    /// Buffer size overflows capacity
+    BufferOverflow,
 }
 
 impl Error {
@@ -144,6 +146,7 @@ impl fmt::Display for Error {
             #[cfg(not(windows))]
             InvalidRawFd => write!(f, "invalid raw file descriptor provided"),
             ErrnoError(ref e) => write!(f, "libpcap os errno: {}", e),
+            BufferOverflow => write!(f, "buffer size too large"),
         }
     }
 }
@@ -164,6 +167,7 @@ impl std::error::Error for Error {
             #[cfg(not(windows))]
             InvalidRawFd => "invalid raw file descriptor provided",
             ErrnoError(..) => "internal error, providing errno",
+            BufferOverflow => "buffer size too large",
         }
     }
 
@@ -198,6 +202,14 @@ impl From<std::io::ErrorKind> for Error {
         IoError(obj)
     }
 }
+
+/*
+impl From<std::num::TryFromIntError> for Error {
+    fn from(_obj: std::num::TryFromIntError) -> Error {
+        BufferOverflow
+    }
+}
+*/
 
 #[derive(Debug, Clone)]
 /// A network device name and (potentially) pcap's description of it.
