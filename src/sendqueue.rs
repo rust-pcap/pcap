@@ -1,6 +1,5 @@
 use std::convert::TryInto;
 use std::ptr::NonNull;
-use std::time::{SystemTime, UNIX_EPOCH};
 
 use libc::c_uint;
 
@@ -32,22 +31,22 @@ impl SendQueue {
     }
 
     /// Add a packet to the queue.
-    pub fn queue(&mut self, buf: &[u8]) -> Result<(), Error> {
-        let start = SystemTime::now();
-        let since_the_epoch = start
-            .duration_since(UNIX_EPOCH)
-            .expect("Time went backwards");
-
-        let s = since_the_epoch.as_secs();
-        let us = since_the_epoch.subsec_micros();
-
+    pub fn queue(&mut self, ts: Option<std::time::Duration>, buf: &[u8]) -> Result<(), Error> {
         let caplen = buf.len().try_into().ok().ok_or(Error::BufferOverflow)?;
         let len = buf.len().try_into().ok().ok_or(Error::BufferOverflow)?;
 
         let pkthdr = raw::pcap_pkthdr {
-            ts: libc::timeval {
-                tv_sec: s as i32,
-                tv_usec: us as i32,
+            ts: if let Some(ts) = ts {
+                libc::timeval {
+                    // tv_sec is is currently i32 in libc when building for Windows
+                    tv_sec: ts.as_secs() as i32,
+                    tv_usec: ts.subsec_micros() as i32,
+                }
+            } else {
+                libc::timeval {
+                    tv_sec: 0,
+                    tv_usec: 0,
+                }
             },
             caplen,
             len,
