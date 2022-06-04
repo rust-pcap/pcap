@@ -203,14 +203,6 @@ impl From<std::io::ErrorKind> for Error {
     }
 }
 
-/*
-impl From<std::num::TryFromIntError> for Error {
-    fn from(_obj: std::num::TryFromIntError) -> Error {
-        BufferOverflow
-    }
-}
-*/
-
 #[derive(Debug, Clone)]
 /// A network device name and (potentially) pcap's description of it.
 pub struct Device {
