@@ -5,6 +5,8 @@
 ### Changed
 
 - `capture-stream` requires rustc version 1.47.0 due to dependency on `tokio`.
+- Switched from `winapi` to `windows-sys` for Windows builds.  `windows-sys`
+  requires rustc 1.46.0.
 
 ## [0.9.1] - 2021-11-07
 
