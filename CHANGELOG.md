@@ -2,11 +2,27 @@
 
 ## [Unreleased]
 
+### Added
+
+ - [doc](https://docs.rs/pcap/latest/pcap/) will now include all features
+
 ### Changed
 
-- `capture-stream` requires rustc version 1.47.0 due to dependency on `tokio`.
-- Switched from `winapi` to `windows-sys` for Windows builds.  `windows-sys`
-  requires rustc 1.46.0.
+- `Device::lookup` now returns `Result<Option<Device>, Error>` rather than `Result<Device, Error>`. `Ok(None)` means that the lookup succeeded, but no suitable devices were available. This is consistent with libpcap.
+- `Capture` and `Savefile` no longer implement the `Sync` trait. The underlying `libpcap` library does not promise thread-safe access for the same capture object from multiple threads.
+- Switched from `winapi` to `windows-sys` for Windows builds.  `windows-sys` requires rustc 1.46.0.
+
+### Removed
+
+- `docs-rs` feature
+- `full` feature
+
+## [0.9.2] - 2022-04-15
+
+### Changed
+
+- `capture-stream` requires rustc version 1.49.0 due to dependency on `tokio`.
+>>>>>>> master
 
 ## [0.9.1] - 2021-11-07
 

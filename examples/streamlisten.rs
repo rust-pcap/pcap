@@ -16,8 +16,8 @@ impl PacketCodec for SimpleDumpCodec {
     }
 }
 
-async fn start_new_stream() -> PacketStream<Active, SimpleDumpCodec> {
-    match new_stream() {
+async fn start_new_stream(device: Device) -> PacketStream<Active, SimpleDumpCodec> {
+    match new_stream(device) {
         Ok(stream) => stream,
         Err(e) => {
             println!("{:?}", e);
@@ -26,9 +26,8 @@ async fn start_new_stream() -> PacketStream<Active, SimpleDumpCodec> {
     }
 }
 
-fn new_stream() -> Result<PacketStream<Active, SimpleDumpCodec>, Error> {
+fn new_stream(device: Device) -> Result<PacketStream<Active, SimpleDumpCodec>, Error> {
     // get the default Device
-    let device = Device::lookup()?;
     println!("Using device {}", device.name);
 
     let cap = Capture::from_device(device)?
@@ -44,7 +43,10 @@ fn main() {
         .build()
         .unwrap();
 
-    let stream = rt.block_on(start_new_stream());
+    let device = Device::lookup()
+        .expect("device lookup failed")
+        .expect("no device available");
+    let stream = rt.block_on(start_new_stream(device));
 
     let fut = stream.for_each(move |s| {
         println!("{:?}", s);
