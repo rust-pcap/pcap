@@ -84,8 +84,6 @@ use winapi::shared::{
 };
 
 mod raw;
-#[cfg(windows)]
-pub mod sendqueue;
 #[cfg(feature = "capture-stream")]
 pub mod stream;
 
