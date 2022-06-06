@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [ wincrate ]
+    branches: [ main ]
   pull_request:
-    branches: [ wincrate ]
+    branches: [ main ]
   schedule:
     - cron: "0 0 * * *"
 
