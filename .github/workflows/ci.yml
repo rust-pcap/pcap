@@ -25,6 +25,7 @@ jobs:
           # capture-stream is not supported on Windows or compiler versions too old for Tokio.
           - os: windows-latest
             features: '--all-features'
+          - os: windows-latest
             toolchain: "1.40.0"
           # 1.46.0 is only a special requirement on Windows
           - os: ubuntu-latest
