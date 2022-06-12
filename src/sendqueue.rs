@@ -23,7 +23,7 @@ impl SendQueue {
     }
 
     pub fn maxlen(&self) -> c_uint {
-        unsafe { (*self.0.as_ptr()).maxlen }
+        unsafe { self.0.as_ref().maxlen }
     }
 
     pub fn is_empty(&self) -> bool {
@@ -31,7 +31,7 @@ impl SendQueue {
     }
 
     pub fn len(&self) -> c_uint {
-        unsafe { (*self.0.as_ptr()).len }
+        unsafe { self.0.as_ref().len }
     }
 
     /// Add a packet to the queue.
@@ -83,7 +83,7 @@ impl SendQueue {
     }
 
     pub fn reset(&mut self) {
-        unsafe { *self.0.as_ptr() }.len = 0;
+        unsafe { self.0.as_mut() }.len = 0;
     }
 }
 
