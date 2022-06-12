@@ -26,6 +26,10 @@ impl SendQueue {
         unsafe { (*self.0.as_ptr()).maxlen }
     }
 
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+
     pub fn len(&self) -> c_uint {
         unsafe { (*self.0.as_ptr()).len }
     }
