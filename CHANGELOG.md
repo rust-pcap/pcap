@@ -5,6 +5,7 @@
 ### Added
 
  - [doc](https://docs.rs/pcap/latest/pcap/) will now include all features
+ - Add `PacketStream::inner_mut` to still be able to inject packets when using `PacketStream`
 
 ### Changed
 
@@ -15,6 +16,7 @@
 
 - `docs-rs` feature
 - `full` feature
+- `stream::SelectableFd` and `stream::PacketStream::new` as they were only meant to be used internally
 
 ## [0.9.2] - 2022-04-15
 
