@@ -80,6 +80,9 @@ use self::Error::*;
 #[cfg(target_os = "windows")]
 use windows_sys::Win32::Networking::WinSock::{AF_INET, AF_INET6, SOCKADDR_IN, SOCKADDR_IN6};
 
+#[cfg(target_os = "windows")]
+use windows_sys::Win32::Foundation::HANDLE;
+
 mod raw;
 #[cfg(feature = "capture-stream")]
 pub mod stream;
@@ -745,6 +748,17 @@ impl<T: State + ?Sized> Capture<T> {
             raw::pcap_setmintocopy(self.handle.as_ptr(), to as _);
         }
         self
+    }
+
+    /// Get handle to the Capture context's internal Win32 event semaphore.
+    ///
+    /// # Safety
+    ///
+    /// The caller must ensure that the `Capture` context outlives the returned `HANDLE` since it is
+    /// a kernel object owned by the `Capture`'s pcap context.
+    #[cfg(windows)]
+    pub unsafe fn get_event(&self) -> HANDLE {
+        raw::pcap_getevent(self.handle.as_ptr())
     }
 
     fn check_err(&self, success: bool) -> Result<(), Error> {
