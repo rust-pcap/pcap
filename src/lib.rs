@@ -1369,7 +1369,9 @@ fn test_struct_size() {
     assert_eq!(size_of::<PacketHeader>(), size_of::<raw::pcap_pkthdr>());
 }
 
+#[repr(transparent)]
 pub struct BpfInstruction(raw::bpf_insn);
+#[repr(transparent)]
 pub struct BpfProgram(raw::bpf_program);
 
 impl BpfProgram {
