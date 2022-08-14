@@ -43,11 +43,11 @@ fn capture_from_test_file(file_name: &str) -> Capture<Offline> {
 fn unify_activated() {
     #![allow(dead_code)]
     fn test1() -> Capture<Active> {
-        loop {}
+        panic!();
     }
 
     fn test2() -> Capture<Offline> {
-        loop {}
+        panic!();
     }
 
     fn maybe(a: bool) -> Capture<dyn Activated> {
@@ -68,6 +68,12 @@ fn unify_activated() {
 pub struct Packets {
     headers: Vec<PacketHeader>,
     data: Vec<Vec<u8>>,
+}
+
+impl Default for Packets {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl Packets {
@@ -96,14 +102,14 @@ impl Packets {
 
     pub fn foreach<F: FnMut(&Packet)>(&self, mut f: F) {
         for (header, data) in self.headers.iter().zip(self.data.iter()) {
-            let packet = Packet::new(header, &data);
+            let packet = Packet::new(header, data);
             f(&packet);
         }
     }
 
     pub fn verify<T: Activated + ?Sized>(&self, cap: &mut Capture<T>) {
         for (header, data) in self.headers.iter().zip(self.data.iter()) {
-            assert_eq!(cap.next().unwrap(), Packet::new(header, &data));
+            assert_eq!(cap.next().unwrap(), Packet::new(header, data));
         }
         assert!(cap.next().is_err());
     }
@@ -316,13 +322,13 @@ fn test_compile() {
     let program = bpf_capture.compile("dst host 8.8.8.8", false).unwrap();
     let instructions = program.get_instructions();
 
-    assert!(instructions.len() > 0);
+    assert!(!instructions.is_empty());
     assert!(program.filter(packet.data));
 
     let program = bpf_capture.compile("src host 8.8.8.8", false).unwrap();
     let instructions = program.get_instructions();
 
-    assert!(instructions.len() > 0);
+    assert!(!instructions.is_empty());
     assert!(!program.filter(packet.data));
 }
 
