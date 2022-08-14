@@ -767,6 +767,14 @@ impl<T: State + ?Sized> Capture<T> {
         raw::pcap_getevent(self.handle.as_ptr())
     }
 
+    fn into_state<S: State + ?Sized>(self) -> Capture<S> {
+        Capture {
+            nonblock: self.nonblock,
+            handle: self.handle,
+            _marker: PhantomData::<S>::default(),
+        }
+    }
+
     fn check_err(&self, success: bool) -> Result<(), Error> {
         if success {
             Ok(())
@@ -931,10 +939,9 @@ impl Capture<Inactive> {
     /// Activates an inactive capture created from `Capture::from_device()` or returns
     /// an error.
     pub fn open(self) -> Result<Capture<Active>, Error> {
-        unsafe {
-            self.check_err(raw::pcap_activate(self.handle.as_ptr()) == 0)?;
-            Ok(mem::transmute(self))
-        }
+        unsafe { self.check_err(raw::pcap_activate(self.handle.as_ptr()) == 0)? };
+
+        Ok(self.into_state())
     }
 
     /// Set the read timeout for the Capture. By default, this is 0, so it will block
@@ -1301,7 +1308,7 @@ impl<T: State + ?Sized> Drop for Capture<T> {
 
 impl<T: Activated> From<Capture<T>> for Capture<dyn Activated> {
     fn from(cap: Capture<T>) -> Capture<dyn Activated> {
-        unsafe { mem::transmute(cap) }
+        cap.into_state()
     }
 }
 
