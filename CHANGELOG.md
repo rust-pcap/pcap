@@ -5,6 +5,7 @@
 ### Added
 
  - [doc](https://docs.rs/pcap/latest/pcap/) will now include all features
+ - Add support for sendqueues on Windows.
  - Add `PacketStream::inner_mut` to still be able to inject packets when using `PacketStream`
 
 ### Changed

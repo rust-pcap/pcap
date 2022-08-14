@@ -77,6 +77,15 @@ pub struct pcap_addr_t {
     pub dstaddr: *mut sockaddr,
 }
 
+#[cfg(windows)]
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct pcap_send_queue {
+    pub maxlen: c_uint,
+    pub len: c_uint,
+    pub buffer: *mut c_char,
+}
+
 pub type pcap_handler =
     Option<extern "C" fn(arg1: *mut c_uchar, arg2: *const pcap_pkthdr, arg3: *const c_uchar) -> ()>;
 
@@ -228,6 +237,19 @@ pub const WINPCAP_MINTOCOPY_DEFAULT: c_int = 16000;
 #[link(name = "wpcap")]
 extern "C" {
     pub fn pcap_setmintocopy(arg1: *mut pcap_t, arg2: c_int) -> c_int;
+
+    pub fn pcap_sendqueue_alloc(memsize: c_uint) -> *mut pcap_send_queue;
+    pub fn pcap_sendqueue_destroy(queue: *mut pcap_send_queue);
+    pub fn pcap_sendqueue_queue(
+        queue: *mut pcap_send_queue,
+        pkt_header: *const pcap_pkthdr,
+        pkt_data: *const c_uchar,
+    ) -> c_int;
+    pub fn pcap_sendqueue_transmit(
+        p: *mut pcap_t,
+        queue: *mut pcap_send_queue,
+        sync: c_int,
+    ) -> c_uint;
 }
 
 #[cfg(not(windows))]
