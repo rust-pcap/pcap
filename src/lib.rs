@@ -1176,8 +1176,9 @@ impl<T: Activated + ?Sized> Capture<T> {
         stream::PacketStream::new(SelectableCapture::new(self)?, codec)
     }
 
-    /// Adds a filter to the capture using the given BPF program string. Internally
-    /// this is compiled using `pcap_compile()`.
+    /// Sets the filter on the capture using the given BPF program string. Internally this is
+    /// compiled using `pcap_compile()`. `optimize` controls whether optimization on the resulting
+    /// code is performed
     ///
     /// See http://biot.com/capstats/bpf.html for more information about this syntax.
     pub fn filter(&mut self, program: &str, optimize: bool) -> Result<(), Error> {
