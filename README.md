@@ -29,6 +29,8 @@ The feature `capture-stream` depends on `tokio`, but we only lock `tokio` versio
 
 ## Windows
 
+As of 0.10.0 Windows builds, without the `cature-stream` feature, requires a compiler version >= 1.46.0.
+
 Install [WinPcap](http://www.winpcap.org/install/default.htm).
 
 Download the WinPcap [Developer's Pack](https://www.winpcap.org/devel.htm).

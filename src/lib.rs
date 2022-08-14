@@ -78,10 +78,10 @@ use std::slice;
 use self::Error::*;
 
 #[cfg(target_os = "windows")]
-use winapi::shared::{
-    ws2def::{AF_INET, AF_INET6, SOCKADDR_IN},
-    ws2ipdef::SOCKADDR_IN6,
-};
+use windows_sys::Win32::Networking::WinSock::{AF_INET, AF_INET6, SOCKADDR_IN, SOCKADDR_IN6};
+
+#[cfg(target_os = "windows")]
+use windows_sys::Win32::Foundation::HANDLE;
 
 mod raw;
 #[cfg(windows)]
@@ -354,15 +354,15 @@ impl Address {
             return None;
         }
 
-        match (*ptr).sa_family as i32 {
+        match (*ptr).sa_family as u32 {
             AF_INET => {
                 let ptr: *const SOCKADDR_IN = std::mem::transmute(ptr);
-                let addr: [u8; 4] = (*(*ptr).sin_addr.S_un.S_addr()).to_ne_bytes();
+                let addr: [u8; 4] = ((*ptr).sin_addr.S_un.S_addr).to_ne_bytes();
                 Some(IpAddr::from(addr))
             }
             AF_INET6 => {
                 let ptr: *const SOCKADDR_IN6 = std::mem::transmute(ptr);
-                let addr = *(*ptr).sin6_addr.u.Byte();
+                let addr = (*ptr).sin6_addr.u.Byte;
                 Some(IpAddr::from(addr))
             }
 
@@ -754,6 +754,17 @@ impl<T: State + ?Sized> Capture<T> {
             raw::pcap_setmintocopy(self.handle.as_ptr(), to as _);
         }
         self
+    }
+
+    /// Get handle to the Capture context's internal Win32 event semaphore.
+    ///
+    /// # Safety
+    ///
+    /// The caller must ensure that the `Capture` context outlives the returned `HANDLE` since it is
+    /// a kernel object owned by the `Capture`'s pcap context.
+    #[cfg(windows)]
+    pub unsafe fn get_event(&self) -> HANDLE {
+        raw::pcap_getevent(self.handle.as_ptr())
     }
 
     fn check_err(&self, success: bool) -> Result<(), Error> {
