@@ -20,7 +20,7 @@ futures = { version = "0.3", optional = true }
 errno = "0.2"
 
 [target.'cfg(target_os = "windows")'.dependencies]
-winapi = {version = "0.3", features = ["ws2def", "ws2ipdef"]}
+windows-sys = { version = "0.36.1", features = ["Win32_Foundation", "Win32_Networking_WinSock"] }
 
 [dev-dependencies]
 tempdir = "0.3"

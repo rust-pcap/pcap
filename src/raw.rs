@@ -3,6 +3,9 @@
 
 use libc::{c_char, c_int, c_uchar, c_uint, c_ushort, sockaddr, timeval, FILE};
 
+#[cfg(windows)]
+use windows_sys::Win32::Foundation::HANDLE;
+
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct bpf_program {
@@ -237,7 +240,7 @@ pub const WINPCAP_MINTOCOPY_DEFAULT: c_int = 16000;
 #[link(name = "wpcap")]
 extern "C" {
     pub fn pcap_setmintocopy(arg1: *mut pcap_t, arg2: c_int) -> c_int;
-
+    pub fn pcap_getevent(p: *mut pcap_t) -> HANDLE;
     pub fn pcap_sendqueue_alloc(memsize: c_uint) -> *mut pcap_send_queue;
     pub fn pcap_sendqueue_destroy(queue: *mut pcap_send_queue);
     pub fn pcap_sendqueue_queue(
