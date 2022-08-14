@@ -90,7 +90,7 @@ pub mod sendqueue;
 pub mod stream;
 
 /// An error received from pcap
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum Error {
     /// The underlying library returned invalid UTF-8
     MalformedError(std::str::Utf8Error),
