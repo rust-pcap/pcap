@@ -1257,6 +1257,20 @@ impl Capture<Dead> {
         ))
     }
 
+    /// Creates a "fake" capture handle for the given link type and timestamp precision.
+    #[cfg(libpcap_1_5_0)]
+    pub fn dead_with_precision(
+        linktype: Linktype,
+        precision: Precision,
+    ) -> Result<Capture<Dead>, Error> {
+        let handle = unsafe {
+            raw::pcap_open_dead_with_tstamp_precision(linktype.0, 65535, precision as u32)
+        };
+        Ok(Capture::from(
+            NonNull::<raw::pcap_t>::new(handle).ok_or(InsufficientMemory)?,
+        ))
+    }
+
     /// Compiles the string into a filter program using `pcap_compile`.
     pub fn compile(&self, program: &str, optimize: bool) -> Result<BpfProgram, Error> {
         let program = CString::new(program).unwrap();
