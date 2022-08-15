@@ -61,6 +61,7 @@
 //! }
 //! ```
 
+use bitflags::bitflags;
 use std::borrow::Borrow;
 use std::convert::TryFrom;
 use std::ffi::{self, CStr, CString};
@@ -211,8 +212,78 @@ impl From<std::io::ErrorKind> for Error {
     }
 }
 
+bitflags! {
+    /// Network device flags. For checking multiple flags at once, see the `bitflags` crate:
+    /// https://docs.rs/bitflags/latest/bitflags/.
+    pub struct DeviceFlags: u32 {
+        /// Set if the device is a loopback interface
+        const LOOPBACK = raw::PCAP_IF_LOOPBACK;
+        /// Set if the device is up
+        const UP = raw::PCAP_IF_UP;
+        /// Set if the device is running
+        const RUNNING = raw::PCAP_IF_RUNNING;
+        /// Set if the device is a wireless interface; this includes IrDA as well as radio-based
+        /// networks such as IEEE 802.15.4 and IEEE 802.11, so it doesn't just mean Wi-Fi
+        const WIRELESS = raw::PCAP_IF_WIRELESS;
+        /// A bitmask for an indication of whether the adapter is connected or not; for wireless
+        /// interfaces, "connected" means "associated with a network"
+        const CONNECTION_STATUS = raw::PCAP_IF_CONNECTION_STATUS;
+    }
+}
+
+impl DeviceFlags {
+    pub fn is_loopback(&self) -> bool {
+        self.contains(DeviceFlags::LOOPBACK)
+    }
+
+    pub fn is_up(&self) -> bool {
+        self.contains(DeviceFlags::UP)
+    }
+
+    pub fn is_running(&self) -> bool {
+        self.contains(DeviceFlags::RUNNING)
+    }
+
+    pub fn is_wireless(&self) -> bool {
+        self.contains(DeviceFlags::WIRELESS)
+    }
+
+    pub fn connection_status(&self) -> ConnectionStatus {
+        ConnectionStatus::from(self)
+    }
+}
+
 #[derive(Debug, Clone)]
-/// A network device name and (potentially) pcap's description of it.
+/// Indication of whether the adapter is connected or not; for wireless interfaces, "connected"
+/// means "associated with a network".
+pub enum ConnectionStatus {
+    /// It's unknown whether the adapter is connected or not
+    Unknown,
+    /// The adapter is connected
+    Connected,
+    /// The adapter is disconnected
+    Disconnected,
+    /// The notion of "connected" and "disconnected" don't apply to this interface; for example, it
+    /// doesn't apply to a loopback device
+    NotApplicable,
+}
+
+impl From<&DeviceFlags> for ConnectionStatus {
+    fn from(flags: &DeviceFlags) -> Self {
+        match (*flags & DeviceFlags::CONNECTION_STATUS).bits() {
+            raw::PCAP_IF_CONNECTION_STATUS_UNKNOWN => ConnectionStatus::Unknown,
+            raw::PCAP_IF_CONNECTION_STATUS_CONNECTED => ConnectionStatus::Connected,
+            raw::PCAP_IF_CONNECTION_STATUS_DISCONNECTED => ConnectionStatus::Disconnected,
+            raw::PCAP_IF_CONNECTION_STATUS_NOT_APPLICABLE => ConnectionStatus::NotApplicable,
+            // DeviceFlags::CONNECTION_STATUS is a 2-bit mask which means that the four values
+            // should cover all the possibilities.
+            _ => unreachable!(),
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
+/// A network device name and pcap's description of it.
 pub struct Device {
     /// The name of the interface
     pub name: String,
@@ -220,14 +291,22 @@ pub struct Device {
     pub desc: Option<String>,
     /// Addresses associated with this interface
     pub addresses: Vec<Address>,
+    /// Interface flags
+    pub flags: DeviceFlags,
 }
 
 impl Device {
-    fn new(name: String, desc: Option<String>, addresses: Vec<Address>) -> Device {
+    fn new(
+        name: String,
+        desc: Option<String>,
+        addresses: Vec<Address>,
+        flags: DeviceFlags,
+    ) -> Device {
         Device {
             name,
             desc,
             addresses,
+            flags,
         }
     }
 
@@ -236,7 +315,7 @@ impl Device {
         Capture::from_device(self)?.open()
     }
 
-    /// Returns the default Device suitable for captures according to pcap_lookupdev,
+    /// Returns the default Device suitable for captures according to pcap_findalldevs,
     /// or an error from pcap. Note that there may be no suitable devices.
     pub fn lookup() -> Result<Option<Device>, Error> {
         unsafe {
@@ -285,7 +364,7 @@ impl Device {
 
 impl From<&str> for Device {
     fn from(name: &str) -> Self {
-        Device::new(name.into(), None, Vec::new())
+        Device::new(name.into(), None, Vec::new(), DeviceFlags::empty())
     }
 }
 
@@ -297,6 +376,7 @@ impl TryFrom<&raw::pcap_if_t> for Device {
             unsafe { cstr_to_string(dev.name)?.ok_or(InvalidString)? },
             unsafe { cstr_to_string(dev.description)? },
             unsafe { Address::new_vec(dev.addresses) },
+            DeviceFlags::from_bits_truncate(dev.flags),
         ))
     }
 }
