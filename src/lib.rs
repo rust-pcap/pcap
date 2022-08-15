@@ -231,6 +231,12 @@ bitflags! {
     }
 }
 
+impl From<u32> for DeviceFlags {
+    fn from(flags: u32) -> Self {
+        DeviceFlags::from_bits_truncate(flags)
+    }
+}
+
 impl DeviceFlags {
     pub fn is_loopback(&self) -> bool {
         self.contains(DeviceFlags::LOOPBACK)
@@ -248,7 +254,7 @@ impl DeviceFlags {
         self.contains(DeviceFlags::WIRELESS)
     }
 
-    pub fn connection_status(&self) -> ConnectionStatus {
+    pub fn connection_status(self) -> ConnectionStatus {
         ConnectionStatus::from(self)
     }
 }
@@ -268,9 +274,9 @@ pub enum ConnectionStatus {
     NotApplicable,
 }
 
-impl From<&DeviceFlags> for ConnectionStatus {
-    fn from(flags: &DeviceFlags) -> Self {
-        match (*flags & DeviceFlags::CONNECTION_STATUS).bits() {
+impl From<DeviceFlags> for ConnectionStatus {
+    fn from(flags: DeviceFlags) -> Self {
+        match (flags & DeviceFlags::CONNECTION_STATUS).bits() {
             raw::PCAP_IF_CONNECTION_STATUS_UNKNOWN => ConnectionStatus::Unknown,
             raw::PCAP_IF_CONNECTION_STATUS_CONNECTED => ConnectionStatus::Connected,
             raw::PCAP_IF_CONNECTION_STATUS_DISCONNECTED => ConnectionStatus::Disconnected,
@@ -293,6 +299,8 @@ pub struct Device {
     pub addresses: Vec<Address>,
     /// Interface flags
     pub flags: DeviceFlags,
+    /// Connection status
+    pub connection_status: ConnectionStatus,
 }
 
 impl Device {
@@ -307,6 +315,7 @@ impl Device {
             desc,
             addresses,
             flags,
+            connection_status: flags.into(),
         }
     }
 
@@ -376,7 +385,7 @@ impl TryFrom<&raw::pcap_if_t> for Device {
             unsafe { cstr_to_string(dev.name)?.ok_or(InvalidString)? },
             unsafe { cstr_to_string(dev.description)? },
             unsafe { Address::new_vec(dev.addresses) },
-            DeviceFlags::from_bits_truncate(dev.flags),
+            DeviceFlags::from(dev.flags),
         ))
     }
 }

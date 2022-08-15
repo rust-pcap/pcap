@@ -364,9 +364,8 @@ fn test_device_flags() {
     pub const PCAP_IF_UP: u32 = 0x00000002;
     pub const PCAP_IF_CONNECTION_STATUS_NOT_APPLICABLE: u32 = 0x00000030;
 
-    let flags = DeviceFlags::from_bits_truncate(
-        PCAP_IF_LOOPBACK | PCAP_IF_UP | PCAP_IF_CONNECTION_STATUS_NOT_APPLICABLE,
-    );
+    let flags =
+        DeviceFlags::from(PCAP_IF_LOOPBACK | PCAP_IF_UP | PCAP_IF_CONNECTION_STATUS_NOT_APPLICABLE);
 
     assert!(flags.is_loopback());
     assert!(flags.is_up());
@@ -388,21 +387,21 @@ fn test_connection_status() {
     pub const PCAP_IF_CONNECTION_STATUS_DISCONNECTED: u32 = 0x00000020;
     pub const PCAP_IF_CONNECTION_STATUS_NOT_APPLICABLE: u32 = 0x00000030;
 
-    let flags = DeviceFlags::from_bits_truncate(PCAP_IF_CONNECTION_STATUS_UNKNOWN);
-    assert_eq!(ConnectionStatus::from(&flags), ConnectionStatus::Unknown);
+    let flags = DeviceFlags::from(PCAP_IF_CONNECTION_STATUS_UNKNOWN);
+    assert_eq!(ConnectionStatus::from(flags), ConnectionStatus::Unknown);
 
-    let flags = DeviceFlags::from_bits_truncate(PCAP_IF_CONNECTION_STATUS_CONNECTED);
-    assert_eq!(ConnectionStatus::from(&flags), ConnectionStatus::Connected);
+    let flags = DeviceFlags::from(PCAP_IF_CONNECTION_STATUS_CONNECTED);
+    assert_eq!(ConnectionStatus::from(flags), ConnectionStatus::Connected);
 
-    let flags = DeviceFlags::from_bits_truncate(PCAP_IF_CONNECTION_STATUS_DISCONNECTED);
+    let flags = DeviceFlags::from(PCAP_IF_CONNECTION_STATUS_DISCONNECTED);
     assert_eq!(
-        ConnectionStatus::from(&flags),
+        ConnectionStatus::from(flags),
         ConnectionStatus::Disconnected
     );
 
-    let flags = DeviceFlags::from_bits_truncate(PCAP_IF_CONNECTION_STATUS_NOT_APPLICABLE);
+    let flags = DeviceFlags::from(PCAP_IF_CONNECTION_STATUS_NOT_APPLICABLE);
     assert_eq!(
-        ConnectionStatus::from(&flags),
+        ConnectionStatus::from(flags),
         ConnectionStatus::NotApplicable
     );
 }
