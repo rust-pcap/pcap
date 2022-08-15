@@ -5,7 +5,7 @@ use std::path::Path;
 use tempdir::TempDir;
 
 use pcap::{
-    Activated, Active, Capture, ConnectionStatus, DeviceFlags, Linktype, Offline, Packet,
+    Activated, Active, Capture, ConnectionStatus, DeviceFlags, IfFlags, Linktype, Offline, Packet,
     PacketHeader,
 };
 #[cfg(not(windows))]
@@ -369,15 +369,15 @@ fn test_device_flags() {
 
     assert!(flags.is_loopback());
     assert!(flags.is_up());
-    assert!(flags.contains(DeviceFlags::LOOPBACK | DeviceFlags::UP));
+    assert!(flags.contains(IfFlags::LOOPBACK | IfFlags::UP));
 
     assert!(!flags.is_running());
     assert!(!flags.is_wireless());
 
-    assert_ne!(flags.connection_status(), ConnectionStatus::Unknown);
-    assert_ne!(flags.connection_status(), ConnectionStatus::Connected);
-    assert_ne!(flags.connection_status(), ConnectionStatus::Disconnected);
-    assert_eq!(flags.connection_status(), ConnectionStatus::NotApplicable);
+    assert_ne!(flags.connection_status, ConnectionStatus::Unknown);
+    assert_ne!(flags.connection_status, ConnectionStatus::Connected);
+    assert_ne!(flags.connection_status, ConnectionStatus::Disconnected);
+    assert_eq!(flags.connection_status, ConnectionStatus::NotApplicable);
 }
 
 #[test]
@@ -387,19 +387,19 @@ fn test_connection_status() {
     pub const PCAP_IF_CONNECTION_STATUS_DISCONNECTED: u32 = 0x00000020;
     pub const PCAP_IF_CONNECTION_STATUS_NOT_APPLICABLE: u32 = 0x00000030;
 
-    let flags = DeviceFlags::from(PCAP_IF_CONNECTION_STATUS_UNKNOWN);
+    let flags = PCAP_IF_CONNECTION_STATUS_UNKNOWN;
     assert_eq!(ConnectionStatus::from(flags), ConnectionStatus::Unknown);
 
-    let flags = DeviceFlags::from(PCAP_IF_CONNECTION_STATUS_CONNECTED);
+    let flags = PCAP_IF_CONNECTION_STATUS_CONNECTED;
     assert_eq!(ConnectionStatus::from(flags), ConnectionStatus::Connected);
 
-    let flags = DeviceFlags::from(PCAP_IF_CONNECTION_STATUS_DISCONNECTED);
+    let flags = PCAP_IF_CONNECTION_STATUS_DISCONNECTED;
     assert_eq!(
         ConnectionStatus::from(flags),
         ConnectionStatus::Disconnected
     );
 
-    let flags = DeviceFlags::from(PCAP_IF_CONNECTION_STATUS_NOT_APPLICABLE);
+    let flags = PCAP_IF_CONNECTION_STATUS_NOT_APPLICABLE;
     assert_eq!(
         ConnectionStatus::from(flags),
         ConnectionStatus::NotApplicable

@@ -213,9 +213,8 @@ impl From<std::io::ErrorKind> for Error {
 }
 
 bitflags! {
-    /// Network device flags. For checking multiple flags at once, see the `bitflags` crate:
-    /// https://docs.rs/bitflags/latest/bitflags/.
-    pub struct DeviceFlags: u32 {
+    /// Network device flags.
+    pub struct IfFlags: u32 {
         /// Set if the device is a loopback interface
         const LOOPBACK = raw::PCAP_IF_LOOPBACK;
         /// Set if the device is up
@@ -225,37 +224,12 @@ bitflags! {
         /// Set if the device is a wireless interface; this includes IrDA as well as radio-based
         /// networks such as IEEE 802.15.4 and IEEE 802.11, so it doesn't just mean Wi-Fi
         const WIRELESS = raw::PCAP_IF_WIRELESS;
-        /// A bitmask for an indication of whether the adapter is connected or not; for wireless
-        /// interfaces, "connected" means "associated with a network"
-        const CONNECTION_STATUS = raw::PCAP_IF_CONNECTION_STATUS;
     }
 }
 
-impl From<u32> for DeviceFlags {
+impl From<u32> for IfFlags {
     fn from(flags: u32) -> Self {
-        DeviceFlags::from_bits_truncate(flags)
-    }
-}
-
-impl DeviceFlags {
-    pub fn is_loopback(&self) -> bool {
-        self.contains(DeviceFlags::LOOPBACK)
-    }
-
-    pub fn is_up(&self) -> bool {
-        self.contains(DeviceFlags::UP)
-    }
-
-    pub fn is_running(&self) -> bool {
-        self.contains(DeviceFlags::RUNNING)
-    }
-
-    pub fn is_wireless(&self) -> bool {
-        self.contains(DeviceFlags::WIRELESS)
-    }
-
-    pub fn connection_status(self) -> ConnectionStatus {
-        ConnectionStatus::from(self)
+        IfFlags::from_bits_truncate(flags)
     }
 }
 
@@ -274,17 +248,61 @@ pub enum ConnectionStatus {
     NotApplicable,
 }
 
-impl From<DeviceFlags> for ConnectionStatus {
-    fn from(flags: DeviceFlags) -> Self {
-        match (flags & DeviceFlags::CONNECTION_STATUS).bits() {
+impl From<u32> for ConnectionStatus {
+    fn from(flags: u32) -> Self {
+        match flags & raw::PCAP_IF_CONNECTION_STATUS {
             raw::PCAP_IF_CONNECTION_STATUS_UNKNOWN => ConnectionStatus::Unknown,
             raw::PCAP_IF_CONNECTION_STATUS_CONNECTED => ConnectionStatus::Connected,
             raw::PCAP_IF_CONNECTION_STATUS_DISCONNECTED => ConnectionStatus::Disconnected,
             raw::PCAP_IF_CONNECTION_STATUS_NOT_APPLICABLE => ConnectionStatus::NotApplicable,
-            // DeviceFlags::CONNECTION_STATUS is a 2-bit mask which means that the four values
-            // should cover all the possibilities.
+            // DeviceFlags::CONNECTION_STATUS should be a 2-bit mask which means that the four
+            // values should cover all the possibilities.
             _ => unreachable!(),
         }
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct DeviceFlags {
+    pub if_flags: IfFlags,
+    pub connection_status: ConnectionStatus,
+}
+
+impl From<u32> for DeviceFlags {
+    fn from(flags: u32) -> Self {
+        DeviceFlags {
+            if_flags: flags.into(),
+            connection_status: flags.into(),
+        }
+    }
+}
+
+impl DeviceFlags {
+    pub fn empty() -> Self {
+        DeviceFlags {
+            if_flags: IfFlags::empty(),
+            connection_status: ConnectionStatus::Unknown,
+        }
+    }
+
+    pub fn contains(&self, if_flags: IfFlags) -> bool {
+        self.if_flags.contains(if_flags)
+    }
+
+    pub fn is_loopback(&self) -> bool {
+        self.contains(IfFlags::LOOPBACK)
+    }
+
+    pub fn is_up(&self) -> bool {
+        self.contains(IfFlags::UP)
+    }
+
+    pub fn is_running(&self) -> bool {
+        self.contains(IfFlags::RUNNING)
+    }
+
+    pub fn is_wireless(&self) -> bool {
+        self.contains(IfFlags::WIRELESS)
     }
 }
 
@@ -299,8 +317,6 @@ pub struct Device {
     pub addresses: Vec<Address>,
     /// Interface flags
     pub flags: DeviceFlags,
-    /// Connection status
-    pub connection_status: ConnectionStatus,
 }
 
 impl Device {
@@ -315,7 +331,6 @@ impl Device {
             desc,
             addresses,
             flags,
-            connection_status: flags.into(),
         }
     }
 
