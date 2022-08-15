@@ -14,13 +14,13 @@
 //! fn main() {
 //!     let mut cap = Device::lookup().unwrap().open().unwrap();
 //!
-//!     while let Ok(packet) = cap.next() {
+//!     while let Ok(packet) = cap.next_packet() {
 //!         println!("received packet! {:?}", packet);
 //!     }
 //! }
 //! ```
 //!
-//! `Capture`'s `.next()` will produce a `Packet` which can be dereferenced to access the
+//! `Capture`'s `.next_packet()` will produce a `Packet` which can be dereferenced to access the
 //! `&[u8]` packet contents.
 //!
 //! # Custom configuration
@@ -40,7 +40,7 @@
 //!                       .snaplen(5000)
 //!                       .open().unwrap();
 //!
-//!     while let Ok(packet) = cap.next() {
+//!     while let Ok(packet) = cap.next_packet() {
 //!         println!("received packet! {:?}", packet);
 //!     }
 //! }
@@ -55,7 +55,7 @@
 //! use pcap::{Activated, Capture};
 //!
 //! fn read_packets<T: Activated>(mut capture: Capture<T>) {
-//!     while let Ok(packet) = capture.next() {
+//!     while let Ok(packet) = capture.next_packet() {
 //!         println!("received packet! {:?}", packet);
 //!     }
 //! }
@@ -690,7 +690,7 @@ impl State for Dead {}
 /// buffer size, snaplen, timeout, and promiscuity before you activate it.
 ///
 /// **`Capture<Active>`** is created by calling `.open()` on a `Capture<Inactive>`. This
-/// activates the capture handle, allowing you to get packets with `.next()` or apply filters
+/// activates the capture handle, allowing you to get packets with `.next_packet()` or apply filters
 /// with `.filter()`.
 ///
 /// **`Capture<Offline>`** is created via `Capture::from_file()`. This allows you to read a
@@ -708,7 +708,7 @@ impl State for Dead {}
 ///               .open() // activate the handle
 ///               .unwrap(); // assume activation worked
 ///
-/// while let Ok(packet) = cap.next() {
+/// while let Ok(packet) = cap.next_packet() {
 ///     println!("received packet! {:?}", packet);
 /// }
 /// ```
@@ -1137,9 +1137,8 @@ impl<T: Activated + ?Sized> Capture<T> {
     ///
     /// This buffer has a finite length, so if the buffer fills completely new
     /// packets will be discarded temporarily. This means that in realtime situations,
-    /// you probably want to minimize the time between calls of this next() method.
-    #[allow(clippy::should_implement_trait)]
-    pub fn next(&mut self) -> Result<Packet, Error> {
+    /// you probably want to minimize the time between calls to next_packet() method.
+    pub fn next_packet(&mut self) -> Result<Packet, Error> {
         unsafe {
             let mut header: *mut raw::pcap_pkthdr = ptr::null_mut();
             let mut packet: *const libc::c_uchar = ptr::null();
@@ -1171,7 +1170,7 @@ impl<T: Activated + ?Sized> Capture<T> {
         }
     }
 
-    /// Return an iterator that call [`Self::next()`] forever. Require a [`PacketCodec`]
+    /// Return an iterator that call [`Self::next_packet()`] forever. Require a [`PacketCodec`]
     pub fn iter<C: PacketCodec>(self, codec: C) -> PacketIter<T, C> {
         PacketIter::new(self, codec)
     }
@@ -1236,7 +1235,7 @@ impl Capture<Active> {
         })
     }
 
-    /// Set the capture to be non-blocking. When this is set, next() may return an error indicating
+    /// Set the capture to be non-blocking. When this is set, [`Self::next_packet()`] may return an error indicating
     /// that there is no packet available to be read.
     pub fn setnonblock(mut self) -> Result<Capture<Active>, Error> {
         with_errbuf(|err| unsafe {

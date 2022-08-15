@@ -13,5 +13,5 @@ fn main() {
         .unwrap();
 
     // get a packet and print its bytes
-    println!("{:?}", cap.next());
+    println!("{:?}", cap.next_packet());
 }

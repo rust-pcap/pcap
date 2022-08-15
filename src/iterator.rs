@@ -29,7 +29,7 @@ impl<S: Activated + ?Sized, C: PacketCodec> Iterator for PacketIter<S, C> {
     type Item = Result<C::Item, Error>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        match self.capture.next() {
+        match self.capture.next_packet() {
             Ok(packet) => Some(Ok(self.codec.decode(packet))),
             Err(Error::NoMorePackets) => None,
             Err(e) => Some(Err(e)),

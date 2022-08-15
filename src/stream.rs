@@ -47,7 +47,7 @@ impl<T: Activated + ?Sized, C: PacketCodec> futures::Stream for PacketStream<T, 
 
         loop {
             let mut guard = ready!(stream.inner.poll_read_ready_mut(cx))?;
-            match guard.try_io(|inner| match inner.get_mut().inner.next() {
+            match guard.try_io(|inner| match inner.get_mut().inner.next_packet() {
                 Ok(p) => Ok(Ok(codec.decode(p))),
                 Err(e @ Error::TimeoutExpired) => Err(io::Error::new(io::ErrorKind::WouldBlock, e)),
                 Err(e) => Ok(Err(e)),

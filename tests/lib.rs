@@ -25,13 +25,13 @@ type suseconds_t = libc::c_long;
 #[test]
 fn read_packet_with_full_data() {
     let mut capture = capture_from_test_file("packet_snaplen_65535.pcap");
-    assert_eq!(capture.next().unwrap().len(), 98);
+    assert_eq!(capture.next_packet().unwrap().len(), 98);
 }
 
 #[test]
 fn read_packet_with_truncated_data() {
     let mut capture = capture_from_test_file("packet_snaplen_20.pcap");
-    assert_eq!(capture.next().unwrap().len(), 20);
+    assert_eq!(capture.next_packet().unwrap().len(), 20);
 }
 
 fn capture_from_test_file(file_name: &str) -> Capture<Offline> {
@@ -109,9 +109,9 @@ impl Packets {
 
     pub fn verify<T: Activated + ?Sized>(&self, cap: &mut Capture<T>) {
         for (header, data) in self.headers.iter().zip(self.data.iter()) {
-            assert_eq!(cap.next().unwrap(), Packet::new(header, data));
+            assert_eq!(cap.next_packet().unwrap(), Packet::new(header, data));
         }
-        assert!(cap.next().is_err());
+        assert!(cap.next_packet().is_err());
     }
 }
 
@@ -315,7 +315,7 @@ fn test_error() {
 #[test]
 fn test_compile() {
     let mut capture = capture_from_test_file("packet_snaplen_65535.pcap");
-    let packet = capture.next().unwrap();
+    let packet = capture.next_packet().unwrap();
 
     let bpf_capture = Capture::dead(Linktype::ETHERNET).unwrap();
 
