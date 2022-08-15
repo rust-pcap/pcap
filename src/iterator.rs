@@ -14,6 +14,7 @@ impl<S: Activated + ?Sized, C> PacketIter<S, C> {
         Self { capture, codec }
     }
 
+    /// Returns a mutable reference to the inner [`Capture`].
     pub fn capture_mut(&mut self) -> &mut Capture<S> {
         &mut self.capture
     }

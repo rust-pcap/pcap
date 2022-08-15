@@ -38,6 +38,6 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
         // Here in the event loop we may await a bunch of other
         // futures too, using the select! macro from tokio.
         let data = stream.next().await.unwrap()?;
-        stream.inner_mut().sendpacket(data)?;
+        stream.capture_mut().sendpacket(data)?;
     }
 }

@@ -31,7 +31,7 @@ impl<T: Activated + ?Sized, C> PacketStream<T, C> {
     ///
     /// The caller must ensure the capture will not be set to be
     /// blocking.
-    pub fn inner_mut(&mut self) -> &mut Capture<T> {
+    pub fn capture_mut(&mut self) -> &mut Capture<T> {
         &mut self.inner.get_mut().inner
     }
 }
