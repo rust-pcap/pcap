@@ -14,7 +14,7 @@ fn main() {
 
     // get 10 packets
     for _ in 0..10 {
-        cap.next().ok();
+        cap.next_packet().ok();
     }
     let stats = cap.stats().unwrap();
     println!(

@@ -23,7 +23,7 @@ See examples for usage.
 
 # Building
 
-As of 0.8.0 this crate uses Rust 2018 and requires a compiler version >= 1.40.0.
+As of 0.8.0 this crate uses Rust 2018 and requires a compiler version >= 1.41.0.
 
 The feature `capture-stream` depends on `tokio`, but we only lock `tokio` version to `1.0`. Therefore, when `capture-stream` is enabled, this crate requires a compiler version new enough to compile the `tokio` crate.
 
@@ -53,6 +53,10 @@ If `LIBPCAP_LIBDIR` environment variable is set when building the crate, it will
 ## Library Version
 
 The crate will automatically try to detect the installed `libpcap`/`wpcap` version by loading it during the build and calling `pcap_lib_version`. If for some reason this is not suitable, you can specify the desired library version by setting the environment variable `LIBPCAP_VER` to the desired version (e.g. `env LIBPCAP_VER=1.5.0`). The version number is used to determine which library calls to include in the compilation.
+
+## Minimum Supported Rust Version (MSRV)
+
+Talk about policies about MSRV is on [#240](https://github.com/rust-pcap/pcap/discussions/240)
 
 ## Optional Features
 

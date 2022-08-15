@@ -1,15 +1,14 @@
 use futures::StreamExt;
-use pcap::stream::{PacketCodec, PacketStream};
-use pcap::{Active, Capture, Device, Error, Packet};
+use pcap::{Active, Capture, Device, Error, Packet, PacketCodec, PacketStream};
 use std::error;
 
 pub struct SimpleDumpCodec;
 
 impl PacketCodec for SimpleDumpCodec {
-    type Type = String;
+    type Item = String;
 
-    fn decode(&mut self, packet: Packet) -> Result<Self::Type, Error> {
-        Ok(format!("{:?}", packet))
+    fn decode(&mut self, packet: Packet) -> Self::Item {
+        format!("{:?}", packet)
     }
 }
 

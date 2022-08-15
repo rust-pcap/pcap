@@ -14,13 +14,13 @@
 //! fn main() {
 //!     let mut cap = Device::lookup().unwrap().open().unwrap();
 //!
-//!     while let Ok(packet) = cap.next() {
+//!     while let Ok(packet) = cap.next_packet() {
 //!         println!("received packet! {:?}", packet);
 //!     }
 //! }
 //! ```
 //!
-//! `Capture`'s `.next()` will produce a `Packet` which can be dereferenced to access the
+//! `Capture`'s `.next_packet()` will produce a `Packet` which can be dereferenced to access the
 //! `&[u8]` packet contents.
 //!
 //! # Custom configuration
@@ -40,7 +40,7 @@
 //!                       .snaplen(5000)
 //!                       .open().unwrap();
 //!
-//!     while let Ok(packet) = cap.next() {
+//!     while let Ok(packet) = cap.next_packet() {
 //!         println!("received packet! {:?}", packet);
 //!     }
 //! }
@@ -55,7 +55,7 @@
 //! use pcap::{Activated, Capture};
 //!
 //! fn read_packets<T: Activated>(mut capture: Capture<T>) {
-//!     while let Ok(packet) = capture.next() {
+//!     while let Ok(packet) = capture.next_packet() {
 //!         println!("received packet! {:?}", packet);
 //!     }
 //! }
@@ -87,7 +87,15 @@ mod raw;
 #[cfg(windows)]
 pub mod sendqueue;
 #[cfg(feature = "capture-stream")]
-pub mod stream;
+mod stream;
+#[cfg(feature = "capture-stream")]
+pub use stream::PacketStream;
+
+mod iterator;
+pub use iterator::PacketIter;
+
+mod codec;
+pub use codec::PacketCodec;
 
 /// An error received from pcap
 #[derive(Debug, PartialEq, Eq)]
@@ -682,7 +690,7 @@ impl State for Dead {}
 /// buffer size, snaplen, timeout, and promiscuity before you activate it.
 ///
 /// **`Capture<Active>`** is created by calling `.open()` on a `Capture<Inactive>`. This
-/// activates the capture handle, allowing you to get packets with `.next()` or apply filters
+/// activates the capture handle, allowing you to get packets with `.next_packet()` or apply filters
 /// with `.filter()`.
 ///
 /// **`Capture<Offline>`** is created via `Capture::from_file()`. This allows you to read a
@@ -700,7 +708,7 @@ impl State for Dead {}
 ///               .open() // activate the handle
 ///               .unwrap(); // assume activation worked
 ///
-/// while let Ok(packet) = cap.next() {
+/// while let Ok(packet) = cap.next_packet() {
 ///     println!("received packet! {:?}", packet);
 /// }
 /// ```
@@ -1123,11 +1131,14 @@ impl<T: Activated + ?Sized> Capture<T> {
     /// Blocks until a packet is returned from the capture handle or an error occurs.
     ///
     /// pcap captures packets and places them into a buffer which this function reads
-    /// from. This buffer has a finite length, so if the buffer fills completely new
+    /// from.
+    ///
+    /// # Warning
+    ///
+    /// This buffer has a finite length, so if the buffer fills completely new
     /// packets will be discarded temporarily. This means that in realtime situations,
-    /// you probably want to minimize the time between calls of this next() method.
-    #[allow(clippy::should_implement_trait)]
-    pub fn next(&mut self) -> Result<Packet, Error> {
+    /// you probably want to minimize the time between calls to next_packet() method.
+    pub fn next_packet(&mut self) -> Result<Packet, Error> {
         unsafe {
             let mut header: *mut raw::pcap_pkthdr = ptr::null_mut();
             let mut packet: *const libc::c_uchar = ptr::null();
@@ -1159,6 +1170,11 @@ impl<T: Activated + ?Sized> Capture<T> {
         }
     }
 
+    /// Return an iterator that call [`Self::next_packet()`] forever. Require a [`PacketCodec`]
+    pub fn iter<C: PacketCodec>(self, codec: C) -> PacketIter<T, C> {
+        PacketIter::new(self, codec)
+    }
+
     /// Returns this capture as a [`futures::Stream`] of packets.
     ///
     /// # Errors
@@ -1166,14 +1182,11 @@ impl<T: Activated + ?Sized> Capture<T> {
     /// If this capture is set to be blocking, or if the network device
     /// does not support `select()`, an error will be returned.
     #[cfg(feature = "capture-stream")]
-    pub fn stream<C: stream::PacketCodec>(
-        self,
-        codec: C,
-    ) -> Result<stream::PacketStream<T, C>, Error> {
+    pub fn stream<C: PacketCodec>(self, codec: C) -> Result<PacketStream<T, C>, Error> {
         if !self.nonblock {
             return Err(NonNonBlock);
         }
-        stream::PacketStream::new(SelectableCapture::new(self)?, codec)
+        PacketStream::new(SelectableCapture::new(self)?, codec)
     }
 
     /// Sets the filter on the capture using the given BPF program string. Internally this is
@@ -1222,7 +1235,7 @@ impl Capture<Active> {
         })
     }
 
-    /// Set the capture to be non-blocking. When this is set, next() may return an error indicating
+    /// Set the capture to be non-blocking. When this is set, [`Self::next_packet()`] may return an error indicating
     /// that there is no packet available to be read.
     pub fn setnonblock(mut self) -> Result<Capture<Active>, Error> {
         with_errbuf(|err| unsafe {

@@ -19,7 +19,7 @@ fn main() {
         let mut savefile = cap.savefile("test.pcap").unwrap();
 
         // get a packet from the interface
-        let p = cap.next().unwrap();
+        let p = cap.next_packet().unwrap();
 
         // print the packet out
         println!("packet received on network: {:?}", p);
@@ -32,7 +32,7 @@ fn main() {
     let mut cap = Capture::from_file("test.pcap").unwrap();
 
     // get a packet
-    let p = cap.next().unwrap();
+    let p = cap.next_packet().unwrap();
 
     // print that packet out -- it should be the same as the one we printed above
     println!("packet obtained from file: {:?}", p);
