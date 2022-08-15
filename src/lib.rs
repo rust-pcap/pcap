@@ -253,7 +253,7 @@ impl DeviceFlags {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 /// Indication of whether the adapter is connected or not; for wireless interfaces, "connected"
 /// means "associated with a network".
 pub enum ConnectionStatus {

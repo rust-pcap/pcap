@@ -4,7 +4,10 @@ use std::ops::Add;
 use std::path::Path;
 use tempdir::TempDir;
 
-use pcap::{Activated, Active, Capture, Linktype, Offline, Packet, PacketHeader};
+use pcap::{
+    Activated, Active, Capture, ConnectionStatus, DeviceFlags, Linktype, Offline, Packet,
+    PacketHeader,
+};
 #[cfg(not(windows))]
 use pcap::{Error, Precision};
 
@@ -353,4 +356,53 @@ fn test_pcap_version() {
     assert_eq!(capture.version(), (2, 4));
     assert_eq!(capture.major_version(), 2);
     assert_eq!(capture.minor_version(), 4);
+}
+
+#[test]
+fn test_device_flags() {
+    pub const PCAP_IF_LOOPBACK: u32 = 0x00000001;
+    pub const PCAP_IF_UP: u32 = 0x00000002;
+    pub const PCAP_IF_CONNECTION_STATUS_NOT_APPLICABLE: u32 = 0x00000030;
+
+    let flags = DeviceFlags::from_bits_truncate(
+        PCAP_IF_LOOPBACK | PCAP_IF_UP | PCAP_IF_CONNECTION_STATUS_NOT_APPLICABLE,
+    );
+
+    assert!(flags.is_loopback());
+    assert!(flags.is_up());
+    assert!(flags.contains(DeviceFlags::LOOPBACK | DeviceFlags::UP));
+
+    assert!(!flags.is_running());
+    assert!(!flags.is_wireless());
+
+    assert_ne!(flags.connection_status(), ConnectionStatus::Unknown);
+    assert_ne!(flags.connection_status(), ConnectionStatus::Connected);
+    assert_ne!(flags.connection_status(), ConnectionStatus::Disconnected);
+    assert_eq!(flags.connection_status(), ConnectionStatus::NotApplicable);
+}
+
+#[test]
+fn test_connection_status() {
+    pub const PCAP_IF_CONNECTION_STATUS_UNKNOWN: u32 = 0x00000000;
+    pub const PCAP_IF_CONNECTION_STATUS_CONNECTED: u32 = 0x00000010;
+    pub const PCAP_IF_CONNECTION_STATUS_DISCONNECTED: u32 = 0x00000020;
+    pub const PCAP_IF_CONNECTION_STATUS_NOT_APPLICABLE: u32 = 0x00000030;
+
+    let flags = DeviceFlags::from_bits_truncate(PCAP_IF_CONNECTION_STATUS_UNKNOWN);
+    assert_eq!(ConnectionStatus::from(&flags), ConnectionStatus::Unknown);
+
+    let flags = DeviceFlags::from_bits_truncate(PCAP_IF_CONNECTION_STATUS_CONNECTED);
+    assert_eq!(ConnectionStatus::from(&flags), ConnectionStatus::Connected);
+
+    let flags = DeviceFlags::from_bits_truncate(PCAP_IF_CONNECTION_STATUS_DISCONNECTED);
+    assert_eq!(
+        ConnectionStatus::from(&flags),
+        ConnectionStatus::Disconnected
+    );
+
+    let flags = DeviceFlags::from_bits_truncate(PCAP_IF_CONNECTION_STATUS_NOT_APPLICABLE);
+    assert_eq!(
+        ConnectionStatus::from(&flags),
+        ConnectionStatus::NotApplicable
+    );
 }
