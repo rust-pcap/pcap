@@ -12,7 +12,7 @@ fn main() {
         2 => ("RAW".to_string(), env::args().nth(1).unwrap()),
         3 => (env::args().nth(1).unwrap(), env::args().nth(2).unwrap()),
         _ => {
-            println!("Usage:    {} [type] 'program'", env::args().nth(0).unwrap());
+            println!("Usage:    {} [type] 'program'", env::args().next().unwrap());
             println!("  type: a pcap linklayer type, e.g:");
             println!("      RAW, EN10MB");
             println!("  program: a pcap filter expression e.g.:");
