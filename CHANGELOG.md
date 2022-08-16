@@ -5,7 +5,7 @@
 ### Added
 
 - [doc](https://docs.rs/pcap/latest/pcap/) will now include all features.
-- support for sendqueues on Windows.
+- Support for sendqueues on Windows.
 - `PacketStream::capture_mut` to still be able to inject packets when using `PacketStream`.
 - `Capture::iter()` that return an iterator that use a codec like `Capture::stream()`.
 - `Packet<Dead>::dead_with_precision` to enable creating a pcap with nanosecond precision.
@@ -14,10 +14,10 @@
 ### Changed
 
 - MSRV is now `1.41.0`.
-- `PacketStream` have been moved from mod `stream` to the `root` of the crate.
-- `PacketCodec` have been moved from mod `stream` to the `root` of the crate.
-- `PacketCodec::decode()` no longer return a `Result`.
-- `PacketCodec::Type` have been renamed `PacketCodec::Item`.
+- `PacketStream` has been moved from mod `stream` to the `root` of the crate.
+- `PacketCodec` has been moved from mod `stream` to the `root` of the crate.
+- `PacketCodec::decode()` no longer returns a `Result`.
+- `PacketCodec::Type` has been renamed to `PacketCodec::Item`.
 - `Device::lookup` now returns `Result<Option<Device>, Error>` rather than `Result<Device, Error>`. `Ok(None)` means that the lookup succeeded, but no suitable devices were available. This is consistent with libpcap.
 - `Capture` and `Savefile` no longer implement the `Sync` trait. The underlying `libpcap` library does not promise thread-safe access for the same capture object from multiple threads.
 - Switched from `winapi` to `windows-sys` for Windows builds. `windows-sys` requires rustc 1.46.0.
@@ -25,7 +25,7 @@
 
 ### Removed
 
-- `mod stream` is no longer public.
+- mod `stream` is no longer public.
 - `docs-rs` feature.
 - `full` feature.
 - `stream::SelectableFd` and `stream::PacketStream::new` as they were only meant to be used internally.
