@@ -6,6 +6,16 @@ use libc::{c_char, c_int, c_uchar, c_uint, c_ushort, sockaddr, timeval, FILE};
 #[cfg(windows)]
 use windows_sys::Win32::Foundation::HANDLE;
 
+pub const PCAP_IF_LOOPBACK: u32 = 0x00000001;
+pub const PCAP_IF_UP: u32 = 0x00000002;
+pub const PCAP_IF_RUNNING: u32 = 0x00000004;
+pub const PCAP_IF_WIRELESS: u32 = 0x00000008;
+pub const PCAP_IF_CONNECTION_STATUS: u32 = 0x00000030;
+pub const PCAP_IF_CONNECTION_STATUS_UNKNOWN: u32 = 0x00000000;
+pub const PCAP_IF_CONNECTION_STATUS_CONNECTED: u32 = 0x00000010;
+pub const PCAP_IF_CONNECTION_STATUS_DISCONNECTED: u32 = 0x00000020;
+pub const PCAP_IF_CONNECTION_STATUS_NOT_APPLICABLE: u32 = 0x00000030;
+
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct bpf_program {
