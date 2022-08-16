@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.10.0] - 2022-08-16
+
 ### Added
 
 - [doc](https://docs.rs/pcap/latest/pcap/) will now include all features.
