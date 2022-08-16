@@ -19,58 +19,79 @@ If you need anything feel free to post an issue or submit a pull request!
 * Write packets to savefiles
 * Inject packets into an interface
 
-See examples for usage.
+See [examples](examples) for usage.
 
 # Building
 
-As of 0.8.0 this crate uses Rust 2018 and requires a compiler version >= 1.41.0.
+This crate requires the `libpcap` (or `wpcap` on Windows) library.
 
-The feature `capture-stream` depends on `tokio`, but we only lock `tokio` version to `1.0`. Therefore, when `capture-stream` is enabled, this crate requires a compiler version new enough to compile the `tokio` crate.
+## Installing dependencies
 
-## Windows
+### Windows
 
-As of 0.10.0 Windows builds, without the `cature-stream` feature, requires a compiler version >= 1.46.0.
+1. Install [WinPcap](http://www.winpcap.org/install/default.htm).
+2. Download the WinPcap [Developer's Pack](https://www.winpcap.org/devel.htm).
+3. Add the `/Lib` or `/Lib/x64` folder to your `LIB` environment variable.
 
-Install [WinPcap](http://www.winpcap.org/install/default.htm).
+### Linux
 
-Download the WinPcap [Developer's Pack](https://www.winpcap.org/devel.htm).
-Add the `/Lib` or `/Lib/x64` folder to your `LIB` environment variable.
+Install the libraries and header files for the `libpcap` library. For example:
 
-## Linux
+- On Debian based Linux: install `libpcap-dev`.
+- On Fedora Linux: install `libpcap-devel`.
 
-On Debian based Linux, install `libpcap-dev`. If not running as root, you need to set capabilities like so: ```sudo setcap cap_net_raw,cap_net_admin=eip path/to/bin```
+**Note:** If not running as root, you need to set capabilities like so: `sudo setcap cap_net_raw,cap_net_admin=eip path/to/bin`.
 
-## Mac OS X
+### Mac OS X
 
-libpcap should be installed on Mac OS X by default.
+`libpcap` should be installed on Mac OS X by default.
 
 **Note:** A timeout of zero may cause ```pcap::Capture::next``` to hang and never return (because it waits for the timeout to expire before returning). This can be fixed by using a non-zero timeout (as the libpcap manual recommends) and calling ```pcap::Capture::next``` in a loop.
 
-## Library Location
+## Linking
 
-If `LIBPCAP_LIBDIR` environment variable is set when building the crate, it will be added to the linker search path - this allows linking against a specific `libpcap`.
+Ultimately, it is your responsibility, as the crate user, to configure linking with `libpcap`/`wpcap` via your own [build script](https://doc.rust-lang.org/cargo/reference/build-scripts.html) to suit your needs (e.g. library version, static vs. dynamic linking, etc.). For most setups, the defaults are most likely sufficient and you don't have to do anything special beyond installing `libpcap` as described above. The notes below are provided if the defaults are not suitable for you.
 
-## Library Version
+### Supporting different library versions
 
-The crate will automatically try to detect the installed `libpcap`/`wpcap` version by loading it during the build and calling `pcap_lib_version`. If for some reason this is not suitable, you can specify the desired library version by setting the environment variable `LIBPCAP_VER` to the desired version (e.g. `env LIBPCAP_VER=1.5.0`). The version number is used to determine which library calls to include in the compilation.
+This crate supports several different versions of `libpcap`, such as `wpcap`, to ensure it can be compiled against older versions while still providing access to functionality available in newer versions. `pcap` will try to automatically detect the right version and configure itself, but it may fail at this task. Especially, if you have an unusual build setup. If you are getting compilation error of the form
+``` text
+cannot find function `pcap_<some_function>` in module `raw`
+```
+then that is probably what is happening. It is likely that your `libpcap` does not support the newest `libpcap` API and `pcap` failed to query `libpcap` to find out which unsupported features it should exclude.
 
-## Minimum Supported Rust Version (MSRV)
+To solve this, you can try helping the `pcap` crate compile the correct feature set that is compatible with your `libpcap` using the following two approaches:
 
-Talk about policies about MSRV is on [#240](https://github.com/rust-pcap/pcap/discussions/240)
+#### Library Location
+
+If you are linking dynamically with `libpcap`, `pcap` will try to consult `libpcap` for its version. However, if your library is in an unconventional location and you had to customize `cargo:rustc-link-search=native` in your own build script, `pcap`'s build script is unable to pick up on that. Please communicate the new library location to `pcap`'s build script using the `LIBPCAP_LIBDIR` environment variable.
+
+#### Library Version
+
+If setting the library location does not work or you are linking statically, you may need to set the `libpcap` version manually. You can do this by setting the environment variable `LIBPCAP_VER` to the desired version (e.g. `env LIBPCAP_VER=1.5.0`). By default, if `pcap` fails to query `libpcap`/`wpcap` for its API version, it will assume the newest API so this should only be necessary if you are using an old version of `libpcap`.
 
 ## Optional Features
 
-#### `capture-stream`
+### `capture-stream`
 
 Use the `capture-stream` feature to enable support for streamed packet captures.
-This feature is supported only on ubuntu and macosx. 
+
+**This feature is supported only on ubuntu and macosx.**
 
 ```toml
 [dependencies]
 pcap = { version = "0.9", features = ["capture-stream"] }
 ```
 
-## License
+## Minimum Supported Rust Version (MSRV)
+
+This crate uses Rust 2018 and requires a compiler version >= 1.41 on Linux and Mac OSX and >= 1.46 on Windows.
+
+The feature `capture-stream` depends on `tokio = "1.0"`. Therefore, when `capture-stream` is enabled, this crate requires a compiler version new enough to compile the `tokio` crate.
+
+Talk about policies about MSRV is on [#240](https://github.com/rust-pcap/pcap/discussions/240).
+
+# License
 
 Licensed under either of
 
@@ -79,7 +100,7 @@ Licensed under either of
 
 at your option.
 
-### Contribution
+# Contributing
 
 Unless you explicitly state otherwise, any contribution intentionally
 submitted for inclusion in the work by you, as defined in the Apache-2.0

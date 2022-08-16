@@ -19,6 +19,31 @@ impl Version {
         }
     }
 
+    fn list() -> Vec<Version> {
+        vec![
+            Version::new(1, 2, 1),
+            Version::new(1, 5, 0),
+            Version::new(1, 7, 2),
+            Version::new(1, 9, 0),
+            Version::new(1, 9, 1),
+        ]
+    }
+
+    fn max() -> Version {
+        #[cfg(not(windows))]
+        {
+            Version::new(1, 9, 1)
+        }
+        #[cfg(windows)]
+        {
+            Version::new(1, 0, 0)
+        }
+    }
+
+    fn docs_rs() -> Version {
+        Version::new(2, 0, 0)
+    }
+
     fn parse(s: &str) -> Result<Version, Box<dyn std::error::Error>> {
         let err = format!("invalid pcap lib version: {}", s);
 
@@ -37,15 +62,9 @@ impl Version {
     }
 }
 
-fn get_pcap_lib_version(
-    libdirpath: Option<PathBuf>,
-) -> Result<Version, Box<dyn std::error::Error>> {
+fn get_libpcap_version(libdirpath: Option<PathBuf>) -> Result<Version, Box<dyn std::error::Error>> {
     if std::env::var("DOCS_RS").is_ok() {
-        return Ok(Version {
-            major: 2,
-            minor: 0,
-            micro: 0,
-        });
+        return Ok(Version::docs_rs());
     }
 
     if let Ok(libver) = env::var("LIBPCAP_VER") {
@@ -63,7 +82,11 @@ fn get_pcap_lib_version(
         libfile = libdir.join(libfile);
     }
 
-    let lib = libloading::Library::new(libfile)?;
+    let lib = if let Ok(lib) = libloading::Library::new(libfile) {
+        lib
+    } else {
+        return Ok(Version::max());
+    };
 
     type PcapLibVersion = unsafe extern "C" fn() -> *mut c_char;
     let pcap_lib_version = unsafe { lib.get::<PcapLibVersion>(b"pcap_lib_version")? };
@@ -112,15 +135,8 @@ fn emit_cfg_flags(version: Version) {
         version >= Version::new(1, 0, 0),
         "required pcap lib version: >=1.0.0"
     );
-    let api_vers: Vec<Version> = vec![
-        Version::new(1, 2, 1),
-        Version::new(1, 5, 0),
-        Version::new(1, 7, 2),
-        Version::new(1, 9, 0),
-        Version::new(1, 9, 1),
-    ];
 
-    for v in api_vers.iter().filter(|&v| v <= &version) {
+    for v in Version::list().iter().filter(|&v| v <= &version) {
         println!(
             "cargo:rustc-cfg=libpcap_{}_{}_{}",
             v.major, v.minor, v.micro
@@ -138,6 +154,6 @@ fn main() {
         libdirpath = Some(PathBuf::from(&libdir));
     }
 
-    let version = get_pcap_lib_version(libdirpath).unwrap();
+    let version = get_libpcap_version(libdirpath).unwrap();
     emit_cfg_flags(version);
 }
