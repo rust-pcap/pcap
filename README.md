@@ -1,7 +1,6 @@
 # pcap
 
-This is a **Rust language** crate for accessing the packet sniffing capabilities of pcap (or wpcap on Windows).
-If you need anything feel free to post an issue or submit a pull request!
+This is a **Rust language** crate for accessing the packet sniffing capabilities of libpcap (or wpcap on Windows). If you need anything, feel free to post an issue or submit a pull request!
 
 [![CI](https://github.com/rust-pcap/pcap/workflows/CI/badge.svg)](https://github.com/rust-pcap/pcap/actions/workflows/ci.yml)
 [![Coverage](https://rust-pcap.github.io/pcap/badges/flat.svg)](https://rust-pcap.github.io/pcap/index.html)
@@ -23,7 +22,7 @@ See [examples](examples) for usage.
 
 # Building
 
-This crate requires the `libpcap` (or `wpcap` on Windows) library.
+This crate requires the libpcap (or wpcap on Windows) library.
 
 ## Installing dependencies
 
@@ -35,7 +34,7 @@ This crate requires the `libpcap` (or `wpcap` on Windows) library.
 
 ### Linux
 
-Install the libraries and header files for the `libpcap` library. For example:
+Install the libraries and header files for the libpcap library. For example:
 
 - On Debian based Linux: install `libpcap-dev`.
 - On Fedora Linux: install `libpcap-devel`.
@@ -50,25 +49,25 @@ Install the libraries and header files for the `libpcap` library. For example:
 
 ## Linking
 
-Ultimately, it is your responsibility, as the crate user, to configure linking with `libpcap`/`wpcap` via your own [build script](https://doc.rust-lang.org/cargo/reference/build-scripts.html) to suit your needs (e.g. library version, static vs. dynamic linking, etc.). For most setups, the defaults are most likely sufficient and you don't have to do anything special beyond installing `libpcap` as described above. The notes below are provided if the defaults are not suitable for you.
+It is your responsibility, as the crate user, to configure linking with libpcap/wpcap to suit your needs (e.g. library version, static vs. dynamic linking, etc.) via your own [build script](https://doc.rust-lang.org/cargo/reference/build-scripts.html). For most setups, the defaults are most likely sufficient and you don't have to do anything special beyond installing libpcap as described above. The notes below are provided if the defaults are not suitable.
 
 ### Supporting different library versions
 
-This crate supports several different versions of `libpcap`, such as `wpcap`, to ensure it can be compiled against older versions while still providing access to functionality available in newer versions. `pcap` will try to automatically detect the right version and configure itself, but it may fail at this task. Especially, if you have an unusual build setup. If you are getting compilation error of the form
+This crate supports several different versions of libpcap, such as wpcap, to ensure it can be compiled against older versions while still providing access to functionality available in newer versions. The build script will try to automatically detect the right version and configure pcap, but it may fail at this task. Especially, if you have an unusual build setup. If you are getting compilation error of the form
 ``` text
 cannot find function `pcap_<some_function>` in module `raw`
 ```
-then that is probably what is happening. It is likely that your `libpcap` does not support the newest `libpcap` API and `pcap` failed to query `libpcap` to find out which unsupported features it should exclude.
+then that is probably what is happening. It is likely that your libpcap does not support the newest libpcap API and pcap failed to query libpcap to find out which unsupported features it should exclude.
 
-To solve this, you can try helping the `pcap` crate compile the correct feature set that is compatible with your `libpcap` using the following two approaches:
+To solve this, you can try helping the pcap crate compile the correct feature set that is compatible with your libpcap using the following two approaches:
 
 #### Library Location
 
-If you are linking dynamically with `libpcap`, `pcap` will try to consult `libpcap` for its version. However, if your library is in an unconventional location and you had to customize `cargo:rustc-link-search=native` in your own build script, `pcap`'s build script is unable to pick up on that. Please communicate the new library location to `pcap`'s build script using the `LIBPCAP_LIBDIR` environment variable.
+If you are linking dynamically with libpcap, pcap will try to consult libpcap for its version. However, if your library is in an unconventional location and you had to customize `cargo:rustc-link-search=native` in your own build script, pcap's build script is unable to pick up on that and will default to the most recent API version. If you are not using the most recent library version, please communicate the library's location to pcap's build script using the `LIBPCAP_LIBDIR` environment variable.
 
 #### Library Version
 
-If setting the library location does not work or you are linking statically, you may need to set the `libpcap` version manually. You can do this by setting the environment variable `LIBPCAP_VER` to the desired version (e.g. `env LIBPCAP_VER=1.5.0`). By default, if `pcap` fails to query `libpcap`/`wpcap` for its API version, it will assume the newest API so this should only be necessary if you are using an old version of `libpcap`.
+If setting the library location does not work or you are linking statically, you may need to set the libpcap version manually. You can do this by setting the environment variable `LIBPCAP_VER` to the desired version (e.g. `env LIBPCAP_VER=1.5.0`). By default, if pcap fails to query libpcap/wpcap for its API version, it will assume the newest API so this should only be necessary if you are using an old version of libpcap.
 
 ## Optional Features
 
@@ -76,12 +75,12 @@ If setting the library location does not work or you are linking statically, you
 
 Use the `capture-stream` feature to enable support for streamed packet captures.
 
-**This feature is supported only on ubuntu and macosx.**
-
 ```toml
 [dependencies]
 pcap = { version = "0.9", features = ["capture-stream"] }
 ```
+
+**This feature is supported only on Linux and Mac OS X. It will not work and is not supported on Windows.**
 
 ## Minimum Supported Rust Version (MSRV)
 
@@ -89,7 +88,7 @@ This crate uses Rust 2018 and requires a compiler version >= 1.41 on Linux and M
 
 The feature `capture-stream` depends on `tokio = "1.0"`. Therefore, when `capture-stream` is enabled, this crate requires a compiler version new enough to compile the `tokio` crate.
 
-Talk about policies about MSRV is on [#240](https://github.com/rust-pcap/pcap/discussions/240).
+[Discuss the MSRV](https://github.com/rust-pcap/pcap/discussions/240).
 
 # License
 
@@ -102,7 +101,4 @@ at your option.
 
 # Contributing
 
-Unless you explicitly state otherwise, any contribution intentionally
-submitted for inclusion in the work by you, as defined in the Apache-2.0
-license, shall be dual licensed as above, without any additional terms or
-conditions.
+Unless you explicitly state otherwise, any contribution intentionally submitted for inclusion in the work by you, as defined in the Apache-2.0 license, shall be dual licensed as above, without any additional terms or conditions.
