@@ -84,6 +84,8 @@ use windows_sys::Win32::Networking::WinSock::{AF_INET, AF_INET6, SOCKADDR_IN, SO
 #[cfg(target_os = "windows")]
 use windows_sys::Win32::Foundation::HANDLE;
 
+mod handle;
+use handle::Handle;
 mod raw;
 #[cfg(windows)]
 pub mod sendqueue;
@@ -818,7 +820,7 @@ impl State for Dead {}
 /// ```
 pub struct Capture<T: State + ?Sized> {
     nonblock: bool,
-    handle: NonNull<raw::pcap_t>,
+    handle: Handle<raw::pcap_t>,
     _marker: PhantomData<T>,
 }
 
@@ -828,10 +830,10 @@ pub struct Capture<T: State + ?Sized> {
 unsafe impl<T: State + ?Sized> Send for Capture<T> {}
 
 impl<T: State + ?Sized> From<NonNull<raw::pcap_t>> for Capture<T> {
-    fn from(handle: NonNull<raw::pcap_t>) -> Self {
+    fn from(pcap_t: NonNull<raw::pcap_t>) -> Self {
         Capture {
             nonblock: false,
-            handle,
+            handle: Handle::new(pcap_t, raw::pcap_close),
             _marker: PhantomData,
         }
     }
@@ -1425,12 +1427,6 @@ impl<T: Activated + ?Sized> AsRawFd for SelectableCapture<T> {
     }
 }
 
-impl<T: State + ?Sized> Drop for Capture<T> {
-    fn drop(&mut self) {
-        unsafe { raw::pcap_close(self.handle.as_ptr()) }
-    }
-}
-
 impl<T: Activated> From<Capture<T>> for Capture<dyn Activated> {
     fn from(cap: Capture<T>) -> Capture<dyn Activated> {
         unsafe { mem::transmute(cap) }
@@ -1439,7 +1435,7 @@ impl<T: Activated> From<Capture<T>> for Capture<dyn Activated> {
 
 /// Abstraction for writing pcap savefiles, which can be read afterwards via `Capture::from_file()`.
 pub struct Savefile {
-    handle: NonNull<raw::pcap_dumper_t>,
+    handle: Handle<raw::pcap_dumper_t>,
 }
 
 // Just like a Capture, a Savefile is safe to Send as it encapsulates the entire lifetime of
@@ -1470,14 +1466,10 @@ impl Savefile {
 }
 
 impl From<NonNull<raw::pcap_dumper_t>> for Savefile {
-    fn from(handle: NonNull<raw::pcap_dumper_t>) -> Self {
-        Savefile { handle }
-    }
-}
-
-impl Drop for Savefile {
-    fn drop(&mut self) {
-        unsafe { raw::pcap_dump_close(self.handle.as_ptr()) }
+    fn from(pcap_dumper_t: NonNull<raw::pcap_dumper_t>) -> Self {
+        Savefile {
+            handle: Handle::new(pcap_dumper_t, raw::pcap_dump_close),
+        }
     }
 }
 
@@ -1520,6 +1512,8 @@ fn test_struct_size() {
 
 #[repr(transparent)]
 pub struct BpfInstruction(raw::bpf_insn);
+
+// Be aware of the Drop impl
 #[repr(transparent)]
 pub struct BpfProgram(raw::bpf_program);
 

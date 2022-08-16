@@ -3,11 +3,12 @@ use std::ptr::NonNull;
 
 use libc::c_uint;
 
+use crate::handle::Handle;
 use crate::raw;
 use crate::Error;
 use crate::{Active, Capture};
 
-pub struct SendQueue(NonNull<raw::pcap_send_queue>);
+pub struct SendQueue(Handle<raw::pcap_send_queue>);
 
 pub enum Sync {
     Off = 0,
@@ -19,7 +20,7 @@ impl SendQueue {
         let squeue = unsafe { raw::pcap_sendqueue_alloc(memsize) };
         let squeue = NonNull::new(squeue).ok_or(Error::InsufficientMemory)?;
 
-        Ok(Self(squeue))
+        Ok(Self(Handle::new(squeue, raw::pcap_sendqueue_destroy)))
     }
 
     pub fn maxlen(&self) -> c_uint {
@@ -84,13 +85,5 @@ impl SendQueue {
 
     pub fn reset(&mut self) {
         unsafe { self.0.as_mut() }.len = 0;
-    }
-}
-
-impl Drop for SendQueue {
-    fn drop(&mut self) {
-        unsafe {
-            raw::pcap_sendqueue_destroy(self.0.as_ptr());
-        }
     }
 }
