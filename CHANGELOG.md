@@ -8,6 +8,7 @@
 - Add support for sendqueues on Windows.
 - Add `PacketStream::capture_mut` to still be able to inject packets when using `PacketStream`
 - `Capture::iter()` that return an iterator that use a codec like `Capture::stream()`
+ - Add `Packet<Dead>::dead_with_precision` to enable creating a pcap with nanosecond precision.
 
 ### Changed
 
