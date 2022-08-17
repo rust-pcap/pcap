@@ -25,6 +25,8 @@ jobs:
           # capture-stream is not supported on Windows or compiler versions too old for Tokio.
           - os: windows-latest
             features: '--all-features'
+          - toolchain: "1.46.0"
+            features: '--all-features'
         include:
           # nightly check is performed on ubuntu only.
           - os: ubuntu-latest

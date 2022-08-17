@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Changed
+
+- MSRV is now `1.46.0`.
+
 ## [0.10.0] - 2022-08-16
 
 ### Added
