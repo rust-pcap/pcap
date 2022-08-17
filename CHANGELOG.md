@@ -19,6 +19,10 @@
 - `Packet<Dead>::dead_with_precision` to enable creating a pcap with nanosecond precision.
 - `flags` field to `Device`.
 
+### Removed
+
+- `BpfProgram` no longer have `Clone` implementation see [#261](https://github.com/rust-pcap/pcap/issues/261)
+
 ### Changed
 
 - MSRV is now `1.41.0`.

@@ -1547,23 +1547,6 @@ impl BpfProgram {
     }
 }
 
-impl Clone for BpfProgram {
-    // make a deep copy of the underlying program
-    fn clone(&self) -> Self {
-        let len = self.0.bf_len as usize;
-        let size = len * mem::size_of::<raw::bpf_insn>();
-        let storage = unsafe {
-            let storage = libc::malloc(size) as *mut raw::bpf_insn;
-            ptr::copy_nonoverlapping(self.0.bf_insns, storage, len);
-            storage
-        };
-        BpfProgram(raw::bpf_program {
-            bf_len: self.0.bf_len,
-            bf_insns: storage,
-        })
-    }
-}
-
 impl Drop for BpfProgram {
     fn drop(&mut self) {
         unsafe { raw::pcap_freecode(&mut self.0) }
