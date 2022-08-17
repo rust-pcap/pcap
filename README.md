@@ -84,7 +84,7 @@ pcap = { version = "0.10", features = ["capture-stream"] }
 
 ## Minimum Supported Rust Version (MSRV)
 
-This crate uses Rust 2018 and requires a compiler version >= 1.41 on Linux and Mac OSX and >= 1.46 on Windows.
+This crate uses Rust 2018 and requires a compiler version >= 1.46.
 
 The feature `capture-stream` depends on `tokio = "1.0"`. Therefore, when `capture-stream` is enabled, this crate requires a compiler version new enough to compile the `tokio` crate.
 
