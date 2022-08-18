@@ -50,11 +50,9 @@ jobs:
           git clone https://github.com/patmarion/winpcap.git C:/winpcap
           echo "LIB=C:/winpcap/Lib/x64" >> $env:GITHUB_ENV
           cp C:/winpcap/Lib/x64/wpcap.dll ${env:SystemRoot}/System32/wpcap.dll
-          regsvr32 ${env:SystemRoot}/System32/wpcap.dll
 
           git clone https://github.com/3gstudent/Winpcap_Install.git C:/npf
           cp C:/npf/npf_x64.sys ${env:SystemRoot}/System32/drivers/npf.sys
-          cp C:/npf/wpcap.dll ${env:SystemRoot}/System32/wpcap.dll
           echo ${env:SystemRoot}
           sc create npf binPath= system32\drivers\npf.sys type= kernel start= demand error= normal tag= no DisplayName= "NetGroup Packet Filter Driver"
           sc start npf
