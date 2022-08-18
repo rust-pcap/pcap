@@ -44,13 +44,20 @@ jobs:
       - name: Install libpcap (macos)
         if: matrix.os == 'macos-latest'
         run: brew install libpcap
-      - name: Install WinPcap and WinPcap 4.1.2 Developer's Pack (windows)
+      - name: Install WinPcap (windows)
         if: matrix.os == 'windows-latest'
         run: |
-          cinst -y winpcap --version 4.1.3.20161116
-          Invoke-WebRequest -Uri "https://www.winpcap.org/install/bin/WpdPack_4_1_2.zip" -OutFile "C:/WpdPack.zip"
-          Expand-Archive -LiteralPath C:/WpdPack.zip -DestinationPath C:/
-          echo "LIB=C:/WpdPack/Lib/x64" >> $env:GITHUB_ENV
+          git clone https://github.com/patmarion/winpcap.git C:/winpcap
+          echo "LIB=C:/winpcap/Lib/x64" >> $env:GITHUB_ENV
+          cp C:/winpcap/Lib/x64/wpcap.dll ${env:SystemRoot}/System32/wpcap.dll
+          regsvr32 ${env:SystemRoot}/System32/wpcap.dll
+
+          git clone https://github.com/3gstudent/Winpcap_Install.git C:/npf
+          cp C:/npf/npf_x64.sys ${env:SystemRoot}/System32/drivers/npf.sys
+          cp C:/npf/wpcap.dll ${env:SystemRoot}/System32/wpcap.dll
+          echo ${env:SystemRoot}
+          sc create npf binPath= system32\drivers\npf.sys type= kernel start= demand error= normal tag= no DisplayName= "NetGroup Packet Filter Driver"
+          sc start npf
       - name: Select rust toolchain
         uses: actions-rs/toolchain@v1
         with:
@@ -59,6 +66,12 @@ jobs:
           override: true
       - name: cargo build
         run: cargo build ${{ matrix.profile }} ${{ matrix.features }}
+      - name: tmp
+        if: matrix.os == 'windows-latest'
+        run: |
+          echo ${env:SystemRoot}
+          echo ${env:Path}
+          ls C:\Windows\System32\wpcap.dll
       - name: cargo test
         run: cargo test ${{ matrix.profile }} ${{ matrix.features }}
       - name: cargo clippy
