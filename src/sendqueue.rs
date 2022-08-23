@@ -22,7 +22,7 @@ impl SendQueue {
         Ok(Self(squeue))
     }
 
-    pub fn maxlen(&self) -> c_uint {
+    pub fn maxlen(&self) -> u32 {
         unsafe { self.0.as_ref().maxlen }
     }
 
@@ -30,7 +30,7 @@ impl SendQueue {
         self.len() == 0
     }
 
-    pub fn len(&self) -> c_uint {
+    pub fn len(&self) -> u32 {
         unsafe { self.0.as_ref().len }
     }
 
