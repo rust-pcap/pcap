@@ -50,7 +50,8 @@ fn main() {
         sq.queue(None, &pktbuf[..14 + 256]).unwrap();
     }
 
-    sq.transmit(&mut cap, pcap::sendqueue::Sync::Off).unwrap();
+    sq.transmit(&mut cap, pcap::sendqueue::SendSync::Off)
+        .unwrap();
 }
 
 #[cfg(not(windows))]
