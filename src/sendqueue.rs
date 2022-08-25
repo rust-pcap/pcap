@@ -8,8 +8,6 @@
 use std::convert::TryInto;
 use std::ptr::NonNull;
 
-use libc::c_uint;
-
 use crate::raw;
 use crate::Error;
 use crate::{Active, Capture};
@@ -26,7 +24,7 @@ impl SendQueue {
     ///
     /// The buffer size `memsize` must be able to contain both packet headers and actual packet
     /// contents.
-    pub fn new(memsize: c_uint) -> Result<Self, Error> {
+    pub fn new(memsize: u32) -> Result<Self, Error> {
         let squeue = unsafe { raw::pcap_sendqueue_alloc(memsize) };
         let squeue = NonNull::new(squeue).ok_or(Error::InsufficientMemory)?;
 
