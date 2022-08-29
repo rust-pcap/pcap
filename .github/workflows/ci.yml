@@ -55,9 +55,9 @@ jobs:
           $CredObject = New-Object System.Management.Automation.PSCredential ("${{ secrets.NPCAP_OEM_USERNAME }}", $SecPassword)
           Invoke-WebRequest -Uri "https://npcap.com/oem/dist/npcap-1.71-oem.exe" -OutFile C:/npcap-oem.exe -Credential $CredObject
           C:/npcap-oem.exe /S
-          Invoke-WebRequest -Uri "https://npcap.com/dist/npcap-sdk-1.13.zip" -OutFile "C:/NpcapSdk.zip"
-          Expand-Archive -LiteralPath C:/NpcapSdk.zip -DestinationPath C:/
-          echo "LIB=C:/NpcapSdk/Lib/x64" >> $env:GITHUB_ENV
+          Invoke-WebRequest -Uri "https://npcap.com/dist/npcap-sdk-1.13.zip" -OutFile "C:/npcap-sdk.zip"
+          Expand-Archive -LiteralPath C:/npcap-sdk.zip -DestinationPath C:/npcap-sdk
+          echo "LIB=C:/npcap-sdk/Lib/x64" >> $env:GITHUB_ENV
       - name: Select rust toolchain
         uses: actions-rs/toolchain@v1
         with:
