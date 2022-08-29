@@ -28,9 +28,9 @@ This crate requires the libpcap (or wpcap on Windows) library.
 
 ### Windows
 
-1. Install [WinPcap](http://www.winpcap.org/install/default.htm).
-2. Download the WinPcap [Developer's Pack](https://www.winpcap.org/devel.htm).
-3. Add the `/Lib` or `/Lib/x64` folder to your `LIB` environment variable.
+1. Install [Npcap](https://npcap.com/#download).
+2. Download the [Npcap SDK](https://npcap.com/#download).
+3. Add the SDK's `/Lib` or `/Lib/x64` folder to your `LIB` environment variable.
 
 ### Linux
 
