@@ -21,7 +21,7 @@ pub enum SendSync {
 }
 
 #[inline]
-fn mkpkthdr(ts: Option<std::time::Duration>, len: u32) -> raw::pcap_pkthdr {
+fn make_pkthdr(ts: Option<std::time::Duration>, len: u32) -> raw::pcap_pkthdr {
     raw::pcap_pkthdr {
         ts: if let Some(ts) = ts {
             libc::timeval {
@@ -71,7 +71,7 @@ impl SendQueue {
     pub fn queue(&mut self, ts: Option<std::time::Duration>, buf: &[u8]) -> Result<(), Error> {
         let len = buf.len().try_into().ok().ok_or(Error::BufferOverflow)?;
 
-        let pkthdr = mkpkthdr(ts, len);
+        let pkthdr = make_pkthdr(ts, len);
 
         let ph = &pkthdr as *const _;
         let res = unsafe { raw::pcap_sendqueue_queue(self.0.as_ptr(), ph, buf.as_ptr()) };
@@ -124,7 +124,7 @@ impl SendQueue {
         let pktlen = pktsize.try_into().ok().ok_or(Error::BufferOverflow)?;
 
         // Generate a raw packet header and get a pointer to it.
-        let pkthdr = mkpkthdr(ts, pktlen);
+        let pkthdr = make_pkthdr(ts, pktlen);
         let rawhdr = &pkthdr as *const _ as *const u8;
 
         // Get a raw pointer to the current write location in sendqueue's internal buffer.
