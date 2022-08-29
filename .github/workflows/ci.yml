@@ -51,8 +51,10 @@ jobs:
       - name: Install WinPcap and WinPcap 4.1.2 Developer's Pack (windows)
         if: matrix.os == 'windows-latest'
         run: |
-          Invoke-WebRequest -Uri "https://${{ secrets.NPCAP_OEM_USERNAME }}:${{ secrets.NPCAP_OEM_PASSWORD }}@npcap.com/oem/dist/npcap-1.71-oem.exe"
-          .\npcap-1.71-oem.exe /S
+          $SecPassword = ConvertTo-SecureString "${{ secrets.NPCAP_OEM_PASSWORD }}" -AsPlainText -Force
+          $CredObject = New-Object System.Management.Automation.PSCredential ("${{ secrets.NPCAP_OEM_USERNAME }}", $SecPassword)
+          Invoke-WebRequest -Uri "https://npcap.com/oem/dist/npcap-1.71-oem.exe" -OutFile C:/npcap-oem.exe -Credential $CredObject
+          .\npcap-oem.exe /S
           Invoke-WebRequest -Uri "https://npcap.com/dist/npcap-sdk-1.13.zip" -OutFile "C:/NpcapSdk.zip"
           Expand-Archive -LiteralPath C:/NpcapSdk.zip -DestinationPath C:/
           echo "LIB=C:/NpcapSdk/Lib/x64" >> $env:GITHUB_ENV
