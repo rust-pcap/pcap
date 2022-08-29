@@ -14,7 +14,7 @@ use crate::{Active, Capture};
 
 pub struct SendQueue(NonNull<raw::pcap_send_queue>);
 
-pub enum Sync {
+pub enum SendSync {
     Off = 0,
     On = 1,
 }
@@ -81,10 +81,10 @@ impl SendQueue {
     ///
     /// If entire queue was transmitted successfully the queue will be automatically reset.
     ///
-    /// If `sync` is set to `Sync::On` the difference between packet header timestamps
-    /// will be used as a delay between sending each packet.  If `Sync::Off` is used the packets
+    /// If `sync` is set to `SendSync::On` the difference between packet header timestamps
+    /// will be used as a delay between sending each packet.  If `SendSync::Off` is used the packets
     /// will be transmitted with no delay between packets.
-    pub fn transmit(&mut self, dev: &mut Capture<Active>, sync: Sync) -> Result<(), Error> {
+    pub fn transmit(&mut self, dev: &mut Capture<Active>, sync: SendSync) -> Result<(), Error> {
         let res = unsafe {
             raw::pcap_sendqueue_transmit(dev.handle.as_ptr(), self.0.as_ptr(), sync as i32)
         };

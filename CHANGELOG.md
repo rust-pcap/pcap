@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+### Changed
+
+- Rename `sendqueue::Sync` to `sendqueue::SendSync` to avoid collision with
+  `Sync` in std's prelude.
+
 ## [0.10.1] - 2022-08-17
 
 ### Changed
