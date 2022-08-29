@@ -17,26 +17,22 @@ jobs:
   cargo-test:
     strategy:
       matrix:
-        os: [windows-latest]
-        toolchain: [stable]
-        profile: ['']
-        features: ['']
-        # os: [windows-latest, ubuntu-latest, macos-latest]
-        # toolchain: ["1.46.0", stable, beta]
-        # profile: ['', --release]
-        # features: ['', '--all-features']
-        # exclude:
-        #   # capture-stream is not supported on Windows or compiler versions too old for Tokio.
-        #   - os: windows-latest
-        #     features: '--all-features'
-        #   - toolchain: "1.46.0"
-        #     features: '--all-features'
-        # include:
-        #   # nightly check is performed on ubuntu only.
-        #   - os: ubuntu-latest
-        #     toolchain: nightly
-        #     profile: ''
-        #     features: --all-features
+        os: [windows-latest, ubuntu-latest, macos-latest]
+        toolchain: ["1.46.0", stable, beta]
+        profile: ['', --release]
+        features: ['', '--all-features']
+        exclude:
+          # capture-stream is not supported on Windows or compiler versions too old for Tokio.
+          - os: windows-latest
+            features: '--all-features'
+          - toolchain: "1.46.0"
+            features: '--all-features'
+        include:
+          # nightly check is performed on ubuntu only.
+          - os: ubuntu-latest
+            toolchain: nightly
+            profile: ''
+            features: --all-features
     runs-on: ${{ matrix.os }}
 
     steps:
