@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+### Added
+
+- `SendQueue::queue_sg()` can add scattered packets, as a slice of
+  `std::io::IoSlice`s, to `SendQueue`s.
+
 ### Changed
 
 - Rename `sendqueue::Sync` to `sendqueue::SendSync` to avoid collision with
