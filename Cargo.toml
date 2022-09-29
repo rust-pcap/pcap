@@ -31,6 +31,7 @@ eui48 = "1.1"
 [build-dependencies]
 libloading = "0.6"
 regex = "1"
+pkg-config = "0.3"
 
 [features]
 # This feature enables access to the function Capture::stream.
