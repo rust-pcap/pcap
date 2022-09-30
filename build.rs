@@ -172,14 +172,24 @@ fn main() {
     let version = if let Ok(libdir) = env::var("LIBPCAP_LIBDIR") {
         println!("cargo:rustc-link-search=native={}", libdir);
         get_libpcap_version(Some(PathBuf::from(&libdir))).unwrap()
-    } else if let Ok(library) = pkg_config::Config::new()
-        .atleast_version(&Version::LOWEST_SUPPORTED.to_string())
-        .probe("libpcap")
-    {
+    } else if let Ok(library) = from_pkg_config() {
         Version::parse(&library.version).unwrap()
     } else {
         get_libpcap_version(None).unwrap()
     };
 
     emit_cfg_flags(version);
+}
+
+fn from_pkg_config() -> Result<pkg_config::Library, pkg_config::Error> {
+    let mut config = pkg_config::Config::new();
+    // If the user has went out of their way to specify LIBPCAP_VER (even though
+    // LIBCAP_LIBDIR wasn't set), respect it. Otherwise fall back to any version
+    // as long as it's supported.
+    if let Ok(v) = env::var("LIBPCAP_VER") {
+        config.exactly_version(&v);
+    } else {
+        config.atleast_version(&Version::LOWEST_SUPPORTED.to_string());
+    };
+    config.probe("libpcap")
 }
