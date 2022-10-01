@@ -65,9 +65,13 @@ To solve this, you can try helping the pcap crate compile the correct feature se
 
 If you are linking dynamically with libpcap, pcap will try to consult libpcap for its version. However, if your library is in an unconventional location and you had to customize `cargo:rustc-link-search=native` in your own build script, pcap's build script is unable to pick up on that and will default to the most recent API version. If you are not using the most recent library version, please communicate the library's location to pcap's build script using the `LIBPCAP_LIBDIR` environment variable.
 
+If `LIBPCAP_LIBDIR` is unset, the build will attempt to find the library via `pkg-config` instead. On most setups, this is the easiest way to get things working and may even eliminate the need for any custom build scripts in your software.
+
 #### Library Version
 
 If setting the library location does not work or you are linking statically, you may need to set the libpcap version manually. You can do this by setting the environment variable `LIBPCAP_VER` to the desired version (e.g. `env LIBPCAP_VER=1.5.0`). By default, if pcap fails to query libpcap/wpcap for its API version, it will assume the newest API so this should only be necessary if you are using an old version of libpcap.
+
+Note that `LIBPCAP_VER` is respected even if you haven't set `LIBPCAP_LIBDIR` and are using `pkg-config`. If it is unset, we'll find whatever available version as long as it's supported by the library.
 
 ## Optional Features
 

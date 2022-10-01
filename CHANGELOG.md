@@ -11,6 +11,8 @@
 
 - Rename `sendqueue::Sync` to `sendqueue::SendSync` to avoid collision with
   `Sync` in std's prelude.
+- Build script will fall back to `pkg-config` if available and `LIBPCAP_LIBDIR`
+  hasn't been explicitly set.
 
 ## [0.10.1] - 2022-08-17
 

@@ -11,6 +11,12 @@ struct Version {
 }
 
 impl Version {
+    const LOWEST_SUPPORTED: Self = Self {
+        major: 1,
+        minor: 0,
+        micro: 0,
+    };
+
     fn new(major: usize, minor: usize, micro: usize) -> Version {
         Version {
             major,
@@ -59,6 +65,17 @@ impl Version {
             minor_str.parse::<usize>()?,
             micro_str.parse::<usize>()?,
         ))
+    }
+}
+
+impl std::fmt::Display for Version {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let Version {
+            major,
+            minor,
+            micro,
+        } = self;
+        write!(f, "{}.{}.{}", major, minor, micro)
     }
 }
 
@@ -132,7 +149,7 @@ fn get_libpcap_version(libdirpath: Option<PathBuf>) -> Result<Version, Box<dyn s
 
 fn emit_cfg_flags(version: Version) {
     assert!(
-        version >= Version::new(1, 0, 0),
+        version >= Version::LOWEST_SUPPORTED,
         "required pcap lib version: >=1.0.0"
     );
 
@@ -148,12 +165,31 @@ fn main() {
     println!("cargo:rerun-if-env-changed=LIBPCAP_LIBDIR");
     println!("cargo:rerun-if-env-changed=LIBPCAP_VER");
 
-    let mut libdirpath: Option<PathBuf> = None;
-    if let Ok(libdir) = env::var("LIBPCAP_LIBDIR") {
+    // If user explicitly set LIBPCAP_LIBDIR, honour their wishes. This keeps
+    // existing build scripts running. If it's not set, try pkg-config. If
+    // that's not set, try last ditch effort to build even though library wasn't
+    // explicitly given.
+    let version = if let Ok(libdir) = env::var("LIBPCAP_LIBDIR") {
         println!("cargo:rustc-link-search=native={}", libdir);
-        libdirpath = Some(PathBuf::from(&libdir));
-    }
+        get_libpcap_version(Some(PathBuf::from(&libdir))).unwrap()
+    } else if let Ok(library) = from_pkg_config() {
+        Version::parse(&library.version).unwrap()
+    } else {
+        get_libpcap_version(None).unwrap()
+    };
 
-    let version = get_libpcap_version(libdirpath).unwrap();
     emit_cfg_flags(version);
+}
+
+fn from_pkg_config() -> Result<pkg_config::Library, pkg_config::Error> {
+    let mut config = pkg_config::Config::new();
+    // If the user has went out of their way to specify LIBPCAP_VER (even though
+    // LIBCAP_LIBDIR wasn't set), respect it. Otherwise fall back to any version
+    // as long as it's supported.
+    if let Ok(v) = env::var("LIBPCAP_VER") {
+        config.exactly_version(&v);
+    } else {
+        config.atleast_version(&Version::LOWEST_SUPPORTED.to_string());
+    };
+    config.probe("libpcap")
 }
