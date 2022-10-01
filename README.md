@@ -81,7 +81,7 @@ Use the `capture-stream` feature to enable support for streamed packet captures.
 
 ```toml
 [dependencies]
-pcap = { version = "0.10", features = ["capture-stream"] }
+pcap = { version = "0.11", features = ["capture-stream"] }
 ```
 
 **This feature is supported only on Linux and Mac OS X. It will not work and is not supported on Windows.**

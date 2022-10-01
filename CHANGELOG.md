@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.11.0] - 2022-10-01
+
 ### Added
 
 - `SendQueue::queue_sg()` can add scattered packets, as a slice of
