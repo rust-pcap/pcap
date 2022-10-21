@@ -1,6 +1,6 @@
 # pcap
 
-This is a **Rust language** crate for accessing the packet sniffing capabilities of libpcap (or wpcap on Windows). If you need anything, feel free to post an issue or submit a pull request!
+This is a **Rust language** crate for accessing the packet sniffing capabilities of libpcap (or Npcap on Windows). If you need anything, feel free to post an issue or submit a pull request!
 
 [![CI](https://github.com/rust-pcap/pcap/workflows/CI/badge.svg)](https://github.com/rust-pcap/pcap/actions/workflows/ci.yml)
 [![Coverage](https://rust-pcap.github.io/pcap/badges/flat.svg)](https://rust-pcap.github.io/pcap/index.html)
@@ -22,7 +22,7 @@ See [examples](examples) for usage.
 
 # Building
 
-This crate requires the libpcap (or wpcap on Windows) library.
+This crate requires the libpcap (or npcap on Windows) library.
 
 ## Installing dependencies
 
