@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## [1.0.0] - 2022-11-19
+
+### Changed
+
+- Public API declared stable.
+
 ## [0.11.0] - 2022-10-01
 
 ### Added
