@@ -22,7 +22,7 @@ See [examples](examples) for usage.
 
 # Building
 
-This crate requires the libpcap (or npcap on Windows) library.
+This crate requires the libpcap (or Npcap on Windows) library.
 
 ## Installing dependencies
 
