@@ -48,10 +48,10 @@ jobs:
         # rust < 1.54 does not work on macos >= 12:
         # https://rust-lang.zulipchat.com/#narrow/stream/182449-t-compiler.2Fhelp/topic/.E2.9C.94.20How.20can.20I.20fix.20Rust.201.2E53.2E0.20or.20earlier.20to.20run.20on.20macOS.2012.2E6.3F/near/299263887
         os: [windows-latest, ubuntu-latest, macos-11]
-        toolchain: "1.46.0"
+        toolchain: ["1.46.0"]
         profile: ['', --release]
         # capture-stream is not supported on compiler versions too old for Tokio.
-        features: ''
+        features: ['']
 
     uses: ./.github/workflows/ci-steps.yml
     with:
@@ -66,10 +66,10 @@ jobs:
   cargo-test-nightly:
     strategy:
       matrix:
-        os: ubuntu-latest
-        toolchain: nightly
-        profile: ''
-        features: '--all-features'
+        os: [ubuntu-latest]
+        toolchain: [nightly]
+        profile: ['']
+        features: ['--all-features']
 
     uses: ./.github/workflows/ci-steps.yml
     with:
