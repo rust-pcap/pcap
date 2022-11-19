@@ -1,0 +1,70 @@
+on:
+  workflow_call:
+    inputs:
+      os:
+        required: true
+        type: string
+      toolchain:
+        required: true
+        type: string
+      profile:
+        required: true
+        type: string
+      features:
+        required: true
+        type: string
+    secrets:
+      NPCAP_OEM_PASSWORD:
+        required: true
+      NPCAP_OEM_USERNAME:
+        required: true
+
+jobs:
+  cargo-test-steps:
+    runs-on: ${{ inputs.os }}
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v2
+      - name: Install libpcap (ubuntu)
+        if: inputs.os == 'ubuntu-latest'
+        run: sudo apt-get install libpcap-dev
+      - name: Install libpcap (macos)
+        if: inputs.os == 'macos-latest'
+        run: brew install libpcap
+      - name: Install npcap sdk (windows)
+        if: inputs.os == 'windows-latest'
+        run: |
+          Invoke-WebRequest -Uri "https://npcap.com/dist/npcap-sdk-1.13.zip" -OutFile "C:/npcap-sdk.zip"
+          Expand-Archive -LiteralPath C:/npcap-sdk.zip -DestinationPath C:/npcap-sdk
+          echo "LIB=C:/npcap-sdk/Lib/x64" >> $env:GITHUB_ENV
+      - name: Install npcap dll (windows)
+        # Secrets are not passed to workflows that are triggered by a pull request from a fork.
+        # https://docs.github.com/actions/automating-your-workflow-with-github-actions/creating-and-using-encrypted-secrets
+        if: (inputs.os == 'windows-latest') && (github.event_name != 'pull_request')
+        run: |
+          $SecPassword = ConvertTo-SecureString "${{ secrets.NPCAP_OEM_PASSWORD }}" -AsPlainText -Force
+          $CredObject = New-Object System.Management.Automation.PSCredential ("${{ secrets.NPCAP_OEM_USERNAME }}", $SecPassword)
+          Invoke-WebRequest -Uri "https://npcap.com/oem/dist/npcap-1.71-oem.exe" -OutFile C:/npcap-oem.exe -Credential $CredObject
+          C:/npcap-oem.exe /S
+      - name: Select rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: ${{ inputs.toolchain }}
+          components: clippy, rustfmt
+          override: true
+      - name: cargo build
+        run: cargo build ${{ inputs.profile }} ${{ inputs.features }}
+      - name: cargo test
+        # Since secrets are not passed to workflows that are triggered by a pull request from a fork
+        # the npcap dll won't be installed so we skip this step on pull requests. It will
+        # nevertheless be run once merged and the pull request will still verify the build steps.
+        if: (inputs.os != 'windows-latest') || (github.event_name != 'pull_request')
+        run: cargo test ${{ inputs.profile }} ${{ inputs.features }}
+      - name: cargo clippy
+        if: inputs.toolchain == 'stable'
+        run: cargo clippy ${{ inputs.profile }} ${{ inputs.features }} -- -D warnings
+      - name: cargo doc
+        run: env DOCS_RS=true cargo doc ${{ inputs.profile }} ${{ inputs.features }} --no-deps
+      - name: cargo fmt
+        if: inputs.toolchain == 'stable'
+        run: cargo fmt -- --check
