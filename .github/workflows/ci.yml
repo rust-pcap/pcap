@@ -25,12 +25,6 @@ jobs:
           # capture-stream is not supported on Windows.
           - os: windows-latest
             features: '--all-features'
-        include:
-          # nightly check is performed on ubuntu only.
-          - os: ubuntu-latest
-            toolchain: nightly
-            profile: ''
-            features: --all-features
 
     uses: ./.github/workflows/ci-steps.yml
     with:
@@ -42,7 +36,7 @@ jobs:
       NPCAP_OEM_PASSWORD: ${{ secrets.NPCAP_OEM_PASSWORD }}
       NPCAP_OEM_USERNAME: ${{ secrets.NPCAP_OEM_USERNAME }}
 
-  cargo-test-stable-msrv:
+  cargo-test-msrv:
     strategy:
       matrix:
         # rust < 1.54 does not work on macos >= 12:
@@ -63,13 +57,14 @@ jobs:
       NPCAP_OEM_PASSWORD: ${{ secrets.NPCAP_OEM_PASSWORD }}
       NPCAP_OEM_USERNAME: ${{ secrets.NPCAP_OEM_USERNAME }}
 
+  # nightly check is performed on ubuntu only.
   cargo-test-nightly:
     strategy:
       matrix:
         os: [ubuntu-latest]
         toolchain: [nightly]
-        profile: ['']
-        features: ['--all-features']
+        profile: ['', --release]
+        features: ['', '--all-features']
 
     uses: ./.github/workflows/ci-steps.yml
     with:
