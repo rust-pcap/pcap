@@ -12,7 +12,7 @@ on:
         type: string
       features:
         required: true
-        type: true
+        type: string
     secrets:
       NPCAP_OEM_PASSWORD:
         required: true
