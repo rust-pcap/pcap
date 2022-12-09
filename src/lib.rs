@@ -8,11 +8,10 @@
 //! use `.open()` on a `Device`. You can obtain the "default" device using
 //! `Device::lookup()`, or you can obtain the device(s) you need via `Device::list()`.
 //!
-//! ```ignore
+//! ```
 //! use pcap::Device;
-//!
 //! fn main() {
-//!     let mut cap = Device::lookup().unwrap().open().unwrap();
+//!     let mut cap = Device::lookup().unwrap().unwrap().open().unwrap();
 //!
 //!     while let Ok(packet) = cap.next_packet() {
 //!         println!("received packet! {:?}", packet);
@@ -30,11 +29,11 @@
 //! proceed to configure the capture handle. When you're finished, run `.open()` on it to
 //! turn it into a `Capture<Active>`.
 //!
-//! ```ignore
-//! use pcap::{Device,Capture};
+//! ```
+//! use pcap::{Device, Capture};
 //!
 //! fn main() {
-//!     let main_device = Device::lookup().unwrap();
+//!     let main_device = Device::lookup().unwrap().unwrap();
 //!     let mut cap = Capture::from_device(main_device).unwrap()
 //!                       .promisc(true)
 //!                       .snaplen(5000)
