@@ -23,7 +23,9 @@ futures = { version = "0.3", optional = true }
 windows-sys = { version = "0.36.1", features = ["Win32_Foundation", "Win32_Networking_WinSock"] }
 
 [dev-dependencies]
+etherparse = "0.13.0"
 tempdir = "0.3"
+tun-tap = "0.1.3"
 
 [target.'cfg(target_os = "windows")'.dev-dependencies]
 eui48 = "1.1"
@@ -37,6 +39,7 @@ pkg-config = "0.3"
 # This feature enables access to the function Capture::stream.
 # This is disabled by default, because it depends on a tokio
 capture-stream = ["tokio", "futures"]
+tap-tests = []
 
 [lib]
 name = "pcap"
