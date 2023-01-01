@@ -12,7 +12,7 @@
 //! use pcap::Device;
 //!
 //! fn main() {
-//!     let mut cap = Device::lookup().unwrap().open().unwrap();
+//!     let mut cap = Device::lookup().unwrap().unwrap().open();
 //!
 //!     while let Ok(packet) = cap.next_packet() {
 //!         println!("received packet! {:?}", packet);
