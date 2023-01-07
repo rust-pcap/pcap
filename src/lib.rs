@@ -1391,7 +1391,7 @@ impl Capture<Dead> {
 }
 
 #[cfg(not(windows))]
-impl AsRawFd for Capture<Active> {
+impl<T: Activated + ?Sized> AsRawFd for Capture<T> {
     /// Returns the file descriptor for a live capture.
     fn as_raw_fd(&self) -> RawFd {
         let fd = unsafe { raw::pcap_fileno(self.handle.as_ptr()) };
