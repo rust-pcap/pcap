@@ -62,9 +62,9 @@ jobs:
         run: cargo test ${{ inputs.profile }} ${{ inputs.features }}
       - name: cargo clippy
         if: inputs.toolchain == 'stable'
-        run: >-
-          cargo clippy ${{ inputs.profile }} ${{ inputs.features }} --
-                       -D warnings
+        run: |-
+          cargo clippy ${{ inputs.profile }} ${{ inputs.features }} -- \
+                       -D warnings \
                        -A clippy::uninlined_format_args
       - name: cargo doc
         run: env DOCS_RS=true cargo doc ${{ inputs.profile }} ${{ inputs.features }} --no-deps
