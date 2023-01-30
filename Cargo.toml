@@ -40,6 +40,8 @@ pkg-config = "0.3"
 # This is disabled by default, because it depends on a tokio
 capture-stream = ["tokio", "futures"]
 tap-tests = []
+# an empty feature to detect if '--all-features' was set
+all-features = []
 
 [lib]
 name = "pcap"
