@@ -8,16 +8,15 @@
 //! use `.open()` on a `Device`. You can obtain the "default" device using
 //! `Device::lookup()`, or you can obtain the device(s) you need via `Device::list()`.
 //!
-//! ```ignore
+//! ```no_run
 //! use pcap::Device;
 //!
-//! fn main() {
-//!     let mut cap = Device::lookup().unwrap().open().unwrap();
+//! let mut cap = Device::lookup().unwrap().unwrap().open().unwrap();
 //!
-//!     while let Ok(packet) = cap.next_packet() {
-//!         println!("received packet! {:?}", packet);
-//!     }
+//! while let Ok(packet) = cap.next_packet() {
+//!     println!("received packet! {:?}", packet);
 //! }
+//!
 //! ```
 //!
 //! `Capture`'s `.next_packet()` will produce a `Packet` which can be dereferenced to access the
@@ -30,19 +29,17 @@
 //! proceed to configure the capture handle. When you're finished, run `.open()` on it to
 //! turn it into a `Capture<Active>`.
 //!
-//! ```ignore
-//! use pcap::{Device,Capture};
+//! ```no_run
+//! use pcap::{Device, Capture};
 //!
-//! fn main() {
-//!     let main_device = Device::lookup().unwrap();
-//!     let mut cap = Capture::from_device(main_device).unwrap()
-//!                       .promisc(true)
-//!                       .snaplen(5000)
-//!                       .open().unwrap();
+//! let main_device = Device::lookup().unwrap().unwrap();
+//! let mut cap = Capture::from_device(main_device).unwrap()
+//!                   .promisc(true)
+//!                   .snaplen(5000)
+//!                   .open().unwrap();
 //!
-//!     while let Ok(packet) = cap.next_packet() {
-//!         println!("received packet! {:?}", packet);
-//!     }
+//! while let Ok(packet) = cap.next_packet() {
+//!     println!("received packet! {:?}", packet);
 //! }
 //! ```
 //!
@@ -806,8 +803,9 @@ impl State for Dead {}
 ///
 /// # Example:
 ///
-/// ```ignore
-/// let cap = Capture::from_device(Device::lookup().unwrap()) // open the "default" interface
+/// ```no_run
+/// # use pcap::{Capture, Device};
+/// let mut cap = Capture::from_device(Device::lookup().unwrap().unwrap()) // open the "default" interface
 ///               .unwrap() // assume the device exists and we are authorized to open it
 ///               .open() // activate the handle
 ///               .unwrap(); // assume activation worked
@@ -1290,7 +1288,7 @@ impl<T: Activated + ?Sized> Capture<T> {
     /// compiled using `pcap_compile()`. `optimize` controls whether optimization on the resulting
     /// code is performed
     ///
-    /// See http://biot.com/capstats/bpf.html for more information about this syntax.
+    /// See <http://biot.com/capstats/bpf.html> for more information about this syntax.
     pub fn filter(&mut self, program: &str, optimize: bool) -> Result<(), Error> {
         let program = CString::new(program)?;
         unsafe {
@@ -1312,7 +1310,7 @@ impl<T: Activated + ?Sized> Capture<T> {
     /// Get capture statistics about this capture. The values represent packet statistics from the
     /// start of the run to the time of the call.
     ///
-    /// See https://www.tcpdump.org/manpages/pcap_stats.3pcap.html for per-platform caveats about
+    /// See <https://www.tcpdump.org/manpages/pcap_stats.3pcap.html> for per-platform caveats about
     /// how packet statistics are calculated.
     pub fn stats(&mut self) -> Result<Stat, Error> {
         unsafe {
