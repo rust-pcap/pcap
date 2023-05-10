@@ -27,7 +27,7 @@ etherparse = { version = "0.13.0", optional = true }
 windows-sys = { version = "0.36.1", features = ["Win32_Foundation", "Win32_Networking_WinSock"] }
 
 [dev-dependencies]
-tempfile = "3"
+tempdir = "0.3"
 
 [target.'cfg(target_os = "windows")'.dev-dependencies]
 eui48 = "1.1"
