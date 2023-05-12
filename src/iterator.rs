@@ -37,3 +37,39 @@ impl<S: Activated + ?Sized, C: PacketCodec> Iterator for PacketIter<S, C> {
         }
     }
 }
+
+#[cfg(feature = "lending-iter")]
+pub use lending_iter::PacketLendingIter;
+
+#[cfg(feature = "lending-iter")]
+mod lending_iter {
+    use crate::Activated;
+    use crate::Capture;
+    use crate::Error;
+    use crate::Packet;
+    use gat_std::iter::{IntoIterator, Iterator};
+
+    pub struct PacketLendingIter<S: Activated + ?Sized> {
+        capture: Capture<S>,
+    }
+
+    impl<S: Activated + ?Sized + 'static> IntoIterator for Capture<S> {
+        type IntoIter = PacketLendingIter<S>;
+
+        fn into_iter(self) -> Self::IntoIter {
+            PacketLendingIter { capture: self }
+        }
+    }
+
+    impl<S: Activated + ?Sized + 'static> Iterator for PacketLendingIter<S> {
+        type Item<'a> = Result<Packet<'a>, Error>;
+
+        fn next(&mut self) -> Option<Self::Item<'_>> {
+            match self.capture.next_packet() {
+                Ok(packet) => Some(Ok(packet)),
+                Err(Error::NoMorePackets) => None,
+                Err(e) => Some(Err(e)),
+            }
+        }
+    }
+}

@@ -86,6 +86,14 @@ pcap = { version = "1", features = ["capture-stream"] }
 
 **This feature is supported only on Linux and Mac OS X. It will not work and is not supported on Windows.**
 
+## Unstable Features
+
+Use at your own risk, we do not consider this our public API yet.
+
+### `lending-iter`
+
+Use the `lending-iter` feature to enable the lending packet iterator. See `lendingiterprint` example.
+
 ## Minimum Supported Rust Version (MSRV)
 
 This crate uses Rust 2018 and requires a compiler version >= 1.46.
