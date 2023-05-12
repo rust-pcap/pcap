@@ -2,9 +2,15 @@
 
 ## [Unreleased]
 
+## [1.1.0] - 2022-11-19
+
 ### Added
 
-- `lending-iter` UNSTABLE feature that introduce lending iterator using GATs
+- `lending-iter` UNSTABLE feature that introduces lending iterator using GATs.
+
+### Changed
+
+- Examples in the docs have been fixed.
 
 ## [1.0.0] - 2022-11-19
 
