@@ -14,11 +14,8 @@ fn main() {
     // remember linktype to create PCAP files later
     let linktype = cap.get_datalink();
 
-    // Save each 30 packets into a new PCAP file
-    let mut counter: usize = 0;
-
     // For example purposes we will only save 5 files...
-    for _ in 0..5 {
+    for counter in 0..5 {
         let mut save_file = Capture::dead(linktype)
             .unwrap()
             .savefile(format!("dump_{}.pcap", counter))
@@ -30,7 +27,5 @@ fn main() {
             save_file.write(&packet);
         }
         save_file.flush().unwrap();
-
-        counter += 1;
     }
 }
