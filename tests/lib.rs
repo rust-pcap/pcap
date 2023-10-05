@@ -32,6 +32,16 @@ fn read_packet_with_full_data() {
 }
 
 #[test]
+fn read_packet_via_pcap_loop() {
+    let mut packets = 0;
+    let mut capture = capture_from_test_file("packet_snaplen_65535.pcap");
+    capture.pcap_loop(|_| {
+        packets += 1;
+    });
+    assert_eq!(packets, 1);
+}
+
+#[test]
 fn read_packet_with_truncated_data() {
     let mut capture = capture_from_test_file("packet_snaplen_20.pcap");
     assert_eq!(capture.next_packet().unwrap().len(), 20);

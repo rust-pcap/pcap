@@ -99,8 +99,9 @@ pub struct pcap_send_queue {
     pub buffer: *mut c_char,
 }
 
+// This is not Option<fn>, pcap functions do not check if the handler is null.
 pub type pcap_handler =
-    Option<extern "C" fn(arg1: *mut c_uchar, arg2: *const pcap_pkthdr, arg3: *const c_uchar) -> ()>;
+    extern "C" fn(user: *mut c_uchar, h: *const pcap_pkthdr, bytes: *const c_uchar) -> ();
 
 extern "C" {
     // [OBSOLETE] pub fn pcap_lookupdev(arg1: *mut c_char) -> *mut c_char;
@@ -119,8 +120,12 @@ extern "C" {
     pub fn pcap_open_offline(arg1: *const c_char, arg2: *mut c_char) -> *mut pcap_t;
     pub fn pcap_fopen_offline(arg1: *mut FILE, arg2: *mut c_char) -> *mut pcap_t;
     pub fn pcap_close(arg1: *mut pcap_t);
-    // pub fn pcap_loop(arg1: *mut pcap_t, arg2: c_int,
-    //                  arg3: pcap_handler, arg4: *mut c_uchar) -> c_int;
+    pub fn pcap_loop(
+        arg1: *mut pcap_t,
+        arg2: c_int,
+        arg3: pcap_handler,
+        arg4: *mut c_uchar,
+    ) -> c_int;
     // pub fn pcap_dispatch(arg1: *mut pcap_t, arg2: c_int, arg3: pcap_handler,
     //                      arg4: *mut c_uchar)-> c_int;
     // pub fn pcap_next(arg1: *mut pcap_t, arg2: *mut pcap_pkthdr) -> *const c_uchar;
@@ -129,7 +134,7 @@ extern "C" {
         arg2: *mut *mut pcap_pkthdr,
         arg3: *mut *const c_uchar,
     ) -> c_int;
-    // pub fn pcap_breakloop(arg1: *mut pcap_t);
+    pub fn pcap_breakloop(arg1: *mut pcap_t);
     pub fn pcap_stats(arg1: *mut pcap_t, arg2: *mut pcap_stat) -> c_int;
     pub fn pcap_setfilter(arg1: *mut pcap_t, arg2: *mut bpf_program) -> c_int;
     pub fn pcap_setdirection(arg1: *mut pcap_t, arg2: pcap_direction_t) -> c_int;

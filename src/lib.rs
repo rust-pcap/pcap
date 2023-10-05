@@ -59,6 +59,7 @@
 //! ```
 
 use bitflags::bitflags;
+use std::any::Any;
 use std::borrow::Borrow;
 use std::convert::TryFrom;
 use std::ffi::{self, CStr, CString};
@@ -69,6 +70,7 @@ use std::net::IpAddr;
 use std::ops::Deref;
 #[cfg(not(windows))]
 use std::os::unix::io::{AsRawFd, RawFd};
+use std::panic::{catch_unwind, resume_unwind, AssertUnwindSafe};
 use std::path::Path;
 use std::ptr::{self, NonNull};
 use std::slice;
@@ -835,7 +837,68 @@ impl<T: State + ?Sized> From<NonNull<raw::pcap_t>> for Capture<T> {
     }
 }
 
+// Handler and its associated function let us create an extern "C" fn which dispatches to a normal
+// Rust FnMut, which may be a closure with a captured environment. The *only* purpose of this
+// generic parameter is to ensure that in Capture::pcap_loop that we pass the right function
+// pointer and the right data pointer to pcap_loop.
+struct Handler<F> {
+    func: F,
+    panic_payload: Option<Box<dyn Any + Send>>,
+    handle: NonNull<raw::pcap_t>,
+}
+
+impl<F> Handler<F>
+where
+    F: FnMut(Packet),
+{
+    extern "C" fn callback(
+        slf: *mut libc::c_uchar,
+        header: *const raw::pcap_pkthdr,
+        packet: *const libc::c_uchar,
+    ) {
+        unsafe {
+            let packet = Packet::new(
+                &*(header as *const PacketHeader),
+                slice::from_raw_parts(packet, (*header).caplen as _),
+            );
+
+            let slf = slf as *mut Self;
+            let func = &mut (*slf).func;
+            let mut func = AssertUnwindSafe(func);
+            // If our handler function panics, we need to prevent it from unwinding across the
+            // FFI boundary. If the handler panics we catch the unwind here, break out of
+            // pcap_loop, and resume the unwind outside.
+            if let Err(e) = catch_unwind(move || func(packet)) {
+                (*slf).panic_payload = Some(e);
+                raw::pcap_breakloop((*slf).handle.as_ptr());
+            }
+        }
+    }
+}
+
 impl<T: State + ?Sized> Capture<T> {
+    pub fn for_each<F>(&mut self, handler: F)
+    where
+        F: FnMut(Packet),
+    {
+        let mut handler = Handler {
+            func: AssertUnwindSafe(handler),
+            panic_payload: None,
+            handle: self.handle,
+        };
+        unsafe {
+            raw::pcap_loop(
+                self.handle.as_ptr(),
+                -1,
+                Handler::<F>::callback,
+                ptr::addr_of_mut!(handler).cast(),
+            )
+        };
+        if let Some(e) = handler.panic_payload {
+            resume_unwind(e);
+        }
+    }
+
     fn new_raw<F>(path: Option<&str>, func: F) -> Result<Capture<T>, Error>
     where
         F: FnOnce(*const libc::c_char, *mut libc::c_char) -> *mut raw::pcap_t,
