@@ -1485,6 +1485,10 @@ impl Drop for Savefile {
 /// # Safety
 ///
 /// Unsafe, because the returned FILE assumes it is the sole owner of the file descriptor.
+#[deprecated(
+    since = "1.1.1",
+    note = "Out of scope for pcap. Will be removed next major version."
+)]
 pub unsafe fn open_raw_fd(fd: RawFd, mode: u8) -> Result<*mut libc::FILE, Error> {
     let mode = [mode, 0];
     libc::fdopen(fd, mode.as_ptr() as _)

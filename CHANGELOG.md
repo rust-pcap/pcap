@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+### Changed
+
+- Crate maintenance: Use `windows-sys` version `0.48.0`.
+- Deprecate `open_raw_fd()`.
+
 ## [1.1.0] - 2023-05-12
 
 ### Added
