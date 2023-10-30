@@ -913,7 +913,11 @@ impl Capture<Offline> {
     /// Unsafe, because the returned Capture assumes it is the sole owner of the file descriptor.
     #[cfg(not(windows))]
     pub unsafe fn from_raw_fd(fd: RawFd) -> Result<Capture<Offline>, Error> {
-        open_raw_fd(fd, b'r')
+        let mode = [b'r', 0];
+        libc::fdopen(fd, mode.as_ptr() as _)
+            .as_mut()
+            .map(|f| f as _)
+            .ok_or(InvalidRawFd)
             .and_then(|file| Capture::new_raw(None, |_, err| raw::pcap_fopen_offline(file, err)))
     }
 
@@ -928,11 +932,16 @@ impl Capture<Offline> {
         fd: RawFd,
         precision: Precision,
     ) -> Result<Capture<Offline>, Error> {
-        open_raw_fd(fd, b'r').and_then(|file| {
-            Capture::new_raw(None, |_, err| {
-                raw::pcap_fopen_offline_with_tstamp_precision(file, precision as _, err)
+        let mode = [b'r', 0];
+        libc::fdopen(fd, mode.as_ptr() as _)
+            .as_mut()
+            .map(|f| f as _)
+            .ok_or(InvalidRawFd)
+            .and_then(|file| {
+                Capture::new_raw(None, |_, err| {
+                    raw::pcap_fopen_offline_with_tstamp_precision(file, precision as _, err)
+                })
             })
-        })
     }
 
     /// Get the major version number of the pcap dump file format.
@@ -1186,16 +1195,21 @@ impl<T: Activated + ?Sized> Capture<T> {
     /// Unsafe, because the returned Savefile assumes it is the sole owner of the file descriptor.
     #[cfg(not(windows))]
     pub unsafe fn savefile_raw_fd(&self, fd: RawFd) -> Result<Savefile, Error> {
-        open_raw_fd(fd, b'w').and_then(|file| {
-            let handle_opt = NonNull::<raw::pcap_dumper_t>::new(raw::pcap_dump_fopen(
-                self.handle.as_ptr(),
-                file,
-            ));
-            let handle = self
-                .check_err(handle_opt.is_some())
-                .map(|_| handle_opt.unwrap())?;
-            Ok(Savefile::from(handle))
-        })
+        let mode = [b'w', 0];
+        libc::fdopen(fd, mode.as_ptr() as _)
+            .as_mut()
+            .map(|f| f as _)
+            .ok_or(InvalidRawFd)
+            .and_then(|file| {
+                let handle_opt = NonNull::<raw::pcap_dumper_t>::new(raw::pcap_dump_fopen(
+                    self.handle.as_ptr(),
+                    file,
+                ));
+                let handle = self
+                    .check_err(handle_opt.is_some())
+                    .map(|_| handle_opt.unwrap())?;
+                Ok(Savefile::from(handle))
+            })
     }
 
     /// Reopen a `Savefile` context for recording captured packets using this `Capture`'s
