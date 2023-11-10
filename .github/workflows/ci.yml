@@ -51,14 +51,14 @@ jobs:
       - name: Create MSRV lock file
         run: cp msrv.lock Cargo.lock
       - uses: ./.github/workflows/ci-steps.yml
-    with:
-      os: ${{ matrix.os }}
-      toolchain: ${{ matrix.toolchain }}
-      profile: ${{ matrix.profile }}
-      features: ${{ matrix.features }}
-    secrets:
-      NPCAP_OEM_PASSWORD: ${{ secrets.NPCAP_OEM_PASSWORD }}
-      NPCAP_OEM_USERNAME: ${{ secrets.NPCAP_OEM_USERNAME }}
+        with:
+          os: ${{ matrix.os }}
+          toolchain: ${{ matrix.toolchain }}
+          profile: ${{ matrix.profile }}
+          features: ${{ matrix.features }}
+        secrets:
+          NPCAP_OEM_PASSWORD: ${{ secrets.NPCAP_OEM_PASSWORD }}
+          NPCAP_OEM_USERNAME: ${{ secrets.NPCAP_OEM_USERNAME }}
 
   # nightly check is performed on ubuntu only.
   cargo-test-nightly:
