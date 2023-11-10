@@ -16,7 +16,7 @@ on:
       msrv:
         required: false
         default: false
-        type: bool
+        type: boolean
     secrets:
       NPCAP_OEM_PASSWORD:
         required: true
