@@ -47,7 +47,10 @@ jobs:
         # capture-stream is not supported on compiler versions too old for Tokio.
         features: ['']
 
-    uses: ./.github/workflows/ci-steps.yml
+    steps:
+      - name: Create MSRV lock file
+        run: cp msrv.lock Cargo.lock
+      - uses: ./.github/workflows/ci-steps.yml
     with:
       os: ${{ matrix.os }}
       toolchain: ${{ matrix.toolchain }}
