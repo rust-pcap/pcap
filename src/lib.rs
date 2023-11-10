@@ -1486,7 +1486,7 @@ impl Drop for Savefile {
 ///
 /// Unsafe, because the returned FILE assumes it is the sole owner of the file descriptor.
 pub unsafe fn open_raw_fd(fd: RawFd, mode: u8) -> Result<*mut libc::FILE, Error> {
-    let mode = vec![mode, 0];
+    let mode = [mode, 0];
     libc::fdopen(fd, mode.as_ptr() as _)
         .as_mut()
         .map(|f| f as _)

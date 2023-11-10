@@ -13,6 +13,10 @@ on:
       features:
         required: true
         type: string
+      msrv:
+        required: false
+        default: false
+        type: boolean
     secrets:
       NPCAP_OEM_PASSWORD:
         required: true
@@ -52,6 +56,9 @@ jobs:
           toolchain: ${{ inputs.toolchain }}
           components: clippy, rustfmt
           override: true
+      - name: create Cargo.lock (MSRV)
+        if: inputs.msrv
+        run: cp msrv.lock Cargo.lock
       - name: cargo build
         run: cargo build ${{ inputs.profile }} ${{ inputs.features }}
       - name: cargo test

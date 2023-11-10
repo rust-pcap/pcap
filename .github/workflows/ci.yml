@@ -53,6 +53,7 @@ jobs:
       toolchain: ${{ matrix.toolchain }}
       profile: ${{ matrix.profile }}
       features: ${{ matrix.features }}
+      msrv: true
     secrets:
       NPCAP_OEM_PASSWORD: ${{ secrets.NPCAP_OEM_PASSWORD }}
       NPCAP_OEM_USERNAME: ${{ secrets.NPCAP_OEM_USERNAME }}
