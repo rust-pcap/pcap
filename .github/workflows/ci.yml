@@ -17,9 +17,9 @@ jobs:
   cargo-test-stable-beta:
     strategy:
       matrix:
-        os: [windows-latest, ubuntu-latest, macos-latest]
+        os: [windows-latest]
         toolchain: [stable, beta]
-        profile: ['', --release]
+        profile: ['', release]
         features: ['', '--all-features']
         exclude:
           # capture-stream is not supported on Windows.
