@@ -42,9 +42,6 @@ jobs:
           Expand-Archive -LiteralPath C:/npcap-sdk.zip -DestinationPath C:/npcap-sdk
           echo "LIB=C:/npcap-sdk/Lib/x64" >> $env:GITHUB_ENV
       - name: Install npcap dll (windows)
-        # Secrets are not passed to workflows that are triggered by a pull request from a fork.
-        # https://docs.github.com/actions/automating-your-workflow-with-github-actions/creating-and-using-encrypted-secrets
-        if: (inputs.os == 'windows-latest') && (github.event_name != 'pull_request')
         run: |
           $SecPassword = ConvertTo-SecureString "${{ secrets.NPCAP_OEM_PASSWORD }}" -AsPlainText -Force
           $CredObject = New-Object System.Management.Automation.PSCredential ("${{ secrets.NPCAP_OEM_USERNAME }}", $SecPassword)
@@ -63,8 +60,6 @@ jobs:
         run: cargo build ${{ inputs.profile }} ${{ inputs.features }}
       - name: cargo build test
         run: cargo test --no-run ${{ inputs.profile }} ${{ inputs.features }}
-      - name: dumpbin the test exe
-        run: dumpbin.exe /DEPENDENTS ./debug/deps/lib-*.exe
       - name: cargo test
         run: cargo test ${{ inputs.profile }} ${{ inputs.features }}
       - name: cargo clippy
