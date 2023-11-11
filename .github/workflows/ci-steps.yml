@@ -48,11 +48,9 @@ jobs:
           Invoke-WebRequest -Uri "https://npcap.com/oem/dist/npcap-1.78-oem.exe" -OutFile C:/npcap-oem.exe -Credential $CredObject
           C:/npcap-oem.exe /S
       - name: Select rust toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: ${{ inputs.toolchain }}
-          components: clippy, rustfmt
-          override: true
+        run: |
+          rustup toolchain install ${{ inputs.toolchain }} --component clippy --component rustfmt
+          rustup override set  ${{ inputs.toolchain }}
       - name: create Cargo.lock (MSRV)
         if: inputs.msrv
         run: cp msrv.lock Cargo.lock
