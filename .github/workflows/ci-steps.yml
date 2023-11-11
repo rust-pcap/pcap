@@ -61,7 +61,7 @@ jobs:
       - name: cargo build test
         run: cargo test --no-run ${{ inputs.profile }} ${{ inputs.features }}
       - name: cargo test
-        run: cargo test ${{ inputs.profile }} ${{ inputs.features }}
+        run: cargo test ${{ inputs.profile }} ${{ inputs.features }} --nocapture
       - name: cargo clippy
         if: inputs.toolchain == 'stable'
         run: cargo clippy ${{ inputs.profile }} ${{ inputs.features }} -- -D warnings -A clippy::uninlined_format_args
