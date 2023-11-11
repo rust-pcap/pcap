@@ -60,30 +60,30 @@ jobs:
         if: inputs.msrv
         run: cp msrv.lock Cargo.lock
       - name: cargo build
-        run: cargo build --${{ inputs.profile }} ${{ inputs.features }}
+        run: cargo build ${{ inputs.profile }} ${{ inputs.features }}
       - name: cargo build test
         # Since secrets are not passed to workflows that are triggered by a pull request from a fork
         # the npcap dll won't be installed so we skip this step on pull requests. It will
         # nevertheless be run once merged and the pull request will still verify the build steps.
         if: (inputs.os != 'windows-latest') || (github.event_name != 'pull_request')
-        run: cargo test --no-run --${{ inputs.profile }} ${{ inputs.features }}
+        run: cargo test --no-run ${{ inputs.profile }} ${{ inputs.features }}
       - name: dumpbin the test exe
         # Since secrets are not passed to workflows that are triggered by a pull request from a fork
         # the npcap dll won't be installed so we skip this step on pull requests. It will
         # nevertheless be run once merged and the pull request will still verify the build steps.
         if: (inputs.os != 'windows-latest') || (github.event_name != 'pull_request')
-        run: DUMPBIN ./${{ inputs.profile }}/deps/lib-*.exe
+        run: DUMPBIN ./debug/deps/lib-*.exe
       - name: cargo test
         # Since secrets are not passed to workflows that are triggered by a pull request from a fork
         # the npcap dll won't be installed so we skip this step on pull requests. It will
         # nevertheless be run once merged and the pull request will still verify the build steps.
         if: (inputs.os != 'windows-latest') || (github.event_name != 'pull_request')
-        run: cargo test --${{ inputs.profile }} ${{ inputs.features }}
+        run: cargo test ${{ inputs.profile }} ${{ inputs.features }}
       - name: cargo clippy
         if: inputs.toolchain == 'stable'
-        run: cargo clippy --${{ inputs.profile }} ${{ inputs.features }} -- -D warnings -A clippy::uninlined_format_args
+        run: cargo clippy ${{ inputs.profile }} ${{ inputs.features }} -- -D warnings -A clippy::uninlined_format_args
       - name: cargo doc
-        run: env DOCS_RS=true cargo doc --${{ inputs.profile }} ${{ inputs.features }} --no-deps
+        run: env DOCS_RS=true cargo doc ${{ inputs.profile }} ${{ inputs.features }} --no-deps
       - name: cargo fmt
         if: inputs.toolchain == 'stable'
         run: cargo fmt -- --check
