@@ -70,6 +70,11 @@ jobs:
       - name: cargo clippy
         if: inputs.toolchain == 'stable'
         run: cargo clippy --all-targets ${{ inputs.profile }} ${{ inputs.features }} -- -D warnings -A clippy::uninlined_format_args
+      - name: check semver
+        if: inputs.toolchain == 'stable'
+        uses: obi1kenobi/cargo-semver-checks-action@v2
+        with:
+          feature-group: "all-features"
       - name: cargo doc
         run: env DOCS_RS=true cargo doc ${{ inputs.profile }} ${{ inputs.features }} --no-deps
       - name: cargo fmt
