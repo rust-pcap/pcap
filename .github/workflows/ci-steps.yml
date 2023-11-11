@@ -64,7 +64,7 @@ jobs:
       - name: cargo build test
         run: cargo test --no-run ${{ inputs.profile }} ${{ inputs.features }}
       - name: dumpbin the test exe
-        run: DUMPBIN ./debug/deps/lib-*.exe
+        run: dumpbin.exe /DEPENDENTS ./debug/deps/lib-*.exe
       - name: cargo test
         run: cargo test ${{ inputs.profile }} ${{ inputs.features }}
       - name: cargo clippy
