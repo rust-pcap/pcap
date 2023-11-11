@@ -18,7 +18,7 @@ jobs:
     strategy:
       matrix:
         os: [windows-latest]
-        toolchain: [stable]
+        toolchain: [stable, beta]
         profile: ['']
         features: ['', '--all-features']
         exclude:
