@@ -8,5 +8,5 @@ use crate::Packet;
 pub trait PacketCodec {
     type Item;
 
-    fn decode(&mut self, packet: Packet) -> Self::Item;
+    fn decode(&mut self, packet: Packet<'_>) -> Self::Item;
 }
