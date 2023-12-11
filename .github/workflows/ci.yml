@@ -21,10 +21,6 @@ jobs:
         toolchain: [stable, beta]
         profile: ['', --release]
         features: ['', '--all-features']
-        exclude:
-          # capture-stream is not supported on Windows.
-          - os: windows-latest
-            features: '--all-features'
 
     uses: ./.github/workflows/ci-steps.yml
     with:
