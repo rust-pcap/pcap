@@ -41,7 +41,7 @@ pkg-config = "0.3"
 [features]
 # This feature enables access to the function Capture::stream.
 # This is disabled by default, because it depends on a tokio
-capture-stream = ["tokio", "futures"]
+capture-stream = ["tokio", "futures", "windows-sys/Win32_System_Threading"]
 tap-tests = ["tun-tap", "etherparse"]
 lending-iter = ["gat-std"]
 # an empty feature to detect if '--all-features' was set
