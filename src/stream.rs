@@ -4,11 +4,14 @@
 use super::Activated;
 use super::Capture;
 use super::Error;
-use super::SelectableCapture;
+use crate::raw;
 use crate::PacketCodec;
+use crate::State;
 use futures::ready;
 use std::io;
 use std::marker::Unpin;
+use std::os::fd::AsRawFd;
+use std::os::fd::RawFd;
 use std::pin::Pin;
 use std::task::{self, Poll};
 use tokio::io::unix::AsyncFd;
@@ -20,7 +23,8 @@ pub struct PacketStream<T: Activated + ?Sized, C> {
 }
 
 impl<T: Activated + ?Sized, C> PacketStream<T, C> {
-    pub(crate) fn new(capture: SelectableCapture<T>, codec: C) -> Result<Self, Error> {
+    pub(crate) fn new(capture: Capture<T>, codec: C) -> Result<Self, Error> {
+        let capture = SelectableCapture::new(capture)?;
         Ok(PacketStream {
             inner: AsyncFd::with_interest(capture, tokio::io::Interest::READABLE)?,
             codec,
@@ -58,5 +62,27 @@ impl<T: Activated + ?Sized, C: PacketCodec> futures::Stream for PacketStream<T, 
                 Err(_would_block) => continue,
             }
         }
+    }
+}
+
+/// Newtype [`Capture`] wrapper that exposes `pcap_get_selectable_fd()`.
+struct SelectableCapture<T: State + ?Sized> {
+    inner: Capture<T>,
+    fd: RawFd,
+}
+
+impl<T: Activated + ?Sized> SelectableCapture<T> {
+    fn new(capture: Capture<T>) -> Result<Self, Error> {
+        let fd = unsafe { raw::pcap_get_selectable_fd(capture.handle.as_ptr()) };
+        if fd == -1 {
+            return Err(Error::InvalidRawFd);
+        }
+        Ok(Self { inner: capture, fd })
+    }
+}
+
+impl<T: Activated + ?Sized> AsRawFd for SelectableCapture<T> {
+    fn as_raw_fd(&self) -> RawFd {
+        self.fd
     }
 }
