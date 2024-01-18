@@ -244,14 +244,14 @@ fn test_raw_fd_api() {
     // Hypothetically, we could do any sort of processing here,
     // like encoding to a gzip stream.
     let mut file_in = unsafe { File::from_raw_fd(fd_in) };
-    let mut file_out = File::create(&filename).unwrap();
+    let mut file_out = File::create(filename).unwrap();
     io::copy(&mut file_in, &mut file_out).unwrap();
 
     // Verify that the contents match
     let filename = dir.path().join("test2.pcap");
     let (mut v1, mut v2) = (vec![], vec![]);
     File::open(&tmpfile).unwrap().read_to_end(&mut v1).unwrap();
-    File::open(&filename).unwrap().read_to_end(&mut v2).unwrap();
+    File::open(filename).unwrap().read_to_end(&mut v2).unwrap();
     assert_eq!(v1, v2);
 
     // Join thread.

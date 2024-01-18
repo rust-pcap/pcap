@@ -1,7 +1,7 @@
-///! nfbpf_compile works the same way as the small tool bundled with iptables:
-///! it compiles a pcap expression in to a BPF filter, then serializes it using
-///! a simple, safe encoding.
-///!
+//! nfbpf_compile works the same way as the small tool bundled with iptables:
+//! it compiles a pcap expression in to a BPF filter, then serializes it using
+//! a simple, safe encoding.
+
 use pcap::{BpfProgram, Capture, Linktype};
 
 use std::env;

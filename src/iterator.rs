@@ -39,9 +39,6 @@ impl<S: Activated + ?Sized, C: PacketCodec> Iterator for PacketIter<S, C> {
 }
 
 #[cfg(feature = "lending-iter")]
-pub use lending_iter::PacketLendingIter;
-
-#[cfg(feature = "lending-iter")]
 mod lending_iter {
     use crate::Activated;
     use crate::Capture;
