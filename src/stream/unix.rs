@@ -1,10 +1,10 @@
 //! Support for asynchronous packet iteration.
 //!
 //! See [`Capture::stream`](super::Capture::stream).
-use super::Activated;
-use super::Capture;
-use super::Error;
 use crate::raw;
+use crate::Activated;
+use crate::Capture;
+use crate::Error;
 use crate::PacketCodec;
 use crate::State;
 use futures::ready;
