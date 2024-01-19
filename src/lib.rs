@@ -85,7 +85,6 @@ mod raw;
 #[cfg(windows)]
 pub mod sendqueue;
 #[cfg(feature = "capture-stream")]
-#[cfg_attr(windows, path = "stream_windows.rs")]
 mod stream;
 #[cfg(feature = "capture-stream")]
 pub use stream::PacketStream;
