@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## [1.2.0] - 2024-01-19
+
+### Added
+
+- `capture-stream` support added for Windows.
+
 ## [1.1.0] - 2023-05-12
 
 ### Added
