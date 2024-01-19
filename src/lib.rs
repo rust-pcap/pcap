@@ -80,9 +80,13 @@ use windows_sys::Win32::Networking::WinSock::{AF_INET, AF_INET6, SOCKADDR_IN, SO
 
 #[cfg(target_os = "windows")]
 use windows_sys::Win32::Foundation::HANDLE;
-
+#[cfg(all(target_os = "windows", feature = "dynamic-load"))]
+mod dynamic_win_raw;
+#[cfg(any(not(windows), not(feature = "dynamic-load")))]
 mod raw;
-#[cfg(windows)]
+mod raw_common;
+#[cfg(all(target_os = "windows", feature = "dynamic-load"))]
+use dynamic_win_raw as raw;
 pub mod sendqueue;
 #[cfg(feature = "capture-stream")]
 mod stream;
@@ -213,14 +217,14 @@ bitflags! {
     /// Network device flags.
     pub struct IfFlags: u32 {
         /// Set if the device is a loopback interface
-        const LOOPBACK = raw::PCAP_IF_LOOPBACK;
+        const LOOPBACK = raw_common::PCAP_IF_LOOPBACK;
         /// Set if the device is up
-        const UP = raw::PCAP_IF_UP;
+        const UP = raw_common::PCAP_IF_UP;
         /// Set if the device is running
-        const RUNNING = raw::PCAP_IF_RUNNING;
+        const RUNNING = raw_common::PCAP_IF_RUNNING;
         /// Set if the device is a wireless interface; this includes IrDA as well as radio-based
         /// networks such as IEEE 802.15.4 and IEEE 802.11, so it doesn't just mean Wi-Fi
-        const WIRELESS = raw::PCAP_IF_WIRELESS;
+        const WIRELESS = raw_common::PCAP_IF_WIRELESS;
     }
 }
 
@@ -247,11 +251,11 @@ pub enum ConnectionStatus {
 
 impl From<u32> for ConnectionStatus {
     fn from(flags: u32) -> Self {
-        match flags & raw::PCAP_IF_CONNECTION_STATUS {
-            raw::PCAP_IF_CONNECTION_STATUS_UNKNOWN => ConnectionStatus::Unknown,
-            raw::PCAP_IF_CONNECTION_STATUS_CONNECTED => ConnectionStatus::Connected,
-            raw::PCAP_IF_CONNECTION_STATUS_DISCONNECTED => ConnectionStatus::Disconnected,
-            raw::PCAP_IF_CONNECTION_STATUS_NOT_APPLICABLE => ConnectionStatus::NotApplicable,
+        match flags & raw_common::PCAP_IF_CONNECTION_STATUS {
+            raw_common::PCAP_IF_CONNECTION_STATUS_UNKNOWN => ConnectionStatus::Unknown,
+            raw_common::PCAP_IF_CONNECTION_STATUS_CONNECTED => ConnectionStatus::Connected,
+            raw_common::PCAP_IF_CONNECTION_STATUS_DISCONNECTED => ConnectionStatus::Disconnected,
+            raw_common::PCAP_IF_CONNECTION_STATUS_NOT_APPLICABLE => ConnectionStatus::NotApplicable,
             // DeviceFlags::CONNECTION_STATUS should be a 2-bit mask which means that the four
             // values should cover all the possibilities.
             _ => unreachable!(),
@@ -368,10 +372,10 @@ impl Device {
 
     unsafe fn with_all_devs<T, F>(func: F) -> Result<T, Error>
     where
-        F: FnOnce(*mut raw::pcap_if_t) -> Result<T, Error>,
+        F: FnOnce(*mut raw_common::pcap_if_t) -> Result<T, Error>,
     {
         let all_devs = with_errbuf(|err| {
-            let mut all_devs: *mut raw::pcap_if_t = ptr::null_mut();
+            let mut all_devs: *mut raw_common::pcap_if_t = ptr::null_mut();
             if raw::pcap_findalldevs(&mut all_devs, err) != 0 {
                 return Err(Error::new(err));
             }
@@ -389,10 +393,10 @@ impl From<&str> for Device {
     }
 }
 
-impl TryFrom<&raw::pcap_if_t> for Device {
+impl TryFrom<&raw_common::pcap_if_t> for Device {
     type Error = Error;
 
-    fn try_from(dev: &raw::pcap_if_t) -> Result<Self, Error> {
+    fn try_from(dev: &raw_common::pcap_if_t) -> Result<Self, Error> {
         Ok(Device::new(
             unsafe { cstr_to_string(dev.name)?.ok_or(InvalidString)? },
             unsafe { cstr_to_string(dev.description)? },
@@ -416,7 +420,7 @@ pub struct Address {
 }
 
 impl Address {
-    unsafe fn new_vec(mut ptr: *const raw::pcap_addr_t) -> Vec<Address> {
+    unsafe fn new_vec(mut ptr: *const raw_common::pcap_addr_t) -> Vec<Address> {
         let mut vec = Vec::new();
         while !ptr.is_null() {
             if let Some(addr) = Address::new(ptr) {
@@ -427,7 +431,7 @@ impl Address {
         vec
     }
 
-    unsafe fn new(ptr: *const raw::pcap_addr_t) -> Option<Address> {
+    unsafe fn new(ptr: *const raw_common::pcap_addr_t) -> Option<Address> {
         Self::convert_sockaddr((*ptr).addr).map(|addr| Address {
             addr,
             netmask: Self::convert_sockaddr((*ptr).netmask),
@@ -816,7 +820,7 @@ impl State for Dead {}
 /// ```
 pub struct Capture<T: State + ?Sized> {
     nonblock: bool,
-    handle: NonNull<raw::pcap_t>,
+    handle: NonNull<raw_common::pcap_t>,
     _marker: PhantomData<T>,
 }
 
@@ -825,8 +829,8 @@ pub struct Capture<T: State + ?Sized> {
 // multiple threads.
 unsafe impl<T: State + ?Sized> Send for Capture<T> {}
 
-impl<T: State + ?Sized> From<NonNull<raw::pcap_t>> for Capture<T> {
-    fn from(handle: NonNull<raw::pcap_t>) -> Self {
+impl<T: State + ?Sized> From<NonNull<raw_common::pcap_t>> for Capture<T> {
+    fn from(handle: NonNull<raw_common::pcap_t>) -> Self {
         Capture {
             nonblock: false,
             handle,
@@ -838,7 +842,7 @@ impl<T: State + ?Sized> From<NonNull<raw::pcap_t>> for Capture<T> {
 impl<T: State + ?Sized> Capture<T> {
     fn new_raw<F>(path: Option<&str>, func: F) -> Result<Capture<T>, Error>
     where
-        F: FnOnce(*const libc::c_char, *mut libc::c_char) -> *mut raw::pcap_t,
+        F: FnOnce(*const libc::c_char, *mut libc::c_char) -> *mut raw_common::pcap_t,
     {
         with_errbuf(|err| {
             let handle = match path {
@@ -849,7 +853,8 @@ impl<T: State + ?Sized> Capture<T> {
                 }
             };
             Ok(Capture::from(
-                NonNull::<raw::pcap_t>::new(handle).ok_or_else(|| unsafe { Error::new(err) })?,
+                NonNull::<raw_common::pcap_t>::new(handle)
+                    .ok_or_else(|| unsafe { Error::new(err) })?,
             ))
         })
     }
@@ -1003,11 +1008,11 @@ pub type TstampType = TimestampType;
 /// The direction of packets to be captured. Use with `Capture::direction`.
 pub enum Direction {
     /// Capture packets received by or sent by the device. This is the default.
-    InOut = raw::PCAP_D_INOUT,
+    InOut = raw_common::PCAP_D_INOUT,
     /// Only capture packets received by the device.
-    In = raw::PCAP_D_IN,
+    In = raw_common::PCAP_D_IN,
     /// Only capture packets sent by the device.
-    Out = raw::PCAP_D_OUT,
+    Out = raw_common::PCAP_D_OUT,
 }
 
 impl Capture<Inactive> {
@@ -1093,7 +1098,7 @@ impl Capture<Inactive> {
                 if to {
                     0
                 } else {
-                    raw::WINPCAP_MINTOCOPY_DEFAULT
+                    raw_common::WINPCAP_MINTOCOPY_DEFAULT
                 },
             )
         };
@@ -1168,7 +1173,7 @@ impl<T: Activated + ?Sized> Capture<T> {
     /// configurations.
     pub fn savefile<P: AsRef<Path>>(&self, path: P) -> Result<Savefile, Error> {
         let name = CString::new(path.as_ref().to_str().unwrap())?;
-        let handle_opt = NonNull::<raw::pcap_dumper_t>::new(unsafe {
+        let handle_opt = NonNull::<raw_common::pcap_dumper_t>::new(unsafe {
             raw::pcap_dump_open(self.handle.as_ptr(), name.as_ptr())
         });
         let handle = self
@@ -1235,7 +1240,7 @@ impl<T: Activated + ?Sized> Capture<T> {
     /// you probably want to minimize the time between calls to next_packet() method.
     pub fn next_packet(&mut self) -> Result<Packet<'_>, Error> {
         unsafe {
-            let mut header: *mut raw::pcap_pkthdr = ptr::null_mut();
+            let mut header: *mut raw_common::pcap_pkthdr = ptr::null_mut();
             let mut packet: *const libc::c_uchar = ptr::null();
             let retcode = raw::pcap_next_ex(self.handle.as_ptr(), &mut header, &mut packet);
             self.check_err(retcode != -1)?; // -1 => an error occured while reading the packet
@@ -1243,7 +1248,7 @@ impl<T: Activated + ?Sized> Capture<T> {
                 i if i >= 1 => {
                     // packet was read without issue
                     Ok(Packet::new(
-                        &*(&*header as *const raw::pcap_pkthdr as *const PacketHeader),
+                        &*(&*header as *const raw_common::pcap_pkthdr as *const PacketHeader),
                         slice::from_raw_parts(packet, (*header).caplen as _),
                     ))
                 }
@@ -1292,7 +1297,7 @@ impl<T: Activated + ?Sized> Capture<T> {
     pub fn filter(&mut self, program: &str, optimize: bool) -> Result<(), Error> {
         let program = CString::new(program)?;
         unsafe {
-            let mut bpf_program: raw::bpf_program = mem::zeroed();
+            let mut bpf_program: raw_common::bpf_program = mem::zeroed();
             let ret = raw::pcap_compile(
                 self.handle.as_ptr(),
                 &mut bpf_program,
@@ -1314,7 +1319,7 @@ impl<T: Activated + ?Sized> Capture<T> {
     /// how packet statistics are calculated.
     pub fn stats(&mut self) -> Result<Stat, Error> {
         unsafe {
-            let mut stats: raw::pcap_stat = mem::zeroed();
+            let mut stats: raw_common::pcap_stat = mem::zeroed();
             self.check_err(raw::pcap_stats(self.handle.as_ptr(), &mut stats) != -1)
                 .map(|_| Stat::new(stats.ps_recv, stats.ps_drop, stats.ps_ifdrop))
         }
@@ -1348,7 +1353,7 @@ impl Capture<Dead> {
     pub fn dead(linktype: Linktype) -> Result<Capture<Dead>, Error> {
         let handle = unsafe { raw::pcap_open_dead(linktype.0, 65535) };
         Ok(Capture::from(
-            NonNull::<raw::pcap_t>::new(handle).ok_or(InsufficientMemory)?,
+            NonNull::<raw_common::pcap_t>::new(handle).ok_or(InsufficientMemory)?,
         ))
     }
 
@@ -1371,7 +1376,7 @@ impl Capture<Dead> {
         let program = CString::new(program).unwrap();
 
         unsafe {
-            let mut bpf_program: raw::bpf_program = mem::zeroed();
+            let mut bpf_program: raw_common::bpf_program = mem::zeroed();
             if -1
                 == raw::pcap_compile(
                     self.handle.as_ptr(),
@@ -1437,7 +1442,7 @@ impl<T: Activated> From<Capture<T>> for Capture<dyn Activated> {
 
 /// Abstraction for writing pcap savefiles, which can be read afterwards via `Capture::from_file()`.
 pub struct Savefile {
-    handle: NonNull<raw::pcap_dumper_t>,
+    handle: NonNull<raw_common::pcap_dumper_t>,
 }
 
 // Just like a Capture, a Savefile is safe to Send as it encapsulates the entire lifetime of
@@ -1451,7 +1456,7 @@ impl Savefile {
         unsafe {
             raw::pcap_dump(
                 self.handle.as_ptr() as _,
-                &*(packet.header as *const PacketHeader as *const raw::pcap_pkthdr),
+                &*(packet.header as *const PacketHeader as *const raw_common::pcap_pkthdr),
                 packet.data.as_ptr(),
             );
         }
@@ -1467,8 +1472,8 @@ impl Savefile {
     }
 }
 
-impl From<NonNull<raw::pcap_dumper_t>> for Savefile {
-    fn from(handle: NonNull<raw::pcap_dumper_t>) -> Self {
+impl From<NonNull<raw_common::pcap_dumper_t>> for Savefile {
+    fn from(handle: NonNull<raw_common::pcap_dumper_t>) -> Self {
         Savefile { handle }
     }
 }
@@ -1513,18 +1518,21 @@ where
 #[test]
 fn test_struct_size() {
     use std::mem::size_of;
-    assert_eq!(size_of::<PacketHeader>(), size_of::<raw::pcap_pkthdr>());
+    assert_eq!(
+        size_of::<PacketHeader>(),
+        size_of::<raw_common::pcap_pkthdr>()
+    );
 }
 
 #[repr(transparent)]
-pub struct BpfInstruction(raw::bpf_insn);
+pub struct BpfInstruction(raw_common::bpf_insn);
 #[repr(transparent)]
-pub struct BpfProgram(raw::bpf_program);
+pub struct BpfProgram(raw_common::bpf_program);
 
 impl BpfProgram {
     /// checks whether a filter matches a packet
     pub fn filter(&self, buf: &[u8]) -> bool {
-        let header: raw::pcap_pkthdr = raw::pcap_pkthdr {
+        let header: raw_common::pcap_pkthdr = raw_common::pcap_pkthdr {
             ts: libc::timeval {
                 tv_sec: 0,
                 tv_usec: 0,

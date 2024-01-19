@@ -10,10 +10,11 @@ use std::io::IoSlice;
 use std::ptr::NonNull;
 
 use crate::raw;
+use crate::raw_common;
 use crate::Error;
 use crate::{Active, Capture};
 
-pub struct SendQueue(NonNull<raw::pcap_send_queue>);
+pub struct SendQueue(NonNull<raw_common::pcap_send_queue>);
 
 pub enum SendSync {
     Off = 0,
@@ -21,8 +22,8 @@ pub enum SendSync {
 }
 
 #[inline]
-fn make_pkthdr(ts: Option<std::time::Duration>, len: u32) -> raw::pcap_pkthdr {
-    raw::pcap_pkthdr {
+fn make_pkthdr(ts: Option<std::time::Duration>, len: u32) -> raw_common::pcap_pkthdr {
+    raw_common::pcap_pkthdr {
         ts: if let Some(ts) = ts {
             libc::timeval {
                 // tv_sec is currently i32 in libc when building for Windows
@@ -112,7 +113,7 @@ impl SendQueue {
         // Note: It is assumed that len cannot exceed maxlen.  This invariant must be upheld by
         // all methods implemented by SendQueue.
         let remain = (self.maxlen() - self.len()) as usize;
-        let need = std::mem::size_of::<raw::pcap_pkthdr>() + pktsize;
+        let need = std::mem::size_of::<raw_common::pcap_pkthdr>() + pktsize;
         if remain < need {
             return Err(Error::BufferOverflow);
         }
@@ -134,7 +135,7 @@ impl SendQueue {
         let mut wbuf = unsafe { sqbuf.offset(bufoffs) };
 
         // Copy packet header into the sendqueue's buffer
-        let mut lastlen = std::mem::size_of::<raw::pcap_pkthdr>();
+        let mut lastlen = std::mem::size_of::<raw_common::pcap_pkthdr>();
         unsafe {
             std::ptr::copy_nonoverlapping(rawhdr, wbuf, lastlen);
         }

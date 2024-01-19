@@ -99,7 +99,7 @@ fn get_libpcap_version(libdirpath: Option<PathBuf>) -> Result<Version, Box<dyn s
         libfile = libdir.join(libfile);
     }
 
-    let lib = if let Ok(lib) = libloading::Library::new(libfile) {
+    let lib = if let Ok(lib) = unsafe { libloading::Library::new(libfile) } {
         lib
     } else {
         return Ok(Version::max());
