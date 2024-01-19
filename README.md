@@ -84,8 +84,6 @@ Use the `capture-stream` feature to enable support for streamed packet captures.
 pcap = { version = "1", features = ["capture-stream"] }
 ```
 
-**This feature is supported only on Linux and Mac OS X. It will not work and is not supported on Windows.**
-
 ## Unstable Features
 
 Use at your own risk, we do not consider this our public API yet.
@@ -100,7 +98,7 @@ This crate uses Rust 2018 and requires a compiler version >= 1.46.
 
 The feature `capture-stream` depends on `tokio = "1.0"`. Therefore, when `capture-stream` is enabled, this crate requires a compiler version new enough to compile the `tokio` crate.
 
-Some dependencies no longer support our chosen MSRV. Since many crates do not consider this a breaking there is not much that can be done to prevent this through semver requirements. However, users can protect themselves against such incompatibility with `Cargo.lock` file. We provide [`msrv.lock`](msrv.lock) which is the lockfile against which we test MSRV builds in our CI.
+Some dependencies no longer support our chosen MSRV. Since many crates do not consider this a breaking change there is not much that can be done to prevent this through semver requirements. However, users can protect themselves against such incompatibility with `Cargo.lock` file. We provide [`msrv.lock`](msrv.lock) which is the lockfile against which we test MSRV builds in our CI.
 
 [Discuss the MSRV](https://github.com/rust-pcap/pcap/discussions/240).
 
