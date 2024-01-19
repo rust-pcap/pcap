@@ -75,7 +75,7 @@ jobs:
         uses: obi1kenobi/cargo-semver-checks-action@v2
         with:
           feature-group: "only-explicit-features"
-          features: ["capture-stream", "lending-iter"]
+          features: "capture-stream lending-iter"
       - name: cargo doc
         run: env DOCS_RS=true cargo doc ${{ inputs.profile }} ${{ inputs.features }} --no-deps
       - name: cargo fmt
