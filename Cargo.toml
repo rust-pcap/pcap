@@ -19,15 +19,19 @@ errno = "0.2"
 tokio = { version = "1.0", features = ["net", "rt", "macros", "rt-multi-thread"], optional = true }
 futures = { version = "0.3", optional = true }
 gat-std = { version = "0.1.1", optional = true }
-# these really belong in [dev-dependencies], but can't have optional dev-deps
-# and these libraries would truncate the min support Rust version (MSRV)
-tun-tap = { version = "0.1.3", optional = true }
+# This really belongs in [dev-dependencies], but we can't have optional dev-deps
+# and this libraries would truncate the min support Rust version (MSRV)
 etherparse = { version = "0.13.0", optional = true }
 libloading = "0.8"
 
 [target.'cfg(target_os = "windows")'.dependencies]
 windows-sys = { version = "0.36.1", features = ["Win32_Foundation", "Win32_Networking_WinSock"] }
 once_cell = "1.19"
+
+[target.'cfg(not(target_os = "windows"))'.dependencies]
+# This really belongs in [dev-dependencies], but we can't have optional dev-deps
+# and this libraries would truncate the min support Rust version (MSRV)
+tun-tap = { version = "0.1.3", optional = true }
 
 [dev-dependencies]
 tempdir = "0.3"
@@ -43,7 +47,7 @@ pkg-config = "0.3"
 [features]
 # This feature enables access to the function Capture::stream.
 # This is disabled by default, because it depends on a tokio
-capture-stream = ["tokio", "futures"]
+capture-stream = ["tokio", "futures", "windows-sys/Win32_System_Threading"]
 tap-tests = ["tun-tap", "etherparse"]
 lending-iter = ["gat-std"]
 dynamic-load = []

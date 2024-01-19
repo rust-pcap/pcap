@@ -89,6 +89,7 @@ mod raw_common;
 use dynamic_win_raw as raw;
 pub mod sendqueue;
 #[cfg(feature = "capture-stream")]
+#[cfg_attr(windows, path = "stream_windows.rs")]
 mod stream;
 #[cfg(feature = "capture-stream")]
 pub use stream::PacketStream;
@@ -1286,7 +1287,7 @@ impl<T: Activated + ?Sized> Capture<T> {
         if !self.nonblock {
             return Err(NonNonBlock);
         }
-        PacketStream::new(SelectableCapture::new(self)?, codec)
+        PacketStream::new(self, codec)
     }
 
     /// Sets the filter on the capture using the given BPF program string. Internally this is
@@ -1400,31 +1401,6 @@ impl AsRawFd for Capture<Active> {
         let fd = unsafe { raw::pcap_fileno(self.handle.as_ptr()) };
         assert!(fd != -1, "Unable to get file descriptor for live capture");
         fd
-    }
-}
-
-/// Newtype [`Capture`] wrapper that exposes `pcap_get_selectable_fd()`.
-#[cfg(feature = "capture-stream")]
-struct SelectableCapture<T: State + ?Sized> {
-    inner: Capture<T>,
-    fd: RawFd,
-}
-
-#[cfg(feature = "capture-stream")]
-impl<T: Activated + ?Sized> SelectableCapture<T> {
-    fn new(capture: Capture<T>) -> Result<Self, Error> {
-        let fd = unsafe { raw::pcap_get_selectable_fd(capture.handle.as_ptr()) };
-        if fd == -1 {
-            return Err(InvalidRawFd);
-        }
-        Ok(Self { inner: capture, fd })
-    }
-}
-
-#[cfg(all(unix, feature = "capture-stream"))]
-impl<T: Activated + ?Sized> AsRawFd for SelectableCapture<T> {
-    fn as_raw_fd(&self) -> RawFd {
-        self.fd
     }
 }
 
