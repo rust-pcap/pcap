@@ -10,3 +10,31 @@ pub trait PacketCodec {
 
     fn decode(&mut self, packet: Packet<'_>) -> Self::Item;
 }
+
+// GRCOV_EXCL_START
+#[cfg(test)]
+pub mod testmod {
+    use crate::packet::PacketHeader;
+
+    use super::*;
+
+    pub struct Codec;
+
+    #[derive(Debug, PartialEq, Eq)]
+    pub struct PacketOwned {
+        pub header: PacketHeader,
+        pub data: Box<[u8]>,
+    }
+
+    impl PacketCodec for Codec {
+        type Item = PacketOwned;
+
+        fn decode(&mut self, pkt: Packet) -> Self::Item {
+            PacketOwned {
+                header: *pkt.header,
+                data: pkt.data.into(),
+            }
+        }
+    }
+}
+// GRCOV_EXCL_STOP

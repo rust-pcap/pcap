@@ -5,7 +5,7 @@ pub mod offline;
 
 use std::{
     ffi::CString,
-    mem,
+    fmt, mem,
     path::Path,
     ptr::{self, NonNull},
     slice,
@@ -163,7 +163,6 @@ impl<T: Activated + ?Sized> Capture<T> {
             let mut header: *mut raw::pcap_pkthdr = ptr::null_mut();
             let mut packet: *const libc::c_uchar = ptr::null();
             let retcode = raw::pcap_next_ex(self.handle.as_ptr(), &mut header, &mut packet);
-            self.check_err(retcode != -1)?; // -1 => an error occured while reading the packet
             match retcode {
                 i if i >= 1 => {
                     // packet was read without issue
@@ -177,15 +176,20 @@ impl<T: Activated + ?Sized> Capture<T> {
                     // timeout expired
                     Err(Error::TimeoutExpired)
                 }
+                -1 => {
+                    // an error occured while reading the packet
+                    Err(self.get_err())
+                }
                 -2 => {
                     // packets are being read from a "savefile" and there are no
                     // more packets to read
                     Err(Error::NoMorePackets)
                 }
+                // GRCOV_EXCL_START
                 _ => {
                     // libpcap only defines codes >=1, 0, -1, and -2
                     unreachable!()
-                }
+                } // GRCOV_EXCL_STOP
             }
         }
     }
@@ -195,13 +199,10 @@ impl<T: Activated + ?Sized> Capture<T> {
         PacketIter::new(self, codec)
     }
 
-    /// Sets the filter on the capture using the given BPF program string. Internally this is
-    /// compiled using `pcap_compile()`. `optimize` controls whether optimization on the resulting
-    /// code is performed
-    ///
-    /// See <http://biot.com/capstats/bpf.html> for more information about this syntax.
-    pub fn filter(&mut self, program: &str, optimize: bool) -> Result<(), Error> {
+    /// Compiles the string into a filter program using `pcap_compile`.
+    pub fn compile(&self, program: &str, optimize: bool) -> Result<BpfProgram, Error> {
         let program = CString::new(program)?;
+
         unsafe {
             let mut bpf_program: raw::bpf_program = mem::zeroed();
             let ret = raw::pcap_compile(
@@ -211,11 +212,19 @@ impl<T: Activated + ?Sized> Capture<T> {
                 optimize as libc::c_int,
                 0,
             );
-            self.check_err(ret != -1)?;
-            let ret = raw::pcap_setfilter(self.handle.as_ptr(), &mut bpf_program);
-            raw::pcap_freecode(&mut bpf_program);
-            self.check_err(ret != -1)
+            self.check_err(ret != -1).and(Ok(BpfProgram(bpf_program)))
         }
+    }
+
+    /// Sets the filter on the capture using the given BPF program string. Internally this is
+    /// compiled using `pcap_compile()`. `optimize` controls whether optimization on the resulting
+    /// code is performed
+    ///
+    /// See <http://biot.com/capstats/bpf.html> for more information about this syntax.
+    pub fn filter(&mut self, program: &str, optimize: bool) -> Result<(), Error> {
+        let mut bpf_program = self.compile(program, optimize)?;
+        let ret = unsafe { raw::pcap_setfilter(self.handle.as_ptr(), &mut bpf_program.0) };
+        self.check_err(ret != -1)
     }
 
     /// Get capture statistics about this capture. The values represent packet statistics from the
@@ -282,6 +291,53 @@ impl Drop for Savefile {
     }
 }
 
+#[repr(transparent)]
+pub struct BpfInstruction(raw::bpf_insn);
+#[repr(transparent)]
+pub struct BpfProgram(raw::bpf_program);
+
+impl BpfProgram {
+    /// checks whether a filter matches a packet
+    pub fn filter(&self, buf: &[u8]) -> bool {
+        let header: raw::pcap_pkthdr = raw::pcap_pkthdr {
+            ts: libc::timeval {
+                tv_sec: 0,
+                tv_usec: 0,
+            },
+            caplen: buf.len() as u32,
+            len: buf.len() as u32,
+        };
+        unsafe { raw::pcap_offline_filter(&self.0, &header, buf.as_ptr()) > 0 }
+    }
+
+    pub fn get_instructions(&self) -> &[BpfInstruction] {
+        unsafe {
+            slice::from_raw_parts(
+                self.0.bf_insns as *const BpfInstruction,
+                self.0.bf_len as usize,
+            )
+        }
+    }
+}
+
+impl Drop for BpfProgram {
+    fn drop(&mut self) {
+        unsafe { raw::pcap_freecode(&mut self.0) }
+    }
+}
+
+impl fmt::Display for BpfInstruction {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{} {} {} {}",
+            self.0.code, self.0.jt, self.0.jf, self.0.k
+        )
+    }
+}
+
+unsafe impl Send for BpfProgram {}
+
 #[cfg(not(windows))]
 /// Open a raw file descriptor.
 ///
@@ -294,4 +350,574 @@ pub unsafe fn open_raw_fd(fd: RawFd, mode: u8) -> Result<*mut libc::FILE, Error>
         .as_mut()
         .map(|f| f as _)
         .ok_or(Error::InvalidRawFd)
+}
+
+// GRCOV_EXCL_START
+#[cfg(test)]
+mod testmod {
+    use super::*;
+
+    pub static TS: libc::timeval = libc::timeval {
+        tv_sec: 5,
+        tv_usec: 50,
+    };
+    pub static LEN: u32 = DATA.len() as u32;
+    pub static CAPLEN: u32 = LEN;
+
+    pub static mut PKTHDR: raw::pcap_pkthdr = raw::pcap_pkthdr {
+        ts: TS,
+        caplen: CAPLEN,
+        len: LEN,
+    };
+    pub static PACKET_HEADER: PacketHeader = PacketHeader {
+        ts: TS,
+        caplen: CAPLEN,
+        len: LEN,
+    };
+
+    pub static DATA: [u8; 4] = [4, 5, 6, 7];
+    pub static PACKET: Packet = Packet {
+        header: &PACKET_HEADER,
+        data: &DATA,
+    };
+
+    pub struct NextExContext(raw::__pcap_next_ex::Context);
+    pub fn next_ex_expect(pcap: *mut raw::pcap_t) -> NextExContext {
+        let data_ptr: *const libc::c_uchar = DATA.as_ptr();
+        let pkthdr_ptr: *mut raw::pcap_pkthdr = unsafe { &mut PKTHDR };
+
+        let ctx = raw::pcap_next_ex_context();
+        ctx.checkpoint();
+        ctx.expect()
+            .withf_st(move |arg1, _, _| *arg1 == pcap)
+            .return_once_st(move |_, arg2, arg3| {
+                unsafe {
+                    *arg2 = pkthdr_ptr;
+                    *arg3 = data_ptr;
+                }
+                CAPLEN as i32
+            });
+
+        NextExContext(ctx)
+    }
+}
+// GRCOV_EXCL_STOP
+
+#[cfg(test)]
+mod tests {
+    use crate::{
+        capture::{
+            activated::testmod::{next_ex_expect, PACKET},
+            testmod::test_capture,
+            Active, Capture, Offline,
+        },
+        raw::testmod::{as_pcap_dumper_t, as_pcap_t, geterr_expect, RAWMTX},
+    };
+
+    use super::*;
+
+    #[test]
+    fn test_list_datalinks() {
+        let _m = RAWMTX.lock();
+
+        let mut value: isize = 777;
+        let pcap = as_pcap_t(&mut value);
+
+        let test_capture = test_capture::<Active>(pcap);
+        let capture: Capture<dyn Activated> = test_capture.capture.into();
+
+        let ctx = raw::pcap_list_datalinks_context();
+        ctx.expect()
+            .withf_st(move |arg1, _| *arg1 == pcap)
+            .return_once_st(|_, _| 0);
+
+        let ctx = raw::pcap_free_datalinks_context();
+        ctx.expect().return_once(|_| {});
+
+        let _err = geterr_expect(pcap);
+
+        let result = capture.list_datalinks();
+        assert!(result.is_err());
+
+        let mut datalinks: [i32; 4] = [0, 1, 2, 3];
+        let links: *mut i32 = datalinks.as_mut_ptr();
+        let len = datalinks.len();
+
+        let ctx = raw::pcap_list_datalinks_context();
+        ctx.checkpoint();
+        ctx.expect()
+            .withf_st(move |arg1, _| *arg1 == pcap)
+            .return_once_st(move |_, arg2| {
+                unsafe { *arg2 = links };
+                len as i32
+            });
+
+        let ctx = raw::pcap_free_datalinks_context();
+        ctx.checkpoint();
+        ctx.expect().return_once(|_| {});
+
+        let pcap_datalinks = capture.list_datalinks().unwrap();
+        assert_eq!(
+            pcap_datalinks,
+            datalinks.iter().cloned().map(Linktype).collect::<Vec<_>>()
+        );
+    }
+
+    #[test]
+    fn test_set_datalink() {
+        let _m = RAWMTX.lock();
+
+        let mut value: isize = 777;
+        let pcap = as_pcap_t(&mut value);
+
+        let test_capture = test_capture::<Active>(pcap);
+        let mut capture: Capture<dyn Activated> = test_capture.capture.into();
+
+        let ctx = raw::pcap_set_datalink_context();
+        ctx.expect()
+            .withf_st(move |arg1, _| *arg1 == pcap)
+            .return_once(|_, _| 0);
+
+        let result = capture.set_datalink(Linktype::ETHERNET);
+        assert!(result.is_ok());
+
+        let ctx = raw::pcap_set_datalink_context();
+        ctx.checkpoint();
+        ctx.expect()
+            .withf_st(move |arg1, _| *arg1 == pcap)
+            .return_once(|_, _| -1);
+
+        let _err = geterr_expect(pcap);
+
+        let result = capture.set_datalink(Linktype::ETHERNET);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_get_datalink() {
+        let _m = RAWMTX.lock();
+
+        let mut value: isize = 777;
+        let pcap = as_pcap_t(&mut value);
+
+        let test_capture = test_capture::<Active>(pcap);
+        let capture: Capture<dyn Activated> = test_capture.capture.into();
+
+        let ctx = raw::pcap_datalink_context();
+        ctx.expect()
+            .withf_st(move |arg1| *arg1 == pcap)
+            .return_once(|_| 1);
+
+        let linktype = capture.get_datalink();
+        assert_eq!(linktype, Linktype::ETHERNET);
+    }
+
+    #[test]
+    fn unify_activated() {
+        #![allow(dead_code)]
+        fn test1() -> Capture<Active> {
+            panic!();
+        }
+
+        fn test2() -> Capture<Offline> {
+            panic!();
+        }
+
+        fn maybe(a: bool) -> Capture<dyn Activated> {
+            if a {
+                test1().into()
+            } else {
+                test2().into()
+            }
+        }
+
+        fn also_maybe(a: &mut Capture<dyn Activated>) {
+            a.filter("whatever filter string, this won't be run anyway", false)
+                .unwrap();
+        }
+    }
+
+    #[test]
+    fn test_savefile() {
+        let _m = RAWMTX.lock();
+
+        let mut value: isize = 777;
+        let pcap = as_pcap_t(&mut value);
+
+        let mut value: isize = 888;
+        let pcap_dumper = as_pcap_dumper_t(&mut value);
+
+        let test_capture = test_capture::<Offline>(pcap);
+        let capture = test_capture.capture;
+
+        let ctx = raw::pcap_dump_open_context();
+        ctx.expect()
+            .withf_st(move |arg1, _| *arg1 == pcap)
+            .return_once_st(move |_, _| pcap_dumper);
+
+        let ctx = raw::pcap_dump_close_context();
+        ctx.expect()
+            .withf_st(move |arg1| *arg1 == pcap_dumper)
+            .return_once(|_| {});
+
+        let result = capture.savefile("path/to/nowhere");
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    #[cfg(libpcap_1_7_2)]
+    fn test_savefile_append() {
+        let _m = RAWMTX.lock();
+
+        let mut value: isize = 777;
+        let pcap = as_pcap_t(&mut value);
+
+        let mut value: isize = 888;
+        let pcap_dumper = as_pcap_dumper_t(&mut value);
+
+        let test_capture = test_capture::<Offline>(pcap);
+        let capture = test_capture.capture;
+
+        let ctx = raw::pcap_dump_open_append_context();
+        ctx.expect()
+            .withf_st(move |arg1, _| *arg1 == pcap)
+            .return_once_st(move |_, _| pcap_dumper);
+
+        let ctx = raw::pcap_dump_close_context();
+        ctx.expect()
+            .withf_st(move |arg1| *arg1 == pcap_dumper)
+            .return_once(|_| {});
+
+        let result = capture.savefile_append("path/to/nowhere");
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_savefile_error() {
+        let _m = RAWMTX.lock();
+
+        let mut value: isize = 777;
+        let pcap = as_pcap_t(&mut value);
+
+        let test_capture = test_capture::<Offline>(pcap);
+        let capture = test_capture.capture;
+
+        let ctx = raw::pcap_dump_open_context();
+        ctx.expect()
+            .withf_st(move |arg1, _| *arg1 == pcap)
+            .return_once(|_, _| std::ptr::null_mut());
+
+        let _err = geterr_expect(pcap);
+
+        let result = capture.savefile("path/to/nowhere");
+        assert!(result.is_err());
+    }
+
+    #[test]
+    #[cfg(libpcap_1_7_2)]
+    fn test_savefile_append_error() {
+        let _m = RAWMTX.lock();
+
+        let mut value: isize = 777;
+        let pcap = as_pcap_t(&mut value);
+
+        let test_capture = test_capture::<Offline>(pcap);
+        let capture = test_capture.capture;
+
+        let ctx = raw::pcap_dump_open_append_context();
+        ctx.expect()
+            .withf_st(move |arg1, _| *arg1 == pcap)
+            .return_once(|_, _| std::ptr::null_mut());
+
+        let _err = geterr_expect(pcap);
+
+        let result = capture.savefile_append("path/to/nowhere");
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_savefile_ops() {
+        let _m = RAWMTX.lock();
+
+        let mut value: isize = 888;
+        let pcap_dumper = as_pcap_dumper_t(&mut value);
+
+        let ctx = raw::pcap_dump_close_context();
+        ctx.expect()
+            .withf_st(move |arg1| *arg1 == pcap_dumper)
+            .return_once(|_| {});
+
+        let mut savefile = Savefile {
+            handle: NonNull::new(pcap_dumper).unwrap(),
+        };
+
+        let ctx = raw::pcap_dump_context();
+        ctx.expect()
+            .withf_st(move |arg1, _, _| *arg1 == pcap_dumper as _)
+            .return_once(|_, _, _| {});
+
+        savefile.write(&PACKET);
+
+        let ctx = raw::pcap_dump_flush_context();
+        ctx.expect()
+            .withf_st(move |arg1| *arg1 == pcap_dumper)
+            .return_once(|_| 0);
+
+        let result = savefile.flush();
+        assert!(result.is_ok());
+
+        let ctx = raw::pcap_dump_flush_context();
+        ctx.checkpoint();
+        ctx.expect()
+            .withf_st(move |arg1| *arg1 == pcap_dumper)
+            .return_once(|_| -1);
+
+        let result = savefile.flush();
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_direction() {
+        let _m = RAWMTX.lock();
+
+        let mut value: isize = 777;
+        let pcap = as_pcap_t(&mut value);
+
+        let test_capture = test_capture::<Active>(pcap);
+        let capture = test_capture.capture;
+
+        let ctx = raw::pcap_setdirection_context();
+        ctx.expect()
+            .withf_st(move |arg1, arg2| (*arg1 == pcap) && (*arg2 == raw::PCAP_D_OUT))
+            .return_once(|_, _| 0);
+
+        let result = capture.direction(Direction::Out);
+        assert!(result.is_ok());
+
+        let ctx = raw::pcap_setdirection_context();
+        ctx.checkpoint();
+        ctx.expect()
+            .withf_st(move |arg1, arg2| (*arg1 == pcap) && (*arg2 == raw::PCAP_D_OUT))
+            .return_once(|_, _| -1);
+
+        let _err = geterr_expect(pcap);
+
+        let result = capture.direction(Direction::Out);
+        assert!(result.is_err());
+
+        // For code coverage of the derive line.
+        assert_ne!(Direction::In, Direction::InOut);
+        assert_ne!(Direction::In, Direction::Out);
+        assert_ne!(Direction::InOut, Direction::Out);
+    }
+
+    #[test]
+    fn test_next_packet() {
+        let _m = RAWMTX.lock();
+
+        let mut value: isize = 777;
+        let pcap = as_pcap_t(&mut value);
+
+        let test_capture = test_capture::<Active>(pcap);
+        let mut capture = test_capture.capture;
+
+        let _nxt = next_ex_expect(pcap);
+
+        let next_packet = capture.next_packet().unwrap();
+        assert_eq!(next_packet, PACKET);
+    }
+
+    #[test]
+    fn test_next_packet_timeout() {
+        let _m = RAWMTX.lock();
+
+        let mut value: isize = 777;
+        let pcap = as_pcap_t(&mut value);
+
+        let test_capture = test_capture::<Active>(pcap);
+        let mut capture = test_capture.capture;
+
+        let ctx = raw::pcap_next_ex_context();
+        ctx.expect()
+            .withf_st(move |arg1, _, _| *arg1 == pcap)
+            .return_once_st(move |_, _, _| 0);
+
+        let err = capture.next_packet().unwrap_err();
+        assert_eq!(err, Error::TimeoutExpired);
+    }
+
+    #[test]
+    fn test_next_packet_read_error() {
+        let _m = RAWMTX.lock();
+
+        let mut value: isize = 777;
+        let pcap = as_pcap_t(&mut value);
+
+        let test_capture = test_capture::<Active>(pcap);
+        let mut capture = test_capture.capture;
+
+        let ctx = raw::pcap_next_ex_context();
+        ctx.expect()
+            .withf_st(move |arg1, _, _| *arg1 == pcap)
+            .return_once_st(move |_, _, _| -1);
+
+        let _err = geterr_expect(pcap);
+
+        let result = capture.next_packet();
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_next_packet_no_more_packets() {
+        let _m = RAWMTX.lock();
+
+        let mut value: isize = 777;
+        let pcap = as_pcap_t(&mut value);
+
+        let test_capture = test_capture::<Offline>(pcap);
+        let mut capture = test_capture.capture;
+
+        let ctx = raw::pcap_next_ex_context();
+        ctx.expect()
+            .withf_st(move |arg1, _, _| *arg1 == pcap)
+            .return_once_st(move |_, _, _| -2);
+
+        let err = capture.next_packet().unwrap_err();
+        assert_eq!(err, Error::NoMorePackets);
+    }
+
+    #[test]
+    fn test_compile() {
+        let _m = RAWMTX.lock();
+
+        let mut value: isize = 777;
+        let pcap = as_pcap_t(&mut value);
+
+        let test_capture = test_capture::<Active>(pcap);
+        let capture = test_capture.capture;
+
+        let ctx = raw::pcap_compile_context();
+        ctx.expect()
+            .withf_st(move |arg1, _, _, _, _| *arg1 == pcap)
+            .return_once(|_, _, _, _, _| -1);
+
+        let _err = geterr_expect(pcap);
+
+        let ctx = raw::pcap_freecode_context();
+        ctx.expect().return_once(|_| {});
+
+        let result = capture.compile("some bpf program", false);
+        assert!(result.is_err());
+
+        let ctx = raw::pcap_compile_context();
+        ctx.checkpoint();
+        ctx.expect()
+            .withf_st(move |arg1, _, _, _, _| *arg1 == pcap)
+            .return_once(|_, _, _, _, _| 0);
+
+        let ctx = raw::pcap_freecode_context();
+        ctx.checkpoint();
+        ctx.expect().return_once(|_| {});
+
+        let result = capture.compile("some bpf program", false);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_filter() {
+        let _m = RAWMTX.lock();
+
+        let mut value: isize = 777;
+        let pcap = as_pcap_t(&mut value);
+
+        let test_capture = test_capture::<Active>(pcap);
+        let mut capture = test_capture.capture;
+
+        let ctx = raw::pcap_compile_context();
+        ctx.expect()
+            .withf_st(move |arg1, _, _, _, _| *arg1 == pcap)
+            .return_once(|_, _, _, _, _| 0);
+
+        let ctx = raw::pcap_setfilter_context();
+        ctx.expect()
+            .withf_st(move |arg1, _| *arg1 == pcap)
+            .return_once(|_, _| -1);
+
+        let _err = geterr_expect(pcap);
+
+        let ctx = raw::pcap_freecode_context();
+        ctx.expect().return_once(|_| {});
+
+        let result = capture.filter("some bpf program", false);
+        assert!(result.is_err());
+
+        let ctx = raw::pcap_compile_context();
+        ctx.checkpoint();
+        ctx.expect()
+            .withf_st(move |arg1, _, _, _, _| *arg1 == pcap)
+            .return_once(|_, _, _, _, _| 0);
+
+        let ctx = raw::pcap_setfilter_context();
+        ctx.checkpoint();
+        ctx.expect()
+            .withf_st(move |arg1, _| *arg1 == pcap)
+            .return_once(|_, _| 0);
+
+        let ctx = raw::pcap_freecode_context();
+        ctx.checkpoint();
+        ctx.expect().return_once(|_| {});
+
+        let result = capture.compile("some bpf program", false);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_stats() {
+        let _m = RAWMTX.lock();
+
+        let mut value: isize = 777;
+        let pcap = as_pcap_t(&mut value);
+
+        let test_capture = test_capture::<Active>(pcap);
+        let mut capture = test_capture.capture;
+
+        let stat = raw::pcap_stat {
+            ps_recv: 1,
+            ps_drop: 2,
+            ps_ifdrop: 3,
+        };
+
+        let ctx = raw::pcap_stats_context();
+        ctx.expect()
+            .withf_st(move |arg1, _| *arg1 == pcap)
+            .return_once_st(move |_, arg2| {
+                unsafe { *arg2 = stat };
+                0
+            });
+
+        let stats = capture.stats().unwrap();
+        assert_eq!(stats, Stat::new(stat.ps_recv, stat.ps_drop, stat.ps_ifdrop));
+
+        let ctx = raw::pcap_stats_context();
+        ctx.checkpoint();
+        ctx.expect()
+            .withf_st(move |arg1, _| *arg1 == pcap)
+            .return_once_st(move |_, _| -1);
+
+        let _err = geterr_expect(pcap);
+
+        let result = capture.stats();
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_bpf_instruction_display() {
+        let instr = BpfInstruction(raw::bpf_insn {
+            code: 1,
+            jt: 2,
+            jf: 3,
+            k: 4,
+        });
+        assert_eq!(format!("{}", instr), "1 2 3 4");
+    }
 }

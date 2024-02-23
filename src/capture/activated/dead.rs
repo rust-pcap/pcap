@@ -1,4 +1,4 @@
-use std::{ffi::CString, fmt, mem, ptr::NonNull, slice};
+use std::ptr::NonNull;
 
 use crate::{
     capture::{Capture, Dead},
@@ -31,72 +31,55 @@ impl Capture<Dead> {
             NonNull::<raw::pcap_t>::new(handle).ok_or(Error::InsufficientMemory)?,
         ))
     }
-
-    /// Compiles the string into a filter program using `pcap_compile`.
-    pub fn compile(&self, program: &str, optimize: bool) -> Result<BpfProgram, Error> {
-        let program = CString::new(program).unwrap();
-
-        unsafe {
-            let mut bpf_program: raw::bpf_program = mem::zeroed();
-            if -1
-                == raw::pcap_compile(
-                    self.handle.as_ptr(),
-                    &mut bpf_program,
-                    program.as_ptr(),
-                    optimize as libc::c_int,
-                    0,
-                )
-            {
-                return Err(Error::new(raw::pcap_geterr(self.handle.as_ptr())));
-            }
-            Ok(BpfProgram(bpf_program))
-        }
-    }
 }
 
-#[repr(transparent)]
-pub struct BpfInstruction(raw::bpf_insn);
-#[repr(transparent)]
-pub struct BpfProgram(raw::bpf_program);
+#[cfg(test)]
+mod tests {
+    #[cfg(libpcap_1_5_0)]
+    use mockall::predicate;
 
-impl BpfProgram {
-    /// checks whether a filter matches a packet
-    pub fn filter(&self, buf: &[u8]) -> bool {
-        let header: raw::pcap_pkthdr = raw::pcap_pkthdr {
-            ts: libc::timeval {
-                tv_sec: 0,
-                tv_usec: 0,
-            },
-            caplen: buf.len() as u32,
-            len: buf.len() as u32,
-        };
-        unsafe { raw::pcap_offline_filter(&self.0, &header, buf.as_ptr()) > 0 }
+    use crate::raw::testmod::{as_pcap_t, RAWMTX};
+
+    use super::*;
+
+    #[test]
+    fn test_dead() {
+        let _m = RAWMTX.lock();
+
+        let mut dummy: isize = 777;
+        let pcap = as_pcap_t(&mut dummy);
+
+        let ctx = raw::pcap_open_dead_context();
+        ctx.expect().return_once_st(move |_, _| pcap);
+
+        let ctx = raw::pcap_close_context();
+        ctx.expect()
+            .withf_st(move |ptr| *ptr == pcap)
+            .return_once(|_| {});
+
+        let result = Capture::dead(Linktype::ETHERNET);
+        assert!(result.is_ok());
     }
 
-    pub fn get_instructions(&self) -> &[BpfInstruction] {
-        unsafe {
-            slice::from_raw_parts(
-                self.0.bf_insns as *const BpfInstruction,
-                self.0.bf_len as usize,
-            )
-        }
+    #[test]
+    #[cfg(libpcap_1_5_0)]
+    fn test_dead_with_precision() {
+        let _m = RAWMTX.lock();
+
+        let mut dummy: isize = 777;
+        let pcap = as_pcap_t(&mut dummy);
+
+        let ctx = raw::pcap_open_dead_with_tstamp_precision_context();
+        ctx.expect()
+            .with(predicate::always(), predicate::always(), predicate::eq(1))
+            .return_once_st(move |_, _, _| pcap);
+
+        let ctx = raw::pcap_close_context();
+        ctx.expect()
+            .withf_st(move |ptr| *ptr == pcap)
+            .return_once(|_| {});
+
+        let result = Capture::dead_with_precision(Linktype::ETHERNET, Precision::Nano);
+        assert!(result.is_ok());
     }
 }
-
-impl Drop for BpfProgram {
-    fn drop(&mut self) {
-        unsafe { raw::pcap_freecode(&mut self.0) }
-    }
-}
-
-impl fmt::Display for BpfInstruction {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "{} {} {} {}",
-            self.0.code, self.0.jt, self.0.jf, self.0.k
-        )
-    }
-}
-
-unsafe impl Send for BpfProgram {}
