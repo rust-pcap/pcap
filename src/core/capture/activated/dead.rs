@@ -2,11 +2,14 @@ use std::{ffi::CString, fmt, mem, ptr::NonNull, slice};
 
 use crate::{
     core::{
-        capture::{Capture, Dead, Precision},
+        capture::{Capture, Dead},
         linktype::Linktype,
     },
     raw, Error,
 };
+
+#[cfg(libpcap_1_5_0)]
+use crate::core::capture::Precision;
 
 impl Capture<Dead> {
     /// Creates a "fake" capture handle for the given link type.

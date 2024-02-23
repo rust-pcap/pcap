@@ -63,12 +63,6 @@ use std::fmt;
 
 use self::Error::*;
 
-#[cfg(target_os = "windows")]
-use windows_sys::Win32::{
-    Foundation::HANDLE,
-    Networking::WinSock::{AF_INET, AF_INET6, SOCKADDR_IN, SOCKADDR_IN6},
-};
-
 mod core;
 
 #[cfg(not(windows))]
@@ -93,6 +87,8 @@ pub type TstampType = TimestampType;
 
 mod raw;
 
+#[cfg(windows)]
+mod sendqueue;
 #[cfg(windows)]
 pub use sendqueue::sendqueue;
 

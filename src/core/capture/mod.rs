@@ -7,6 +7,9 @@ use std::{
     ptr::{self, NonNull},
 };
 
+#[cfg(windows)]
+use windows_sys::Win32::Foundation::HANDLE;
+
 use crate::{raw, Error};
 
 /// Phantom type representing an inactive capture handle.
