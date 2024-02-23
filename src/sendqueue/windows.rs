@@ -10,7 +10,7 @@ use std::io::IoSlice;
 use std::ptr::NonNull;
 
 use crate::{
-    core::capture::{Active, Capture},
+    capture::{Active, Capture},
     raw, Error,
 };
 

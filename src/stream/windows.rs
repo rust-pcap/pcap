@@ -10,10 +10,8 @@ use tokio::task::JoinHandle;
 use windows_sys::Win32::{Foundation::HANDLE, System::Threading::WaitForSingleObject};
 
 use crate::{
-    core::{
-        capture::{Activated, Capture},
-        codec::PacketCodec,
-    },
+    capture::{Activated, Capture},
+    codec::PacketCodec,
     Error,
 };
 

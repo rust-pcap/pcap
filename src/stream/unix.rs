@@ -11,10 +11,8 @@ use futures::ready;
 use tokio::io::unix::AsyncFd;
 
 use crate::{
-    core::{
-        capture::{Activated, Capture, State},
-        codec::PacketCodec,
-    },
+    capture::{Activated, Capture, State},
+    codec::PacketCodec,
     raw, Error,
 };
 
