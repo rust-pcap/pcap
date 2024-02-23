@@ -65,6 +65,8 @@ use self::Error::*;
 
 mod capture;
 mod codec;
+mod device;
+mod linktype;
 mod packet;
 
 #[cfg(not(windows))]
@@ -73,14 +75,14 @@ pub use capture::{
     activated::{
         dead::{BpfInstruction, BpfProgram},
         iterator::PacketIter,
-        linktype::Linktype,
         Direction, Savefile, Stat,
     },
-    device::{Address, ConnectionStatus, Device, DeviceFlags, IfFlags},
     inactive::TimestampType,
     {Activated, Active, Capture, Dead, Inactive, Offline, Precision, State},
 };
 pub use codec::PacketCodec;
+pub use device::{Address, ConnectionStatus, Device, DeviceFlags, IfFlags};
+pub use linktype::Linktype;
 pub use packet::{Packet, PacketHeader};
 
 #[deprecated(note = "Renamed to TimestampType")]

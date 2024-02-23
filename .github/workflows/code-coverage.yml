@@ -12,6 +12,9 @@ env:
 jobs:
   code-coverage:
     runs-on: ubuntu-latest
+    env:
+      LLVM_PROFILE_FILE: target/debug/profraw/pcap-%p-%m.profraw
+      RUSTFLAGS: -C instrument-coverage
 
     steps:
       - name: Check out repo
@@ -28,11 +31,22 @@ jobs:
         # This is slower, but the grcov-provided binary does not produce correct badges.
         run: cargo install grcov
       - name: cargo build
-        run: RUSTFLAGS="-C instrument-coverage" cargo build --all-features
+        run: cargo build --all-targets --all-features
       - name: cargo test
-        run: RUSTFLAGS="-C instrument-coverage" LLVM_PROFILE_FILE="target/debug/profraw/pcap-%p-%m.profraw" cargo test --all-features
+        run: cargo test  --all-targets --all-features --no-fail-fast
       - name: grcov
-        run: grcov target/debug/profraw -s src/ --binary-path ./target/debug/ -t html --branch --ignore-not-existing -o ./target/debug/coverage/
+        run: >-
+          grcov target/debug/profraw
+          --binary-path ./target/debug/
+          --output-types html
+          --source-dir .
+          --ignore-not-existing
+          --ignore "build.rs"
+          --ignore "tests/*"
+          --ignore "examples/*"
+          --excl-start "GRCOV_EXCL_START|mod tests \{"
+          --excl-stop "GRCOV_EXCL_STOP"
+          --output-path ./target/debug/coverage/
       - name: Check out code-coverage branch
         uses: actions/checkout@v2
         with:
