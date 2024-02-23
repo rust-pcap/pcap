@@ -1,8 +1,6 @@
 use crate::{
-    core::{
-        capture::{Activated, Capture},
-        codec::PacketCodec,
-    },
+    capture::{Activated, Capture},
+    codec::PacketCodec,
     Error,
 };
 

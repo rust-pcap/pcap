@@ -63,23 +63,25 @@ use std::fmt;
 
 use self::Error::*;
 
-mod core;
+mod capture;
+mod codec;
+mod packet;
 
 #[cfg(not(windows))]
-pub use crate::core::capture::activated::open_raw_fd;
-pub use crate::core::capture::{
+pub use capture::activated::open_raw_fd;
+pub use capture::{
     activated::{
         dead::{BpfInstruction, BpfProgram},
         iterator::PacketIter,
+        linktype::Linktype,
         Direction, Savefile, Stat,
     },
+    device::{Address, ConnectionStatus, Device, DeviceFlags, IfFlags},
     inactive::TimestampType,
     {Activated, Active, Capture, Dead, Inactive, Offline, Precision, State},
 };
-pub use crate::core::codec::PacketCodec;
-pub use crate::core::device::{Address, ConnectionStatus, Device, DeviceFlags, IfFlags};
-pub use crate::core::linktype::Linktype;
-pub use crate::core::packet::{Packet, PacketHeader};
+pub use codec::PacketCodec;
+pub use packet::{Packet, PacketHeader};
 
 #[deprecated(note = "Renamed to TimestampType")]
 /// An old name for `TimestampType`, kept around for backward-compatibility.

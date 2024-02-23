@@ -1,15 +1,12 @@
 use std::mem;
 
 use crate::{
-    core::{
-        capture::{Active, Capture, Inactive},
-        device::Device,
-    },
+    capture::{device::Device, Active, Capture, Inactive},
     raw, Error,
 };
 
 #[cfg(libpcap_1_5_0)]
-use crate::core::capture::Precision;
+use crate::capture::Precision;
 
 impl Capture<Inactive> {
     /// Opens a capture handle for a device. You can pass a `Device` or an `&str` device

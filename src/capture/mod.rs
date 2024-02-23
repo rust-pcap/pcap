@@ -1,4 +1,5 @@
 pub mod activated;
+pub mod device;
 pub mod inactive;
 
 use std::{

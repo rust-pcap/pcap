@@ -6,7 +6,7 @@ use bitflags::bitflags;
 use windows_sys::Win32::Networking::WinSock::{AF_INET, AF_INET6, SOCKADDR_IN, SOCKADDR_IN6};
 
 use crate::{
-    core::capture::{Active, Capture},
+    capture::{Active, Capture},
     raw, Error,
 };
 

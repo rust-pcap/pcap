@@ -1,6 +1,7 @@
 pub mod active;
 pub mod dead;
 pub mod iterator;
+pub mod linktype;
 pub mod offline;
 
 use std::{
@@ -15,16 +16,14 @@ use std::{
 use std::os::unix::io::RawFd;
 
 use crate::{
-    core::{
-        capture::{Activated, Capture},
-        codec::PacketCodec,
-        linktype::Linktype,
-        packet::{Packet, PacketHeader},
-    },
+    capture::{Activated, Capture},
+    codec::PacketCodec,
+    packet::{Packet, PacketHeader},
     raw, Error,
 };
 
 use iterator::PacketIter;
+use linktype::Linktype;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 /// Packet statistics for a capture

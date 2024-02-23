@@ -4,7 +4,7 @@ use std::borrow::Borrow;
 use std::os::unix::io::{AsRawFd, RawFd};
 
 use crate::{
-    core::capture::{Active, Capture},
+    capture::{Active, Capture},
     raw, Error,
 };
 

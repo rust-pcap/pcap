@@ -4,15 +4,15 @@ use std::path::Path;
 use std::os::unix::io::RawFd;
 
 use crate::{
-    core::capture::{Capture, Offline},
+    capture::{Capture, Offline},
     raw, Error,
 };
 
 #[cfg(libpcap_1_5_0)]
-use crate::core::capture::Precision;
+use crate::capture::Precision;
 
 #[cfg(not(windows))]
-use crate::core::capture::activated::open_raw_fd;
+use crate::capture::activated::open_raw_fd;
 
 impl Capture<Offline> {
     /// Opens an offline capture handle from a pcap dump file, given a path.

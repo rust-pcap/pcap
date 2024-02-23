@@ -1,4 +1,4 @@
-use crate::core::packet::Packet;
+use crate::packet::Packet;
 
 /// This trait is used to implement Stream and Iterator feature.
 /// This is almost like `map()`.
