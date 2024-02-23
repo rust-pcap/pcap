@@ -88,9 +88,7 @@ pub type TstampType = TimestampType;
 mod raw;
 
 #[cfg(windows)]
-mod sendqueue;
-#[cfg(windows)]
-pub use sendqueue::{SendQueue, SendSync};
+pub mod sendqueue;
 
 #[cfg(feature = "capture-stream")]
 mod stream;
