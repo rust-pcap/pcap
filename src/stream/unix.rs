@@ -1,20 +1,20 @@
 //! Support for asynchronous packet iteration.
 //!
 //! See [`Capture::stream`](super::Capture::stream).
-use crate::raw;
-use crate::Activated;
-use crate::Capture;
-use crate::Error;
-use crate::PacketCodec;
-use crate::State;
-use futures::ready;
 use std::io;
 use std::marker::Unpin;
-use std::os::fd::AsRawFd;
-use std::os::fd::RawFd;
+use std::os::fd::{AsRawFd, RawFd};
 use std::pin::Pin;
 use std::task::{self, Poll};
+
+use futures::ready;
 use tokio::io::unix::AsyncFd;
+
+use crate::{
+    capture::{Activated, Capture, State},
+    codec::PacketCodec,
+    raw, Error,
+};
 
 /// Implement Stream for async use of pcap
 pub struct PacketStream<T: Activated + ?Sized, C> {
@@ -73,7 +73,7 @@ struct SelectableCapture<T: State + ?Sized> {
 
 impl<T: Activated + ?Sized> SelectableCapture<T> {
     fn new(capture: Capture<T>) -> Result<Self, Error> {
-        let fd = unsafe { raw::pcap_get_selectable_fd(capture.handle.as_ptr()) };
+        let fd = unsafe { raw::pcap_get_selectable_fd(capture.as_ptr()) };
         if fd == -1 {
             return Err(Error::InvalidRawFd);
         }

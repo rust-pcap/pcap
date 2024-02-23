@@ -9,9 +9,10 @@ use std::convert::TryInto;
 use std::io::IoSlice;
 use std::ptr::NonNull;
 
-use crate::raw;
-use crate::Error;
-use crate::{Active, Capture};
+use crate::{
+    capture::{Active, Capture},
+    raw, Error,
+};
 
 pub struct SendQueue(NonNull<raw::pcap_send_queue>);
 
@@ -166,12 +167,11 @@ impl SendQueue {
     /// will be used as a delay between sending each packet.  If `SendSync::Off` is used the packets
     /// will be transmitted with no delay between packets.
     pub fn transmit(&mut self, dev: &mut Capture<Active>, sync: SendSync) -> Result<(), Error> {
-        let res = unsafe {
-            raw::pcap_sendqueue_transmit(dev.handle.as_ptr(), self.0.as_ptr(), sync as i32)
-        };
+        let res =
+            unsafe { raw::pcap_sendqueue_transmit(dev.as_ptr(), self.0.as_ptr(), sync as i32) };
 
         if res < self.len() {
-            return unsafe { Err(Error::new(raw::pcap_geterr(dev.handle.as_ptr()))) };
+            return unsafe { Err(Error::new(raw::pcap_geterr(dev.as_ptr()))) };
         } else {
             self.reset();
         }

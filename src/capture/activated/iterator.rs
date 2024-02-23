@@ -1,7 +1,8 @@
-use crate::Activated;
-use crate::Capture;
-use crate::Error;
-use crate::PacketCodec;
+use crate::{
+    capture::{Activated, Capture},
+    codec::PacketCodec,
+    Error,
+};
 
 /// Implement an Iterator of Packet
 pub struct PacketIter<S: Activated + ?Sized, C> {
