@@ -1,7 +1,7 @@
 use std::borrow::Borrow;
 
 #[cfg(not(windows))]
-use std::os::fd::{AsRawFd, RawFd};
+use std::os::unix::io::{AsRawFd, RawFd};
 
 use crate::{
     core::capture::{Active, Capture},

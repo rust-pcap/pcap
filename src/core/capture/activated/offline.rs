@@ -1,7 +1,7 @@
 use std::path::Path;
 
 #[cfg(not(windows))]
-use std::os::fd::RawFd;
+use std::os::unix::io::RawFd;
 
 use crate::{
     core::capture::{Capture, Offline},

@@ -12,7 +12,7 @@ use std::{
 };
 
 #[cfg(not(windows))]
-use std::os::fd::RawFd;
+use std::os::unix::io::RawFd;
 
 use crate::{
     core::{

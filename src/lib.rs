@@ -66,8 +66,8 @@ use self::Error::*;
 mod core;
 
 #[cfg(not(windows))]
-pub use core::capture::activated::open_raw_fd;
-pub use core::capture::{
+pub use crate::core::capture::activated::open_raw_fd;
+pub use crate::core::capture::{
     activated::{
         dead::{BpfInstruction, BpfProgram},
         iterator::PacketIter,
@@ -76,10 +76,10 @@ pub use core::capture::{
     inactive::TimestampType,
     {Activated, Active, Capture, Dead, Inactive, Offline, Precision, State},
 };
-pub use core::codec::PacketCodec;
-pub use core::device::{Address, ConnectionStatus, Device, DeviceFlags, IfFlags};
-pub use core::linktype::Linktype;
-pub use core::packet::{Packet, PacketHeader};
+pub use crate::core::codec::PacketCodec;
+pub use crate::core::device::{Address, ConnectionStatus, Device, DeviceFlags, IfFlags};
+pub use crate::core::linktype::Linktype;
+pub use crate::core::packet::{Packet, PacketHeader};
 
 #[deprecated(note = "Renamed to TimestampType")]
 /// An old name for `TimestampType`, kept around for backward-compatibility.
