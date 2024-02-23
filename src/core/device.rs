@@ -3,7 +3,7 @@ use std::{convert::TryFrom, net::IpAddr, ptr};
 use bitflags::bitflags;
 
 #[cfg(target_os = "windows")]
-use windows_sys::Win32::Networking::WinSock::{SOCKADDR_IN, SOCKADDR_IN6};
+use windows_sys::Win32::Networking::WinSock::{AF_INET, AF_INET6, SOCKADDR_IN, SOCKADDR_IN6};
 
 use crate::{
     core::capture::{Active, Capture},
