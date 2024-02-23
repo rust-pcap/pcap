@@ -1,0 +1,182 @@
+pub mod activated;
+pub mod inactive;
+
+use std::{
+    ffi::CString,
+    marker::PhantomData,
+    ptr::{self, NonNull},
+};
+
+use crate::{raw, Error};
+
+/// Phantom type representing an inactive capture handle.
+pub enum Inactive {}
+
+/// Phantom type representing an active capture handle.
+pub enum Active {}
+
+/// Phantom type representing an offline capture handle, from a pcap dump file.
+/// Implements `Activated` because it behaves nearly the same as a live handle.
+pub enum Offline {}
+
+/// Phantom type representing a dead capture handle.  This can be use to create
+/// new save files that are not generated from an active capture.
+/// Implements `Activated` because it behaves nearly the same as a live handle.
+pub enum Dead {}
+
+/// `Capture`s can be in different states at different times, and in these states they
+/// may or may not have particular capabilities. This trait is implemented by phantom
+/// types which allows us to punt these invariants to the type system to avoid runtime
+/// errors.
+pub trait Activated: State {}
+
+impl Activated for Active {}
+
+impl Activated for Offline {}
+
+impl Activated for Dead {}
+
+/// `Capture`s can be in different states at different times, and in these states they
+/// may or may not have particular capabilities. This trait is implemented by phantom
+/// types which allows us to punt these invariants to the type system to avoid runtime
+/// errors.
+pub trait State {}
+
+impl State for Inactive {}
+
+impl State for Active {}
+
+impl State for Offline {}
+
+impl State for Dead {}
+
+/// This is a pcap capture handle which is an abstraction over the `pcap_t` provided by pcap.
+/// There are many ways to instantiate and interact with a pcap handle, so phantom types are
+/// used to express these behaviors.
+///
+/// **`Capture<Inactive>`** is created via `Capture::from_device()`. This handle is inactive,
+/// so you cannot (yet) obtain packets from it. However, you can configure things like the
+/// buffer size, snaplen, timeout, and promiscuity before you activate it.
+///
+/// **`Capture<Active>`** is created by calling `.open()` on a `Capture<Inactive>`. This
+/// activates the capture handle, allowing you to get packets with `.next_packet()` or apply filters
+/// with `.filter()`.
+///
+/// **`Capture<Offline>`** is created via `Capture::from_file()`. This allows you to read a
+/// pcap format dump file as if you were opening an interface -- very useful for testing or
+/// analysis.
+///
+/// **`Capture<Dead>`** is created via `Capture::dead()`. This allows you to create a pcap
+/// format dump file without needing an active capture.
+///
+/// # Example:
+///
+/// ```no_run
+/// # use pcap::{Capture, Device};
+/// let mut cap = Capture::from_device(Device::lookup().unwrap().unwrap()) // open the "default" interface
+///               .unwrap() // assume the device exists and we are authorized to open it
+///               .open() // activate the handle
+///               .unwrap(); // assume activation worked
+///
+/// while let Ok(packet) = cap.next_packet() {
+///     println!("received packet! {:?}", packet);
+/// }
+/// ```
+pub struct Capture<T: State + ?Sized> {
+    nonblock: bool,
+    handle: NonNull<raw::pcap_t>,
+    _marker: PhantomData<T>,
+}
+
+// A Capture is safe to Send as it encapsulates the entire lifetime of `raw::pcap_t *`, but it is
+// not safe to Sync as libpcap does not promise thread-safe access to the same `raw::pcap_t *` from
+// multiple threads.
+unsafe impl<T: State + ?Sized> Send for Capture<T> {}
+
+impl<T: State + ?Sized> From<NonNull<raw::pcap_t>> for Capture<T> {
+    fn from(handle: NonNull<raw::pcap_t>) -> Self {
+        Capture {
+            nonblock: false,
+            handle,
+            _marker: PhantomData,
+        }
+    }
+}
+
+impl<T: State + ?Sized> Capture<T> {
+    fn new_raw<F>(path: Option<&str>, func: F) -> Result<Capture<T>, Error>
+    where
+        F: FnOnce(*const libc::c_char, *mut libc::c_char) -> *mut raw::pcap_t,
+    {
+        Error::with_errbuf(|err| {
+            let handle = match path {
+                None => func(ptr::null(), err),
+                Some(path) => {
+                    let path = CString::new(path)?;
+                    func(path.as_ptr(), err)
+                }
+            };
+            Ok(Capture::from(
+                NonNull::<raw::pcap_t>::new(handle).ok_or_else(|| unsafe { Error::new(err) })?,
+            ))
+        })
+    }
+
+    pub fn is_nonblock(&self) -> bool {
+        self.nonblock
+    }
+
+    pub fn as_ptr(&self) -> *mut raw::pcap_t {
+        self.handle.as_ptr()
+    }
+
+    /// Set the minumum amount of data received by the kernel in a single call.
+    ///
+    /// Note that this value is set to 0 when the capture is set to immediate mode. You should not
+    /// call `min_to_copy` on captures in immediate mode if you want them to stay in immediate mode.
+    #[cfg(windows)]
+    pub fn min_to_copy(self, to: i32) -> Capture<T> {
+        unsafe {
+            raw::pcap_setmintocopy(self.handle.as_ptr(), to as _);
+        }
+        self
+    }
+
+    /// Get handle to the Capture context's internal Win32 event semaphore.
+    ///
+    /// # Safety
+    ///
+    /// The caller must ensure that the `Capture` context outlives the returned `HANDLE` since it is
+    /// a kernel object owned by the `Capture`'s pcap context.
+    #[cfg(windows)]
+    pub unsafe fn get_event(&self) -> HANDLE {
+        raw::pcap_getevent(self.handle.as_ptr())
+    }
+
+    fn check_err(&self, success: bool) -> Result<(), Error> {
+        if success {
+            Ok(())
+        } else {
+            Err(unsafe { Error::new(raw::pcap_geterr(self.handle.as_ptr())) })
+        }
+    }
+}
+
+impl<T: State + ?Sized> Drop for Capture<T> {
+    fn drop(&mut self) {
+        unsafe { raw::pcap_close(self.handle.as_ptr()) }
+    }
+}
+
+#[repr(u32)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+/// Timestamp resolution types
+///
+/// Not all systems and interfaces will necessarily support all of these resolutions when doing
+/// live captures; all of them can be requested when reading a safefile.
+pub enum Precision {
+    /// Use timestamps with microsecond precision. This is the default.
+    Micro = 0,
+    /// Use timestamps with nanosecond precision.
+    Nano = 1,
+}

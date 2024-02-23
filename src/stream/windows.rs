@@ -1,18 +1,21 @@
 //! Support for asynchronous packet iteration.
 //!
 //! See [`Capture::stream`](super::Capture::stream).
-use crate::Activated;
-use crate::Capture;
-use crate::Error;
-use crate::PacketCodec;
-use futures::ready;
-use futures::FutureExt;
 use std::marker::Unpin;
 use std::pin::Pin;
 use std::task::{self, Poll};
+
+use futures::{ready, FutureExt};
 use tokio::task::JoinHandle;
-use windows_sys::Win32::Foundation::HANDLE;
-use windows_sys::Win32::System::Threading::WaitForSingleObject;
+use windows_sys::Win32::{Foundation::HANDLE, System::Threading::WaitForSingleObject};
+
+use crate::{
+    core::{
+        capture::{Activated, Capture},
+        codec::PacketCodec,
+    },
+    Error,
+};
 
 /// Implement Stream for async use of pcap
 pub struct PacketStream<T: Activated + ?Sized, C> {

@@ -9,9 +9,10 @@ use std::convert::TryInto;
 use std::io::IoSlice;
 use std::ptr::NonNull;
 
-use crate::raw;
-use crate::Error;
-use crate::{Active, Capture};
+use crate::{
+    core::capture::{Active, Capture},
+    raw, Error,
+};
 
 pub struct SendQueue(NonNull<raw::pcap_send_queue>);
 
