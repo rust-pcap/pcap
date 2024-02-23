@@ -4,9 +4,12 @@ use std::path::Path;
 use std::os::fd::RawFd;
 
 use crate::{
-    core::capture::{Capture, Offline, Precision},
+    core::capture::{Capture, Offline},
     raw, Error,
 };
+
+#[cfg(libpcap_1_5_0)]
+use crate::core::capture::Precision;
 
 #[cfg(not(windows))]
 use crate::core::capture::activated::open_raw_fd;

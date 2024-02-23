@@ -90,7 +90,7 @@ mod raw;
 #[cfg(windows)]
 mod sendqueue;
 #[cfg(windows)]
-pub use sendqueue::sendqueue;
+pub use sendqueue::{SendQueue, SendSync};
 
 #[cfg(feature = "capture-stream")]
 mod stream;
