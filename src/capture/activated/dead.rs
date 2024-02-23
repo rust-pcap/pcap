@@ -1,7 +1,8 @@
 use std::{ffi::CString, fmt, mem, ptr::NonNull, slice};
 
 use crate::{
-    capture::{activated::linktype::Linktype, Capture, Dead},
+    capture::{Capture, Dead},
+    linktype::Linktype,
     raw, Error,
 };
 

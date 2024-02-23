@@ -1,7 +1,8 @@
 use std::mem;
 
 use crate::{
-    capture::{device::Device, Active, Capture, Inactive},
+    capture::{Active, Capture, Inactive},
+    device::Device,
     raw, Error,
 };
 
