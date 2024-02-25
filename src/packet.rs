@@ -66,9 +66,31 @@ mod tests {
 
     use super::*;
 
+    static HEADER: PacketHeader = PacketHeader {
+        ts: libc::timeval {
+            tv_sec: 5,
+            tv_usec: 50,
+        },
+        caplen: 5,
+        len: 9,
+    };
+
     #[test]
-    fn test_struct_size() {
+    fn test_packet_header_size() {
         use std::mem::size_of;
         assert_eq!(size_of::<PacketHeader>(), size_of::<raw::pcap_pkthdr>());
+    }
+
+    #[test]
+    fn test_packet_header_clone() {
+        // For code coverag purposes.
+        #[allow(clippy::clone_on_copy)]
+        let header_clone = HEADER.clone();
+        assert_eq!(header_clone, HEADER);
+    }
+
+    #[test]
+    fn test_packet_header_display() {
+        assert!(!format!("{:?}", HEADER).is_empty());
     }
 }

@@ -33,8 +33,7 @@ impl<T: Activated + ?Sized, C> PacketStream<T, C> {
 
     /// Returns a mutable reference to the inner [`Capture`].
     ///
-    /// The caller must ensure the capture will not be set to be
-    /// blocking.
+    /// The caller must ensure the capture will not be set to be blocking.
     pub fn capture_mut(&mut self) -> &mut Capture<T> {
         &mut self.capture
     }

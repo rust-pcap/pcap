@@ -1,6 +1,6 @@
 use std::ffi::CString;
 
-use crate::{raw, Error};
+use crate::{cstr_to_string, raw, Error};
 
 /// This is a datalink link type.
 ///
@@ -18,13 +18,13 @@ pub struct Linktype(pub i32);
 impl Linktype {
     /// Gets the name of the link type, such as EN10MB
     pub fn get_name(&self) -> Result<String, Error> {
-        unsafe { Error::cstr_to_string(raw::pcap_datalink_val_to_name(self.0)) }?
+        unsafe { cstr_to_string(raw::pcap_datalink_val_to_name(self.0)) }?
             .ok_or(Error::InvalidLinktype)
     }
 
     /// Gets the description of a link type.
     pub fn get_description(&self) -> Result<String, Error> {
-        unsafe { Error::cstr_to_string(raw::pcap_datalink_val_to_description(self.0)) }?
+        unsafe { cstr_to_string(raw::pcap_datalink_val_to_description(self.0)) }?
             .ok_or(Error::InvalidLinktype)
     }
 
@@ -167,4 +167,55 @@ impl Linktype {
     pub const Z_WAVE_SERIAL: Self = Self(287);
     pub const USB_2_0: Self = Self(288);
     pub const ATSC_ALP: Self = Self(289);
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::raw::testmod::RAWMTX;
+
+    use super::*;
+
+    #[test]
+    fn test_get_name() {
+        let _m = RAWMTX.lock();
+        let name = "datalink name";
+
+        let cstr = CString::new(name).unwrap();
+        let ctx = raw::pcap_datalink_val_to_name_context();
+        ctx.expect().return_once(|_| cstr.into_raw());
+
+        let linktype_name = Linktype::ARCNET_LINUX.get_name().unwrap();
+        assert_eq!(&linktype_name, name);
+    }
+
+    #[test]
+    fn test_get_description() {
+        let _m = RAWMTX.lock();
+        let desc = "datalink description";
+
+        let cstr = CString::new(desc).unwrap();
+        let ctx = raw::pcap_datalink_val_to_description_context();
+        ctx.expect().return_once(|_| cstr.into_raw());
+
+        let linktype_name = Linktype::ARCNET_LINUX.get_description().unwrap();
+        assert_eq!(&linktype_name, desc);
+    }
+
+    #[test]
+    fn test_from_name() {
+        let _m = RAWMTX.lock();
+
+        let ctx = raw::pcap_datalink_name_to_val_context();
+        ctx.expect().return_once(|_| 7);
+
+        let linktype = Linktype::from_name("git rekt scrub").unwrap();
+        assert_eq!(linktype, Linktype::ARCNET_BSD);
+
+        let ctx = raw::pcap_datalink_name_to_val_context();
+        ctx.checkpoint();
+        ctx.expect().return_once(|_| -1);
+
+        let err = Linktype::from_name("git rekt scrub").unwrap_err();
+        assert_eq!(err, Error::InvalidLinktype);
+    }
 }

@@ -61,10 +61,13 @@ jobs:
         run: cp msrv.lock Cargo.lock
       - name: cargo build
         run: cargo build --all-targets ${{ inputs.profile }} ${{ inputs.features }}
+      # Since secrets are not passed to workflows that are triggered by a pull request from a fork
+      # the npcap dll won't be installed so we skip this step on pull requests. It will
+      # nevertheless be run once merged and the pull request will still verify the build steps.
+      - name: cargo test (windows pull-request special)
+        if: (inputs.os == 'windows-latest') && (github.event_name == 'pull_request')
+        run: cargo test --lib ${{ inputs.profile }} ${{ inputs.features }}
       - name: cargo test
-        # Since secrets are not passed to workflows that are triggered by a pull request from a fork
-        # the npcap dll won't be installed so we skip this step on pull requests. It will
-        # nevertheless be run once merged and the pull request will still verify the build steps.
         if: (inputs.os != 'windows-latest') || (github.event_name != 'pull_request')
         run: cargo test --all-targets ${{ inputs.profile }} ${{ inputs.features }}
       - name: cargo clippy

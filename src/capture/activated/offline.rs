@@ -78,3 +78,80 @@ impl Capture<Offline> {
         (self.major_version(), self.minor_version())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    #[cfg(libpcap_1_5_0)]
+    use mockall::predicate;
+
+    use crate::{
+        capture::testmod::test_capture,
+        raw::testmod::{as_pcap_t, RAWMTX},
+    };
+
+    use super::*;
+
+    #[test]
+    fn test_from_file() {
+        let _m = RAWMTX.lock();
+
+        let mut dummy: isize = 777;
+        let pcap = as_pcap_t(&mut dummy);
+
+        let ctx = raw::pcap_open_offline_context();
+        ctx.expect().return_once_st(move |_, _| pcap);
+
+        let ctx = raw::pcap_close_context();
+        ctx.expect()
+            .withf_st(move |ptr| *ptr == pcap)
+            .return_once(|_| {});
+
+        let result = Capture::from_file("path/to/nowhere");
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    #[cfg(libpcap_1_5_0)]
+    fn test_from_file_with_precision() {
+        let _m = RAWMTX.lock();
+
+        let mut dummy: isize = 777;
+        let pcap = as_pcap_t(&mut dummy);
+
+        let ctx = raw::pcap_open_offline_with_tstamp_precision_context();
+        ctx.expect()
+            .with(predicate::always(), predicate::eq(1), predicate::always())
+            .return_once_st(move |_, _, _| pcap);
+
+        let ctx = raw::pcap_close_context();
+        ctx.expect()
+            .withf_st(move |ptr| *ptr == pcap)
+            .return_once(|_| {});
+
+        let result = Capture::from_file_with_precision("path/to/nowhere", Precision::Nano);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_version() {
+        let _m = RAWMTX.lock();
+
+        let mut dummy: isize = 777;
+        let pcap = as_pcap_t(&mut dummy);
+
+        let ctx = raw::pcap_major_version_context();
+        ctx.expect()
+            .withf_st(move |arg| *arg == pcap)
+            .return_once(|_| 5);
+
+        let ctx = raw::pcap_minor_version_context();
+        ctx.expect()
+            .withf_st(move |arg| *arg == pcap)
+            .return_once(|_| 7);
+
+        let test_capture = test_capture::<Offline>(pcap);
+        let capture = test_capture.capture;
+
+        assert_eq!(capture.version(), (5, 7));
+    }
+}

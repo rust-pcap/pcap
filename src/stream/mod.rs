@@ -28,3 +28,27 @@ impl<T: Activated + ?Sized> Capture<T> {
         PacketStream::new(self, codec)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::{
+        capture::{testmod::test_capture, Active},
+        codec::testmod::Codec,
+        raw::testmod::{as_pcap_t, RAWMTX},
+    };
+
+    #[test]
+    fn test_stream_error() {
+        let _m = RAWMTX.lock();
+
+        let mut dummy: isize = 777;
+        let pcap = as_pcap_t(&mut dummy);
+
+        let test_capture = test_capture::<Active>(pcap);
+        let capture = test_capture.capture;
+        assert!(!capture.is_nonblock());
+
+        let result = capture.stream(Codec);
+        assert!(result.is_err());
+    }
+}

@@ -72,11 +72,7 @@ mod packet;
 #[cfg(not(windows))]
 pub use capture::activated::open_raw_fd;
 pub use capture::{
-    activated::{
-        dead::{BpfInstruction, BpfProgram},
-        iterator::PacketIter,
-        Direction, Savefile, Stat,
-    },
+    activated::{iterator::PacketIter, BpfInstruction, BpfProgram, Direction, Savefile, Stat},
     inactive::TimestampType,
     {Activated, Active, Capture, Dead, Inactive, Offline, Precision, State},
 };
@@ -133,19 +129,10 @@ pub enum Error {
 
 impl Error {
     unsafe fn new(ptr: *const libc::c_char) -> Error {
-        match Self::cstr_to_string(ptr) {
+        match cstr_to_string(ptr) {
             Err(e) => e as Error,
             Ok(string) => PcapError(string.unwrap_or_default()),
         }
-    }
-
-    unsafe fn cstr_to_string(ptr: *const libc::c_char) -> Result<Option<String>, Error> {
-        let string = if ptr.is_null() {
-            None
-        } else {
-            Some(CStr::from_ptr(ptr as _).to_str()?.to_owned())
-        };
-        Ok(string)
     }
 
     fn with_errbuf<T, F>(func: F) -> Result<T, Error>
@@ -155,6 +142,15 @@ impl Error {
         let mut errbuf = [0i8; 256];
         func(errbuf.as_mut_ptr() as _)
     }
+}
+
+unsafe fn cstr_to_string(ptr: *const libc::c_char) -> Result<Option<String>, Error> {
+    let string = if ptr.is_null() {
+        None
+    } else {
+        Some(CStr::from_ptr(ptr as _).to_str()?.to_owned())
+    };
+    Ok(string)
 }
 
 impl fmt::Display for Error {
@@ -178,6 +174,7 @@ impl fmt::Display for Error {
     }
 }
 
+// Using description is deprecated. Remove in next version.
 impl std::error::Error for Error {
     fn description(&self) -> &str {
         match *self {
@@ -220,12 +217,66 @@ impl From<std::str::Utf8Error> for Error {
 
 impl From<std::io::Error> for Error {
     fn from(obj: std::io::Error) -> Error {
-        IoError(obj.kind())
+        obj.kind().into()
     }
 }
 
 impl From<std::io::ErrorKind> for Error {
     fn from(obj: std::io::ErrorKind) -> Error {
         IoError(obj)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::error::Error as StdError;
+    use std::{ffi::CString, io};
+
+    use super::*;
+
+    #[test]
+    fn test_error_invalid_utf8() {
+        let bytes: [u8; 8] = [0x78, 0xfe, 0xe9, 0x89, 0x00, 0x00, 0xed, 0x4f];
+        let error = unsafe { Error::new(&bytes as *const _ as _) };
+        assert!(matches!(error, Error::MalformedError(_)));
+    }
+
+    #[test]
+    fn test_error_null() {
+        let error = unsafe { Error::new(std::ptr::null()) };
+        assert_eq!(error, Error::PcapError("".to_string()));
+    }
+
+    #[test]
+    #[allow(deprecated)]
+    fn test_errors() {
+        let mut errors: Vec<Error> = vec![];
+
+        let bytes: [u8; 8] = [0x78, 0xfe, 0xe9, 0x89, 0x00, 0x00, 0xed, 0x4f];
+        let cstr = unsafe { CStr::from_ptr(&bytes as *const _ as _) };
+
+        errors.push(cstr.to_str().unwrap_err().into());
+        errors.push(Error::InvalidString);
+        errors.push(Error::PcapError("git rekt".to_string()));
+        errors.push(Error::InvalidLinktype);
+        errors.push(Error::TimeoutExpired);
+        errors.push(Error::NoMorePackets);
+        errors.push(Error::NonNonBlock);
+        errors.push(Error::InsufficientMemory);
+        errors.push(CString::new(b"f\0oo".to_vec()).unwrap_err().into());
+        errors.push(io::Error::new(io::ErrorKind::Interrupted, "error").into());
+        #[cfg(not(windows))]
+        errors.push(Error::InvalidRawFd);
+        errors.push(Error::ErrnoError(errno::Errno(125)));
+        errors.push(Error::BufferOverflow);
+
+        for error in errors.iter() {
+            assert!(!error.to_string().is_empty());
+            assert!(!error.description().is_empty());
+            match error {
+                Error::MalformedError(_) => assert!(error.cause().is_some()),
+                _ => assert!(error.cause().is_none()),
+            }
+        }
     }
 }

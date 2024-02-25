@@ -1,5 +1,7 @@
 pub mod activated;
 pub mod inactive;
+#[cfg(all(not(windows), feature = "capture-stream"))]
+pub mod selectable;
 
 use std::{
     ffi::CString,
@@ -160,8 +162,12 @@ impl<T: State + ?Sized> Capture<T> {
         if success {
             Ok(())
         } else {
-            Err(unsafe { Error::new(raw::pcap_geterr(self.handle.as_ptr())) })
+            Err(self.get_err())
         }
+    }
+
+    fn get_err(&self) -> Error {
+        unsafe { Error::new(raw::pcap_geterr(self.handle.as_ptr())) }
     }
 }
 
@@ -182,4 +188,102 @@ pub enum Precision {
     Micro = 0,
     /// Use timestamps with nanosecond precision.
     Nano = 1,
+}
+
+// GRCOV_EXCL_START
+#[cfg(test)]
+pub mod testmod {
+    use raw::testmod::RAWMTX;
+
+    use super::*;
+
+    pub struct TestCapture<T: State + ?Sized> {
+        pub capture: Capture<T>,
+        _close_ctx: raw::__pcap_close::Context,
+    }
+
+    pub fn test_capture<T: State + ?Sized>(pcap: *mut raw::pcap_t) -> TestCapture<T> {
+        // Lock must be acquired by caller.
+        assert!(RAWMTX.try_lock().is_err());
+
+        let ctx = raw::pcap_close_context();
+        ctx.checkpoint();
+        ctx.expect()
+            .withf_st(move |ptr| *ptr == pcap)
+            .return_once(|_| {});
+
+        TestCapture {
+            capture: Capture::<T>::from(NonNull::new(pcap).unwrap()),
+            _close_ctx: ctx,
+        }
+    }
+}
+// GRCOV_EXCL_STOP
+
+#[cfg(test)]
+mod tests {
+    use crate::{
+        capture::testmod::test_capture,
+        raw::testmod::{as_pcap_t, RAWMTX},
+    };
+
+    use super::*;
+
+    #[test]
+    fn test_capture_getters() {
+        let _m = RAWMTX.lock();
+
+        let mut dummy: isize = 777;
+        let pcap = as_pcap_t(&mut dummy);
+
+        let test_capture = test_capture::<Active>(pcap);
+        let capture = test_capture.capture;
+
+        assert!(!capture.is_nonblock());
+        assert_eq!(capture.as_ptr(), capture.handle.as_ptr());
+    }
+
+    #[test]
+    #[cfg(windows)]
+    fn test_min_to_copy() {
+        let _m = RAWMTX.lock();
+
+        let mut dummy: isize = 777;
+        let pcap = as_pcap_t(&mut dummy);
+
+        let test_capture = test_capture::<Active>(pcap);
+        let capture = test_capture.capture;
+
+        let ctx = raw::pcap_setmintocopy_context();
+        ctx.expect()
+            .withf_st(move |arg1, _| *arg1 == pcap)
+            .return_once(|_, _| 0);
+
+        let _capture = capture.min_to_copy(5);
+    }
+
+    #[test]
+    #[cfg(windows)]
+    fn test_get_event() {
+        let _m = RAWMTX.lock();
+
+        let mut dummy: isize = 777;
+        let pcap = as_pcap_t(&mut dummy);
+
+        let test_capture = test_capture::<Active>(pcap);
+        let capture = test_capture.capture;
+
+        let ctx = raw::pcap_getevent_context();
+        ctx.expect()
+            .withf_st(move |arg1| *arg1 == pcap)
+            .return_once(|_| 5);
+
+        let handle = unsafe { capture.get_event() };
+        assert_eq!(handle, 5);
+    }
+
+    #[test]
+    fn test_precision() {
+        assert_ne!(Precision::Micro, Precision::Nano);
+    }
 }
