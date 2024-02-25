@@ -32,7 +32,7 @@ mod inner {
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     use inner::*;
     use pcap::Capture;
-    use std::{io, os::fd::AsRawFd};
+    use std::{io, os::unix::io::AsRawFd};
 
     let stdin = io::stdin();
 
