@@ -1,0 +1,102 @@
+on:
+  workflow_call:
+    inputs:
+      os:
+        required: true
+        type: string
+
+env:
+  RUST_BACKTRACE: 1
+  CARGO_TERM_VERBOSE: true
+  CARGO_TERM_COLOR: always
+  PCAP_CI_GRCOV_CMD: >-
+    ${{ contains(inputs.os, 'windows') && 'C:/grcov' || './grcov' }}
+    target/debug/profraw
+    --binary-path ./target/debug/
+    --output-types html
+    --source-dir .
+    --ignore-not-existing
+    --ignore "build.rs"
+    --ignore "tests/*"
+    --ignore "examples/*"
+    --excl-start "GRCOV_EXCL_START|mod tests \{"
+    --excl-stop "GRCOV_EXCL_STOP"
+    --output-path ./target/debug/coverage/
+  PCAP_CI_COV_CMD: >-
+    python3 .github/scripts/coverage.py
+    --coverage-file ./target/debug/coverage/coverage.json
+  PCAP_CI_COV_FAIL_UNDER_NO_FEATURES: ${{ contains(inputs.os, 'windows') && '79.00' || '100.00' }}
+  PCAP_CI_COV_FAIL_UNDER_ALL_FEATURES: ${{ contains(inputs.os, 'windows') && '73.00' || '95.00' }}
+
+jobs:
+  coverage:
+    runs-on: ${{ inputs.os }}
+    env:
+      LLVM_PROFILE_FILE: 'target/debug/profraw/pcap-%p-%m.profraw'
+      RUSTFLAGS: '-C instrument-coverage'
+    steps:
+      - uses: actions/checkout@v4
+      - if: ${{ contains(inputs.os, 'ubuntu') }}
+        run: sudo apt-get install libpcap-dev
+      - if: ${{ contains(inputs.os, 'macos') }}
+        run: brew install libpcap
+      - if: ${{ contains(inputs.os, 'windows') }}
+        run: |
+          Invoke-WebRequest -Uri "https://npcap.com/dist/npcap-sdk-1.13.zip" -OutFile "C:/npcap-sdk.zip"
+          Expand-Archive -LiteralPath C:/npcap-sdk.zip -DestinationPath C:/npcap-sdk
+          echo "LIB=C:/npcap-sdk/Lib/x64" >> $env:GITHUB_ENV
+      # No installation of actuall library since we cannot install OEM pcap on pull request branches
+      # anyway. We'll just be running unit tests on Windows. No integration tests.
+      - run: |
+          rustup update stable
+          rustup default stable
+          rustup component add llvm-tools-preview
+      - if: ${{ contains(inputs.os, 'ubuntu') }}
+        run: >-
+          wget https://github.com/mozilla/grcov/releases/latest/download/grcov-x86_64-unknown-linux-gnu.tar.bz2 -qO- |
+          tar -xj -C ./
+      - if: ${{ contains(inputs.os, 'macos') }}
+        run: >-
+          wget https://github.com/mozilla/grcov/releases/latest/download/grcov-x86_64-apple-darwin.tar.bz2 -qO- |
+          tar -xj -C ./
+      - if: ${{ contains(inputs.os, 'windows') }}
+        run: |
+          Invoke-WebRequest -Uri "https://github.com/mozilla/grcov/releases/latest/download/grcov-x86_64-pc-windows-msvc.zip" -OutFile C:/grcov.zip
+          Expand-Archive -LiteralPath C:/grcov.zip -DestinationPath C:/
+      # Coverage without features.
+      - if: ${{ contains(inputs.os, 'windows') }}
+        run: cargo test  --lib                        --no-fail-fast
+      - if: ${{ ! contains(inputs.os, 'windows') }}
+        run: cargo test  --all-targets                --no-fail-fast
+      - run: ${{ env.PCAP_CI_GRCOV_CMD }}
+      - run: ${{ env.PCAP_CI_COV_CMD }} --fail-under ${{ env.PCAP_CI_COV_FAIL_UNDER_NO_FEATURES }}
+      # Clean up coverage artifacts.
+      - if: ${{ contains(inputs.os, 'windows') }}
+        run: |
+          Remove-Item -Recurse -Force ./target/debug/coverage
+          Remove-Item -Recurse -Force ./target/debug/profraw
+      - if: ${{ ! contains(inputs.os, 'windows') }}
+        run: rm -rf ./target/debug/{coverage,profraw}
+      - run: cargo clean -p pcap
+      # Coverage with features.
+      - if: ${{ contains(inputs.os, 'windows') }}
+        run: cargo test  --lib         --all-features --no-fail-fast
+      - if: ${{ ! contains(inputs.os, 'windows') }}
+        run: cargo test  --all-targets --all-features --no-fail-fast
+      - run: ${{ env.PCAP_CI_GRCOV_CMD }}
+      - run: ${{ env.PCAP_CI_COV_CMD }} --fail-under ${{ env.PCAP_CI_COV_FAIL_UNDER_ALL_FEATURES }}
+      # On push to main push results to coverage branch.
+      - if: ${{ (github.event_name == 'push') && (github.ref == 'refs/heads/main') && contains(inputs.os, 'ubuntu') }}
+        uses: actions/checkout@v4
+        with:
+          clean: false
+          ref: coverage
+      - if: ${{ (github.event_name == 'push') && (github.ref == 'refs/heads/main') && contains(inputs.os, 'ubuntu') }}
+        run: |
+          rm -rf *.html badges src coverage.json
+          cp -r ./target/debug/coverage/* ./
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add -A
+          git commit -m "Code coverage for "$(git rev-parse --short origin/main)
+          git push

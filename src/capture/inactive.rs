@@ -317,6 +317,7 @@ mod tests {
     #[cfg(all(windows, not(libpcap_1_5_0)))]
     struct ImmediateModeExpect(raw::__pcap_setmintocopy::Context);
 
+    #[cfg(any(libpcap_1_5_0, windows))]
     fn immediate_mode_expect(pcap: *mut raw::pcap_t) -> ImmediateModeExpect {
         #[cfg(libpcap_1_5_0)]
         {
