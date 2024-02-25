@@ -94,6 +94,10 @@ name = "sendqueue"
 path = "examples/sendqueue.rs"
 
 [[example]]
+name = "stdin"
+path = "examples/stdin.rs"
+
+[[example]]
 name = "streamecho"
 path = "examples/streamecho.rs"
 required-features = ["capture-stream"]

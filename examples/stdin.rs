@@ -3,29 +3,37 @@
 //!
 //!    tcpdump -i en0 -U -w - | cargo run --example stdin
 //!
-use pcap::{Capture, Packet, PacketCodec, PacketHeader};
-use std::{error, io, os::fd::AsRawFd};
 
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct PacketOwned {
-    pub header: PacketHeader,
-    pub data: Box<[u8]>,
-}
+#[cfg(not(windows))]
+mod inner {
+    use pcap::{Packet, PacketCodec, PacketHeader};
 
-pub struct Codec;
+    #[derive(Debug, Clone, PartialEq, Eq)]
+    pub struct PacketOwned {
+        pub header: PacketHeader,
+        pub data: Box<[u8]>,
+    }
 
-impl PacketCodec for Codec {
-    type Item = PacketOwned;
+    pub struct Codec;
 
-    fn decode(&mut self, packet: Packet) -> Self::Item {
-        PacketOwned {
-            header: *packet.header,
-            data: packet.data.into(),
+    impl PacketCodec for Codec {
+        type Item = PacketOwned;
+
+        fn decode(&mut self, packet: Packet) -> Self::Item {
+            PacketOwned {
+                header: *packet.header,
+                data: packet.data.into(),
+            }
         }
     }
 }
 
-fn main() -> Result<(), Box<dyn error::Error>> {
+#[cfg(not(windows))]
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    use inner::*;
+    use pcap::Capture;
+    use std::{io, os::fd::AsRawFd};
+
     let stdin = io::stdin();
 
     let cap = unsafe { Capture::from_raw_fd(stdin.as_raw_fd())? };
@@ -36,5 +44,11 @@ fn main() -> Result<(), Box<dyn error::Error>> {
         println!("{:?}", packet);
     }
 
+    Ok(())
+}
+
+#[cfg(windows)]
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    eprintln!("Program not supported on Windows");
     Ok(())
 }
