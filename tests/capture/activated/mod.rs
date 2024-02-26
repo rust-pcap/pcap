@@ -146,3 +146,10 @@ fn read_packet_via_pcap_loop() {
     });
     assert_eq!(packets, 1);
 }
+
+#[test]
+#[should_panic]
+fn panic_in_pcap_loop() {
+    let mut capture = capture_from_test_file("packet_snaplen_65535.pcap");
+    capture.for_each(|_| panic!());
+}
