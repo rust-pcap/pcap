@@ -13,7 +13,7 @@ fn main() {
         .unwrap();
 
     let mut count = 0;
-    cap.for_each(|packet| {
+    cap.for_each(None, |packet| {
         println!("Got {:?}", packet.header);
         count += 1;
         if count > 100 {
