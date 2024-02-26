@@ -136,3 +136,13 @@ fn test_filter() {
     let result = capture.next_packet();
     assert!(result.is_ok());
 }
+
+#[test]
+fn read_packet_via_pcap_loop() {
+    let mut packets = 0;
+    let mut capture = capture_from_test_file("packet_snaplen_65535.pcap");
+    capture.for_each(|_| {
+        packets += 1;
+    });
+    assert_eq!(packets, 1);
+}

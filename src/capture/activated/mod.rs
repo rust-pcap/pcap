@@ -4,8 +4,10 @@ pub mod iterator;
 pub mod offline;
 
 use std::{
+    any::Any,
     ffi::CString,
     fmt, mem,
+    panic::{catch_unwind, resume_unwind, AssertUnwindSafe},
     path::Path,
     ptr::{self, NonNull},
     slice,
@@ -199,6 +201,28 @@ impl<T: Activated + ?Sized> Capture<T> {
         PacketIter::new(self, codec)
     }
 
+    pub fn for_each<F>(&mut self, handler: F)
+    where
+        F: FnMut(Packet),
+    {
+        let mut handler = Handler {
+            func: AssertUnwindSafe(handler),
+            panic_payload: None,
+            handle: self.handle,
+        };
+        unsafe {
+            raw::pcap_loop(
+                self.handle.as_ptr(),
+                -1,
+                Handler::<F>::callback,
+                &mut handler as *mut Handler<AssertUnwindSafe<F>> as *mut u8,
+            )
+        };
+        if let Some(e) = handler.panic_payload {
+            resume_unwind(e);
+        }
+    }
+
     /// Compiles the string into a filter program using `pcap_compile`.
     pub fn compile(&self, program: &str, optimize: bool) -> Result<BpfProgram, Error> {
         let program = CString::new(program)?;
@@ -237,6 +261,45 @@ impl<T: Activated + ?Sized> Capture<T> {
             let mut stats: raw::pcap_stat = mem::zeroed();
             self.check_err(raw::pcap_stats(self.handle.as_ptr(), &mut stats) != -1)
                 .map(|_| Stat::new(stats.ps_recv, stats.ps_drop, stats.ps_ifdrop))
+        }
+    }
+}
+
+// Handler and its associated function let us create an extern "C" fn which dispatches to a normal
+// Rust FnMut, which may be a closure with a captured environment. The *only* purpose of this
+// generic parameter is to ensure that in Capture::pcap_loop that we pass the right function
+// pointer and the right data pointer to pcap_loop.
+struct Handler<F> {
+    func: F,
+    panic_payload: Option<Box<dyn Any + Send>>,
+    handle: NonNull<raw::pcap_t>,
+}
+
+impl<F> Handler<F>
+where
+    F: FnMut(Packet),
+{
+    extern "C" fn callback(
+        slf: *mut libc::c_uchar,
+        header: *const raw::pcap_pkthdr,
+        packet: *const libc::c_uchar,
+    ) {
+        unsafe {
+            let packet = Packet::new(
+                &*(header as *const PacketHeader),
+                slice::from_raw_parts(packet, (*header).caplen as _),
+            );
+
+            let slf = slf as *mut Self;
+            let func = &mut (*slf).func;
+            let mut func = AssertUnwindSafe(func);
+            // If our handler function panics, we need to prevent it from unwinding across the
+            // FFI boundary. If the handler panics we catch the unwind here, break out of
+            // pcap_loop, and resume the unwind outside.
+            if let Err(e) = catch_unwind(move || func(packet)) {
+                (*slf).panic_payload = Some(e);
+                raw::pcap_breakloop((*slf).handle.as_ptr());
+            }
         }
     }
 }
