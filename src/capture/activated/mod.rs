@@ -202,13 +202,14 @@ impl<T: Activated + ?Sized> Capture<T> {
         PacketIter::new(self, codec)
     }
 
-    pub fn for_each<F>(&mut self, count: Option<usize>, handler: F)
+    pub fn for_each<F>(&mut self, count: Option<usize>, handler: F) -> Result<(), Error>
     where
         F: FnMut(Packet),
     {
         let cnt = match count {
             // Actually passing 0 down to pcap_loop would mean read forever.
-            Some(0) => return,
+            // We interpret it as "read nothing", so we just succeed immediately.
+            Some(0) => return Ok(()),
             Some(cnt) => cnt
                 .try_into()
                 .expect("count of packets to read cannot exceed c_int::MAX"),
@@ -220,7 +221,7 @@ impl<T: Activated + ?Sized> Capture<T> {
             panic_payload: None,
             handle: self.handle,
         };
-        unsafe {
+        let return_code = unsafe {
             raw::pcap_loop(
                 self.handle.as_ptr(),
                 cnt,
@@ -231,6 +232,7 @@ impl<T: Activated + ?Sized> Capture<T> {
         if let Some(e) = handler.panic_payload {
             resume_unwind(e);
         }
+        self.check_err(return_code == 0)
     }
 
     /// Compiles the string into a filter program using `pcap_compile`.
@@ -1022,9 +1024,11 @@ mod tests {
             });
 
         let mut packets = 0;
-        capture.for_each(None, |_| {
-            packets += 1;
-        });
+        capture
+            .for_each(None, |_| {
+                packets += 1;
+            })
+            .unwrap();
         assert_eq!(packets, 1);
     }
 
@@ -1061,7 +1065,9 @@ mod tests {
             .withf_st(move |arg1| *arg1 == pcap)
             .return_once_st(move |_| {});
 
-        capture.for_each(None, |_| panic!("panic in callback"));
+        capture
+            .for_each(None, |_| panic!("panic in callback"))
+            .unwrap();
     }
 
     #[test]
@@ -1093,9 +1099,11 @@ mod tests {
             });
 
         let mut packets = 0;
-        capture.for_each(Some(2), |_| {
-            packets += 1;
-        });
+        capture
+            .for_each(Some(2), |_| {
+                packets += 1;
+            })
+            .unwrap();
         assert_eq!(packets, 2);
     }
 
@@ -1110,9 +1118,11 @@ mod tests {
         let mut capture: Capture<dyn Activated> = test_capture.capture.into();
 
         let mut packets = 0;
-        capture.for_each(Some(0), |_| {
-            packets += 1;
-        });
+        capture
+            .for_each(Some(0), |_| {
+                packets += 1;
+            })
+            .unwrap();
         assert_eq!(packets, 0);
     }
 }

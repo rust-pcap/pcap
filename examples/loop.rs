@@ -19,5 +19,6 @@ fn main() {
         if count > 100 {
             panic!("ow");
         }
-    });
+    })
+    .unwrap();
 }
