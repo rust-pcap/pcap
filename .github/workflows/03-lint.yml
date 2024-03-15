@@ -18,7 +18,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: |
-          rustup update stable
+          rustup update --no-self-update stable
           rustup override set stable
       - run: cargo clippy --all-targets                          -- ${{ env.PCAP_CI_CLIPPY_FLAGS }}
       - run: cargo clippy --all-targets --release                -- ${{ env.PCAP_CI_CLIPPY_FLAGS }}
