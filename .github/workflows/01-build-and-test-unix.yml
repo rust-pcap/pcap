@@ -27,7 +27,7 @@ jobs:
       - if: ${{ contains(inputs.os, 'macos') }}
         run: brew install libpcap
       - run: |
-          rustup update ${{ inputs.toolchain }}
+          rustup update --no-self-update ${{ inputs.toolchain }}
           rustup override set ${{ inputs.toolchain }}
       - if: inputs.msrv
         run: cp msrv.lock Cargo.lock

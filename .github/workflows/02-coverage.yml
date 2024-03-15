@@ -48,7 +48,7 @@ jobs:
       # No installation of actuall library since we cannot install OEM pcap on pull request branches
       # anyway. We'll just be running unit tests on Windows. No integration tests.
       - run: |
-          rustup update stable
+          rustup update --no-self-update stable
           rustup default stable
           rustup component add llvm-tools-preview
       - if: ${{ contains(inputs.os, 'ubuntu') }}
