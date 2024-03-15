@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## [1.3.0] - 2024-03-15
+
+### Added
+
+- Binding for `pcap_loop` added. It can be accessed via the `for_each` call on Activated captures.
+
 ## [1.2.0] - 2024-01-19
 
 ### Added
