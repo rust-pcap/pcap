@@ -25,8 +25,8 @@ env:
   PCAP_CI_COV_CMD: >-
     python3 .github/scripts/coverage.py
     --coverage-file ./target/debug/coverage/coverage.json
-  PCAP_CI_COV_FAIL_UNDER_NO_FEATURES: ${{ contains(inputs.os, 'windows') && '79.00' || '100.00' }}
-  PCAP_CI_COV_FAIL_UNDER_ALL_FEATURES: ${{ contains(inputs.os, 'windows') && '73.00' || '95.00' }}
+  PCAP_CI_COV_FAIL_UNDER_NO_FEATURES: ${{ contains(inputs.os, 'windows') && '80.00' || '100.00' }}
+  PCAP_CI_COV_FAIL_UNDER_ALL_FEATURES: ${{ contains(inputs.os, 'windows') && '75.00' || '96.00' }}
 
 jobs:
   coverage:
