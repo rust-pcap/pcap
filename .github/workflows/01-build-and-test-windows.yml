@@ -37,7 +37,7 @@ jobs:
         run: |
           $SecPassword = ConvertTo-SecureString "${{ secrets.NPCAP_OEM_PASSWORD }}" -AsPlainText -Force
           $CredObject = New-Object System.Management.Automation.PSCredential ("${{ secrets.NPCAP_OEM_USERNAME }}", $SecPassword)
-          Invoke-WebRequest -Uri "https://npcap.com/oem/dist/npcap-1.71-oem.exe" -OutFile C:/npcap-oem.exe -Credential $CredObject
+          Invoke-WebRequest -Uri "https://npcap.com/oem/dist/npcap-1.79-oem.exe" -OutFile C:/npcap-oem.exe -Credential $CredObject
           C:/npcap-oem.exe /S
       - run: |
           rustup update --no-self-update ${{ inputs.toolchain }}

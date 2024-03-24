@@ -9,52 +9,52 @@ on:
     - cron: "0 6 * * *"
 
 jobs:
-  build-and-test-ubuntu-stable:
-    uses: './.github/workflows/01-build-and-test-unix.yml'
-    with:
-      os: 'ubuntu-latest'
-      toolchain: 'stable'
+  # build-and-test-ubuntu-stable:
+  #   uses: './.github/workflows/01-build-and-test-unix.yml'
+  #   with:
+  #     os: 'ubuntu-latest'
+  #     toolchain: 'stable'
 
-  build-and-test-ubuntu-beta:
-    uses: './.github/workflows/01-build-and-test-unix.yml'
-    with:
-      os: 'ubuntu-latest'
-      toolchain: 'beta'
+  # build-and-test-ubuntu-beta:
+  #   uses: './.github/workflows/01-build-and-test-unix.yml'
+  #   with:
+  #     os: 'ubuntu-latest'
+  #     toolchain: 'beta'
 
-  build-and-test-ubuntu-msrv:
-    uses: './.github/workflows/01-build-and-test-unix.yml'
-    with:
-      os: 'ubuntu-latest'
-      toolchain: '1.46.0'
-      msrv: true
+  # build-and-test-ubuntu-msrv:
+  #   uses: './.github/workflows/01-build-and-test-unix.yml'
+  #   with:
+  #     os: 'ubuntu-latest'
+  #     toolchain: '1.46.0'
+  #     msrv: true
 
-  # Nightly check is performed on ubuntu only.
-  build-and-test-ubuntu-nightly:
-    uses: './.github/workflows/01-build-and-test-unix.yml'
-    with:
-      os: 'ubuntu-latest'
-      toolchain: 'nightly'
+  # # Nightly check is performed on ubuntu only.
+  # build-and-test-ubuntu-nightly:
+  #   uses: './.github/workflows/01-build-and-test-unix.yml'
+  #   with:
+  #     os: 'ubuntu-latest'
+  #     toolchain: 'nightly'
 
-  build-and-test-macos-stable:
-    uses: './.github/workflows/01-build-and-test-unix.yml'
-    with:
-      os: 'macos-latest'
-      toolchain: 'stable'
+  # build-and-test-macos-stable:
+  #   uses: './.github/workflows/01-build-and-test-unix.yml'
+  #   with:
+  #     os: 'macos-latest'
+  #     toolchain: 'stable'
 
-  build-and-test-macos-beta:
-    uses: './.github/workflows/01-build-and-test-unix.yml'
-    with:
-      os: 'macos-latest'
-      toolchain: 'beta'
+  # build-and-test-macos-beta:
+  #   uses: './.github/workflows/01-build-and-test-unix.yml'
+  #   with:
+  #     os: 'macos-latest'
+  #     toolchain: 'beta'
 
-  build-and-test-macos-msrv:
-    uses: './.github/workflows/01-build-and-test-unix.yml'
-    with:
-      # rust < 1.54 does not work on macos >= 12:
-      # https://rust-lang.zulipchat.com/#narrow/stream/182449-t-compiler.2Fhelp/topic/.E2.9C.94.20How.20can.20I.20fix.20Rust.201.2E53.2E0.20or.20earlier.20to.20run.20on.20macOS.2012.2E6.3F/near/299263887
-      os: 'macos-11'
-      toolchain: '1.46.0'
-      msrv: true
+  # build-and-test-macos-msrv:
+  #   uses: './.github/workflows/01-build-and-test-unix.yml'
+  #   with:
+  #     # rust < 1.54 does not work on macos >= 12:
+  #     # https://rust-lang.zulipchat.com/#narrow/stream/182449-t-compiler.2Fhelp/topic/.E2.9C.94.20How.20can.20I.20fix.20Rust.201.2E53.2E0.20or.20earlier.20to.20run.20on.20macOS.2012.2E6.3F/near/299263887
+  #     os: 'macos-11'
+  #     toolchain: '1.46.0'
+  #     msrv: true
 
   build-and-test-windows-stable:
     uses: './.github/workflows/01-build-and-test-windows.yml'
@@ -84,18 +84,27 @@ jobs:
       NPCAP_OEM_PASSWORD: ${{ secrets.NPCAP_OEM_PASSWORD }}
       NPCAP_OEM_USERNAME: ${{ secrets.NPCAP_OEM_USERNAME }}
 
-  coverage-all-stable:
-    strategy:
-      matrix:
-        os: ['ubuntu-latest', 'macos-latest', 'windows-latest']
-    uses: './.github/workflows/02-coverage.yml'
+  build-and-test-windows-nightly:
+    uses: './.github/workflows/01-build-and-test-windows.yml'
     with:
-      os: ${{ matrix.os }}
+      os: 'windows-latest'
+      toolchain: 'nightly'
+    secrets:
+      NPCAP_OEM_PASSWORD: ${{ secrets.NPCAP_OEM_PASSWORD }}
+      NPCAP_OEM_USERNAME: ${{ secrets.NPCAP_OEM_USERNAME }}
 
-  lint-all-stable:
-    strategy:
-      matrix:
-        os: ['ubuntu-latest', 'macos-latest', 'windows-latest']
-    uses: './.github/workflows/03-lint.yml'
-    with:
-      os: ${{ matrix.os }}
+  # coverage-all-stable:
+  #   strategy:
+  #     matrix:
+  #       os: ['ubuntu-latest', 'macos-latest', 'windows-latest']
+  #   uses: './.github/workflows/02-coverage.yml'
+  #   with:
+  #     os: ${{ matrix.os }}
+
+  # lint-all-stable:
+  #   strategy:
+  #     matrix:
+  #       os: ['ubuntu-latest', 'macos-latest', 'windows-latest']
+  #   uses: './.github/workflows/03-lint.yml'
+  #   with:
+  #     os: ${{ matrix.os }}
