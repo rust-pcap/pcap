@@ -94,7 +94,7 @@ Use the `lending-iter` feature to enable the lending packet iterator. See `lendi
 
 ## Minimum Supported Rust Version (MSRV)
 
-This crate uses Rust 2018 and requires a compiler version >= 1.46.
+This crate uses Rust 2018 and requires a compiler version >= 1.56.
 
 The feature `capture-stream` depends on `tokio = "1.0"`. Therefore, when `capture-stream` is enabled, this crate requires a compiler version new enough to compile the `tokio` crate.
 
