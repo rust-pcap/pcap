@@ -99,7 +99,14 @@ fn get_libpcap_version(libdirpath: Option<PathBuf>) -> Result<Version, Box<dyn s
         libfile = libdir.join(libfile);
     }
 
-    let lib = if let Ok(lib) = libloading::Library::new(libfile) {
+    let lib = if let Ok(lib) = unsafe {
+        // Loading a shared library is unsafe in the general case since initialization and
+        // termination routines could have arbitrary behavior. This is sound as long as the shared
+        // library is "well-behaved." See https://github.com/nagisa/rust_libloading/issues/86 and
+        // https://github.com/nagisa/rust_libloading/blob/0.8.3/src/changelog.rs#L96-L151 for
+        // details.
+        libloading::Library::new(libfile)
+    } {
         lib
     } else {
         return Ok(Version::max());
