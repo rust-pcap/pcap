@@ -388,7 +388,7 @@ mod tests {
         let mut addr: WinSock::SOCKADDR_IN = InetAddressV4::new();
 
         addr.sin_port = 1075;
-        addr.set_addr(0x4200000A);
+        addr.set_addr(0x0A000042_u32.to_be());
 
         Sockaddr::SockaddrIn(addr)
     }
