@@ -18,6 +18,7 @@ jobs:
     with:
       os: 'ubuntu-latest'
       toolchain: ${{ matrix.toolchain }}
+      msrv: ${{ matrix.toolchain == '1.63' }}
 
   linux-coverage-stable:
     uses: './.github/workflows/02-coverage.yml'

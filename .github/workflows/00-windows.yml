@@ -17,6 +17,7 @@ jobs:
     with:
       os: 'windows-latest'
       toolchain: ${{ matrix.toolchain }}
+      msrv: ${{ matrix.toolchain == '1.63' }}
     secrets:
       NPCAP_OEM_PASSWORD: ${{ secrets.NPCAP_OEM_PASSWORD }}
       NPCAP_OEM_USERNAME: ${{ secrets.NPCAP_OEM_USERNAME }}

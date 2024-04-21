@@ -17,6 +17,7 @@ jobs:
     with:
       os: 'macos-latest'
       toolchain: ${{ matrix.toolchain }}
+      msrv: ${{ matrix.toolchain == '1.63' }}
 
   macos-coverage-stable:
     uses: './.github/workflows/02-coverage.yml'
