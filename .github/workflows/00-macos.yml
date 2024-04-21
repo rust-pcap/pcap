@@ -1,0 +1,42 @@
+name: 'Mac OS'
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    - cron: "0 6 * * *"
+
+env:
+  PCAP_CI_OS: 'macos-latest'
+
+jobs:
+  build-and-test-stable:
+    uses: './.github/workflows/01-build-and-test-unix.yml'
+    with:
+      os: ${{ env.PCAP_CI_OS }}
+      toolchain: 'stable'
+
+  build-and-test-beta:
+    uses: './.github/workflows/01-build-and-test-unix.yml'
+    with:
+      os: ${{ env.PCAP_CI_OS }}
+      toolchain: 'beta'
+
+  build-and-test-msrv:
+    uses: './.github/workflows/01-build-and-test-unix.yml'
+    with:
+      os: ${{ env.PCAP_CI_OS }}
+      toolchain: '1.63.0'
+      msrv: true
+
+  coverage-stable:
+    uses: './.github/workflows/02-coverage.yml'
+    with:
+      os: ${{ env.PCAP_CI_OS }}
+
+  lint-stable:
+    uses: './.github/workflows/03-lint.yml'
+    with:
+      os: ${{ env.PCAP_CI_OS }}

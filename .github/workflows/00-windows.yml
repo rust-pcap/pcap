@@ -1,0 +1,51 @@
+name: 'Windows'
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    - cron: "0 6 * * *"
+
+env:
+  PCAP_CI_OS: 'windows-latest'
+
+jobs:
+  build-and-test-stable:
+    uses: './.github/workflows/01-build-and-test-windows.yml'
+    with:
+      os: ${{ env.PCAP_CI_OS }}
+      toolchain: 'stable'
+    secrets:
+      NPCAP_OEM_PASSWORD: ${{ secrets.NPCAP_OEM_PASSWORD }}
+      NPCAP_OEM_USERNAME: ${{ secrets.NPCAP_OEM_USERNAME }}
+
+  build-and-test-beta:
+    uses: './.github/workflows/01-build-and-test-windows.yml'
+    with:
+      os: ${{ env.PCAP_CI_OS }}
+      toolchain: 'beta'
+    secrets:
+      NPCAP_OEM_PASSWORD: ${{ secrets.NPCAP_OEM_PASSWORD }}
+      NPCAP_OEM_USERNAME: ${{ secrets.NPCAP_OEM_USERNAME }}
+
+  build-and-test-msrv:
+    uses: './.github/workflows/01-build-and-test-windows.yml'
+    with:
+      os: ${{ env.PCAP_CI_OS }}
+      toolchain: '1.63.0'
+      msrv: true
+    secrets:
+      NPCAP_OEM_PASSWORD: ${{ secrets.NPCAP_OEM_PASSWORD }}
+      NPCAP_OEM_USERNAME: ${{ secrets.NPCAP_OEM_USERNAME }}
+
+  coverage-stable:
+    uses: './.github/workflows/02-coverage.yml'
+    with:
+      os: ${{ env.PCAP_CI_OS }}
+
+  lint-all-stable:
+    uses: './.github/workflows/03-lint.yml'
+    with:
+      os: ${{ env.PCAP_CI_OS }}
