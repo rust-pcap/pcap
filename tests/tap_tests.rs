@@ -4,8 +4,9 @@
 * To build and run these tests, run:
 *
 
- cargo test -F tap-tests --no-run --test tap_tests |& \
-           sed -e 's/[()]//g' | awk '/Executable/ {print $3}' | xargs sudo
+ cargo test --no-run --test tap_tests |& \
+           sed -e 's/[()]//g' | awk '/Executable/ {print $3" --ignored"}' | \
+           xargs sudo
 
 * which does the build as a non-priv user, extracts the exec binary location of
 * the test from 'cargo test', and runs only that as root.
@@ -39,6 +40,7 @@ mod tests {
      * work as expected
      */
     #[test]
+    #[ignore]
     fn conntrack_tap_basic() {
         let (cap, iface) = capture_tap_interface();
 
