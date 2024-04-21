@@ -33,8 +33,7 @@ jobs:
           echo "LIB=C:/npcap-sdk/Lib/x64" >> $env:GITHUB_ENV
       # Secrets are not passed to workflows that are triggered by a pull request from a fork.
       # https://docs.github.com/actions/automating-your-workflow-with-github-actions/creating-and-using-encrypted-secrets
-      - if: github.event_name != 'pull_request'
-        run: |
+      - run: |
           $SecPassword = ConvertTo-SecureString "${{ secrets.NPCAP_OEM_PASSWORD }}" -AsPlainText -Force
           $CredObject = New-Object System.Management.Automation.PSCredential ("${{ secrets.NPCAP_OEM_USERNAME }}", $SecPassword)
           Invoke-WebRequest -Uri "https://npcap.com/oem/dist/npcap-1.71-oem.exe" -OutFile C:/npcap-oem.exe -Credential $CredObject
@@ -48,14 +47,14 @@ jobs:
       # secrets are not passed to workflows triggered by a pull request from a fork, it will still
       # not be possible to run integration tests on pull requests.
       - run: cargo build --all-targets
-      - run: cargo test  --lib
+      - run: cargo test  --all-targets
       - run: cargo build --all-targets --release
-      - run: cargo test  --lib         --release
+      - run: cargo test  --all-targets --release
       - if: ${{ ! inputs.msrv }}
         run: cargo build --all-targets           --all-features
       - if: ${{ ! inputs.msrv}}
-        run: cargo test  --lib                   --all-features
+        run: cargo test  --all-targets           --all-features
       - if: ${{ ! inputs.msrv }}
         run: cargo build --all-targets --release --all-features
       - if: ${{ ! inputs.msrv}}
-        run: cargo test  --lib         --release --all-features
+        run: cargo test  --all-targets --release --all-features
