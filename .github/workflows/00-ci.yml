@@ -50,9 +50,7 @@ jobs:
   build-and-test-macos-msrv:
     uses: './.github/workflows/01-build-and-test-unix.yml'
     with:
-      # rust < 1.54 does not work on macos >= 12:
-      # https://rust-lang.zulipchat.com/#narrow/stream/182449-t-compiler.2Fhelp/topic/.E2.9C.94.20How.20can.20I.20fix.20Rust.201.2E53.2E0.20or.20earlier.20to.20run.20on.20macOS.2012.2E6.3F/near/299263887
-      os: 'macos-11'
+      os: 'macos-latest'
       toolchain: '1.63.0'
       msrv: true
 
