@@ -5,7 +5,8 @@
 *
 
  cargo test --no-run --test tap_tests |& \
-           sed -e 's/[()]//g' | awk '/Executable/ {print $3" --ignored"}' | \
+           sed -e 's/[()]//g' | \
+           awk '/Executable/ {print $3" --include-ignored"}' | \
            xargs sudo
 
 * which does the build as a non-priv user, extracts the exec binary location of
