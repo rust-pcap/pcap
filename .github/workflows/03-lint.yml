@@ -14,7 +14,7 @@ jobs:
   lint:
     runs-on: ${{ inputs.os }}
     env:
-      PCAP_CI_CLIPPY_FLAGS: '-D warnings -A clippy::uninlined_format_args'
+      PCAP_CI_CLIPPY_FLAGS: '-D warnings'
     steps:
       - uses: actions/checkout@v4
       - run: |
