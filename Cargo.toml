@@ -11,6 +11,7 @@ repository = "https://github.com/rust-pcap/pcap"
 documentation = "https://docs.rs/pcap"
 license = "MIT OR Apache-2.0"
 build = "build.rs"
+rust-version = "1.63"
 
 [dependencies]
 bitflags = "1.3"
