@@ -2,9 +2,9 @@
 
 This is a **Rust language** crate for accessing the packet sniffing capabilities of libpcap (or Npcap on Windows). If you need anything, feel free to post an issue or submit a pull request!
 
-[![CI](https://github.com/rust-pcap/pcap/actions/workflows/00-linux.yml/badge.svg)](https://github.com/rust-pcap/pcap/actions/workflows/00-linux.yml)
-[![CI](https://github.com/rust-pcap/pcap/actions/workflows/00-macos.yml/badge.svg)](https://github.com/rust-pcap/pcap/actions/workflows/00-macos.yml)
-[![CI](https://github.com/rust-pcap/pcap/actions/workflows/00-windows.yml/badge.svg)](https://github.com/rust-pcap/pcap/actions/workflows/00-windows.yml)
+[![Linux](https://github.com/rust-pcap/pcap/actions/workflows/00-linux.yml/badge.svg)](https://github.com/rust-pcap/pcap/actions/workflows/00-linux.yml)
+[![Mac OS](https://github.com/rust-pcap/pcap/actions/workflows/00-macos.yml/badge.svg)](https://github.com/rust-pcap/pcap/actions/workflows/00-macos.yml)
+[![Windows](https://github.com/rust-pcap/pcap/actions/workflows/00-windows.yml/badge.svg)](https://github.com/rust-pcap/pcap/actions/workflows/00-windows.yml)
 [![Coverage](https://rust-pcap.github.io/pcap/badges/flat.svg)](https://rust-pcap.github.io/pcap/index.html)
 [![Crates.io](https://img.shields.io/crates/v/pcap.svg)](https://crates.io/crates/pcap)
 [![Docs.rs](https://docs.rs/pcap/badge.svg)](https://docs.rs/pcap)
@@ -83,7 +83,7 @@ Use the `capture-stream` feature to enable support for streamed packet captures.
 
 ```toml
 [dependencies]
-pcap = { version = "1", features = ["capture-stream"] }
+pcap = { version = "2", features = ["capture-stream"] }
 ```
 
 ## Unstable Features

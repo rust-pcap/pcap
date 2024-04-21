@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [2.0.0] - 2024-04-21
+
 ### Changed
 
 - Rust Edition is now `2021`.
