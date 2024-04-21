@@ -18,15 +18,6 @@ jobs:
       NPCAP_OEM_PASSWORD: ${{ secrets.NPCAP_OEM_PASSWORD }}
       NPCAP_OEM_USERNAME: ${{ secrets.NPCAP_OEM_USERNAME }}
 
-  windows-build-and-test-beta:
-    uses: './.github/workflows/01-build-and-test-windows.yml'
-    with:
-      os: 'windows-latest'
-      toolchain: 'beta'
-    secrets:
-      NPCAP_OEM_PASSWORD: ${{ secrets.NPCAP_OEM_PASSWORD }}
-      NPCAP_OEM_USERNAME: ${{ secrets.NPCAP_OEM_USERNAME }}
-
   windows-build-and-test-msrv:
     uses: './.github/workflows/01-build-and-test-windows.yml'
     with:
