@@ -9,7 +9,7 @@ on:
     - cron: "0 6 * * *"
 
 jobs:
-  windows-build-and-test-stable:
+  windows-build-and-test:
     strategy:
       matrix:
         toolchain: [ 'stable', 'beta', '1.63' ]

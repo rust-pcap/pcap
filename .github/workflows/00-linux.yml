@@ -9,7 +9,7 @@ on:
     - cron: "0 6 * * *"
 
 jobs:
-  linux-build-and-test-stable:
+  linux-build-and-test:
     strategy:
       matrix:
         # Nightly check is performed on ubuntu only.
