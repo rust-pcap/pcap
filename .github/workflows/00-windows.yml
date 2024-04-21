@@ -26,7 +26,7 @@ jobs:
     with:
       os: 'windows-latest'
 
-  windows-lint-all-stable:
+  windows-lint-stable:
     uses: './.github/workflows/03-lint.yml'
     with:
       os: 'windows-latest'
