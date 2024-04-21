@@ -29,6 +29,7 @@
 * NOTE: tests in rust capture stdio/stderr by default; add "-- --nocapture", e.g.,
 *  'cargo test -- --nocapture'
 */
+#[cfg(not(windows))]
 mod tests {
 
     use etherparse::{PacketBuilder, PacketHeaders};
