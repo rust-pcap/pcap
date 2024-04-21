@@ -40,7 +40,7 @@ tempdir = "0.3"
 eui48 = "1.1"
 
 [build-dependencies]
-libloading = "0.6"
+libloading = "0.8"
 regex = "1"
 pkg-config = "0.3"
 
