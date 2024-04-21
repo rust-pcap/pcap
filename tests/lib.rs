@@ -95,7 +95,7 @@ fn test_raw_fd_api() {
     use std::os::unix::io::{FromRawFd, RawFd};
     use std::thread;
 
-    use tempdir::TempDir;
+    use tempfile::TempDir;
 
     use pcap::Linktype;
     use pcap::{Error, Precision};
@@ -114,7 +114,7 @@ fn test_raw_fd_api() {
         );
     }
 
-    let dir = TempDir::new("pcap").unwrap();
+    let dir = TempDir::new().unwrap();
     let tmpfile = dir.path().join("test.pcap");
 
     // Write all packets to test.pcap savefile
