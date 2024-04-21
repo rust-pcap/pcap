@@ -37,6 +37,15 @@ jobs:
       NPCAP_OEM_PASSWORD: ${{ secrets.NPCAP_OEM_PASSWORD }}
       NPCAP_OEM_USERNAME: ${{ secrets.NPCAP_OEM_USERNAME }}
 
+  windows-build-and-test-nightly:
+    uses: './.github/workflows/01-build-and-test-windows.yml'
+    with:
+      os: 'windows-latest'
+      toolchain: 'nightly'
+    secrets:
+      NPCAP_OEM_PASSWORD: ${{ secrets.NPCAP_OEM_PASSWORD }}
+      NPCAP_OEM_USERNAME: ${{ secrets.NPCAP_OEM_USERNAME }}
+
   windows-coverage-stable:
     uses: './.github/workflows/02-coverage.yml'
     with:
