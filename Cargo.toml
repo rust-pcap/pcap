@@ -29,12 +29,10 @@ etherparse = "0.13.0"
 once_cell = "1.14.0"
 mockall = "0.11.4"
 tempdir = "0.3"
+tun-tap = "0.1.3"
 
 [target.'cfg(target_os = "windows")'.dev-dependencies]
 eui48 = "1.1"
-
-[target.'cfg(not(target_os = "windows"))'.dev-dependencies]
-tun-tap = "0.1.3"
 
 [build-dependencies]
 libloading = "0.8"
@@ -45,10 +43,7 @@ pkg-config = "0.3"
 # This feature enables access to the function Capture::stream.
 # This is disabled by default, because it depends on a tokio
 capture-stream = ["tokio", "futures", "windows-sys/Win32_System_Threading"]
-tap-tests = []
 lending-iter = ["gat-std"]
-# an empty feature to detect if '--all-features' was set
-all-features = []
 
 [lib]
 name = "pcap"

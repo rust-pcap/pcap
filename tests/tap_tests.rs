@@ -28,7 +28,6 @@
 * NOTE: tests in rust capture stdio/stderr by default; add "-- --nocapture", e.g.,
 *  'cargo test -- --nocapture'
 */
-#[cfg(all(feature = "tap-tests", not(feature = "all-features")))]
 mod tests {
 
     use etherparse::{PacketBuilder, PacketHeaders};
