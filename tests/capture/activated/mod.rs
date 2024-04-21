@@ -1,6 +1,6 @@
 mod offline;
 
-use tempdir::TempDir;
+use tempfile::TempDir;
 
 use pcap::{Capture, Linktype};
 
@@ -24,7 +24,7 @@ fn capture_dead_savefile() {
     packets.push(1460408319, 1234, 1, 1, &[1]);
     packets.push(1460408320, 4321, 1, 1, &[2]);
 
-    let dir = TempDir::new("pcap").unwrap();
+    let dir = TempDir::new().unwrap();
     let tmpfile = dir.path().join("test.pcap");
 
     let cap = Capture::dead(Linktype(1)).unwrap();
@@ -47,7 +47,7 @@ fn capture_dead_savefile_append() {
     packets2.push(1460408322, 5432, 1, 1, &[4]);
     let packets = &packets1 + &packets2;
 
-    let dir = TempDir::new("pcap").unwrap();
+    let dir = TempDir::new().unwrap();
     let tmpfile = dir.path().join("test.pcap");
 
     let cap = Capture::dead(Linktype(1)).unwrap();
