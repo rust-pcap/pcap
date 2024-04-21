@@ -3,6 +3,7 @@ name = "pcap"
 version = "1.3.0"
 authors = ["Sean Bowe <ewillbefull@gmail.com>", "Wojciech Kozlowski <wk@wojciechkozlowski.eu>", "Hideki Sekine"]
 edition = "2018"
+rust-version = "1.63"
 description = "A packet capture API around pcap/wpcap"
 keywords = ["pcap", "packet", "sniffing"]
 readme = "README.md"
@@ -11,7 +12,6 @@ repository = "https://github.com/rust-pcap/pcap"
 documentation = "https://docs.rs/pcap"
 license = "MIT OR Apache-2.0"
 build = "build.rs"
-rust-version = "1.63"
 
 [dependencies]
 bitflags = "1.3"
