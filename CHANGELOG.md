@@ -4,6 +4,7 @@
 
 ### Changed
 
+- Rust Edition is now `2021`.
 - MSRV is now `1.63.0`.
 
 ## [1.3.0] - 2024-03-15
