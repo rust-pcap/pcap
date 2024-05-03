@@ -4,11 +4,6 @@ on:
       os:
         required: true
         type: string
-    secrets:
-      NPCAP_OEM_PASSWORD:
-        required: ${{ contains(inputs.os, 'windows') }}
-      NPCAP_OEM_USERNAME:
-        required: ${{ contains(inputs.os, 'windows') }}
 
 env:
   RUST_BACKTRACE: 1
