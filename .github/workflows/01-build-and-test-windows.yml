@@ -33,8 +33,8 @@ jobs:
           echo "LIB=C:/npcap-sdk/Lib/x64" >> $env:GITHUB_ENV
       # Secrets are not passed to workflows that are triggered by a pull request from a fork.
       # https://docs.github.com/actions/automating-your-workflow-with-github-actions/creating-and-using-encrypted-secrets
-      - if: github.event_name != 'pull_request'
-        run: |
+      # - if: github.event_name != 'pull_request'
+      - run: |
           $SecPassword = ConvertTo-SecureString "${{ secrets.NPCAP_OEM_PASSWORD }}" -AsPlainText -Force
           $CredObject = New-Object System.Management.Automation.PSCredential ("${{ secrets.NPCAP_OEM_USERNAME }}", $SecPassword)
           Invoke-WebRequest -Uri "https://npcap.com/oem/dist/npcap-1.71-oem.exe" -OutFile C:/npcap-oem.exe -Credential $CredObject
