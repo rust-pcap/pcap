@@ -4,6 +4,11 @@ on:
       os:
         required: true
         type: string
+    secrets:
+      NPCAP_OEM_PASSWORD:
+        required: false
+      NPCAP_OEM_USERNAME:
+        required: false
 
 env:
   RUST_BACKTRACE: 1
@@ -45,7 +50,8 @@ jobs:
           Invoke-WebRequest -Uri "https://npcap.com/dist/npcap-sdk-1.13.zip" -OutFile "C:/npcap-sdk.zip"
           Expand-Archive -LiteralPath C:/npcap-sdk.zip -DestinationPath C:/npcap-sdk
           echo "LIB=C:/npcap-sdk/Lib/x64" >> $env:GITHUB_ENV
-      - run: |
+      - if: ${{ contains(inputs.os, 'windows') }}
+        run: |
           $SecPassword = ConvertTo-SecureString "${{ secrets.NPCAP_OEM_PASSWORD }}" -AsPlainText -Force
           $CredObject = New-Object System.Management.Automation.PSCredential ("${{ secrets.NPCAP_OEM_USERNAME }}", $SecPassword)
           Invoke-WebRequest -Uri "https://npcap.com/oem/dist/npcap-1.71-oem.exe" -OutFile C:/npcap-oem.exe -Credential $CredObject
