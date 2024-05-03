@@ -32,9 +32,6 @@ jobs:
     uses: './.github/workflows/02-coverage.yml'
     with:
       os: 'windows-latest'
-    secrets:
-      NPCAP_OEM_PASSWORD: ${{ secrets.NPCAP_OEM_PASSWORD }}
-      NPCAP_OEM_USERNAME: ${{ secrets.NPCAP_OEM_USERNAME }}
 
   windows-lint-stable:
     uses: './.github/workflows/03-lint.yml'
