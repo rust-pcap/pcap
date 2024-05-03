@@ -48,14 +48,14 @@ jobs:
       # secrets are not passed to workflows triggered by a pull request from a fork, it will still
       # not be possible to run integration tests on pull requests.
       - run: cargo build --all-targets
-      - run: cargo test  --lib
+      - run: cargo test  --all-targets
       - run: cargo build --all-targets --release
-      - run: cargo test  --lib         --release
+      - run: cargo test  --all-targets --release
       - if: ${{ ! inputs.msrv }}
         run: cargo build --all-targets           --all-features
       - if: ${{ ! inputs.msrv}}
-        run: cargo test  --lib                   --all-features
+        run: cargo test  --all-targets           --all-features
       - if: ${{ ! inputs.msrv }}
         run: cargo build --all-targets --release --all-features
       - if: ${{ ! inputs.msrv}}
-        run: cargo test  --lib         --release --all-features
+        run: cargo test  --all-targets --release --all-features

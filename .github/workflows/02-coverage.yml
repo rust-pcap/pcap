@@ -64,10 +64,7 @@ jobs:
           Invoke-WebRequest -Uri "https://github.com/mozilla/grcov/releases/latest/download/grcov-x86_64-pc-windows-msvc.zip" -OutFile C:/grcov.zip
           Expand-Archive -LiteralPath C:/grcov.zip -DestinationPath C:/
       # Coverage without features.
-      - if: ${{ contains(inputs.os, 'windows') }}
-        run: cargo test  --lib                        --no-fail-fast
-      - if: ${{ ! contains(inputs.os, 'windows') }}
-        run: cargo test  --all-targets                --no-fail-fast
+      - run: cargo test  --all-targets                --no-fail-fast
       - run: ${{ env.PCAP_CI_GRCOV_CMD }}
       - run: ${{ env.PCAP_CI_COV_CMD }} --fail-under ${{ env.PCAP_CI_COV_FAIL_UNDER_NO_FEATURES }}
       # Clean up coverage artifacts.
@@ -79,10 +76,7 @@ jobs:
         run: rm -rf ./target/debug/{coverage,profraw}
       - run: cargo clean -p pcap
       # Coverage with features.
-      - if: ${{ contains(inputs.os, 'windows') }}
-        run: cargo test  --lib         --all-features --no-fail-fast
-      - if: ${{ ! contains(inputs.os, 'windows') }}
-        run: cargo test  --all-targets --all-features --no-fail-fast
+      - run: cargo test  --all-targets --all-features --no-fail-fast
       - run: ${{ env.PCAP_CI_GRCOV_CMD }}
       - run: ${{ env.PCAP_CI_COV_CMD }} --fail-under ${{ env.PCAP_CI_COV_FAIL_UNDER_ALL_FEATURES }}
       # On push to main push results to coverage branch.
