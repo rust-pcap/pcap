@@ -21,6 +21,7 @@ env:
   RUST_BACKTRACE: 1
   CARGO_TERM_VERBOSE: true
   CARGO_TERM_COLOR: always
+  PCAP_CI_TEST_TARGETS: ${{ (github.event_name == 'pull_request') && '--lib' || '--all-targets' }}
 
 jobs:
   build-and-test:
@@ -44,18 +45,17 @@ jobs:
           rustup override set ${{ inputs.toolchain }}
       - if: inputs.msrv
         run: cp msrv.lock Cargo.lock
-      # Until #275 is resolved, we will not run integration tests on Windows. Note that since
-      # secrets are not passed to workflows triggered by a pull request from a fork, it will still
-      # not be possible to run integration tests on pull requests.
+      # Note that since secrets are not passed to workflows triggered by a pull request from a fork,
+      # it is not possible to run integration tests on pull requests.
       - run: cargo build --all-targets
-      - run: cargo test  --lib
-      - run: cargo build --all-targets --release
-      - run: cargo test  --lib         --release
+      - run: cargo test  ${{ env.PCAP_CI_TEST_TARGETS }}
+      - run: cargo build --all-targets                   --release
+      - run: cargo test  ${{ env.PCAP_CI_TEST_TARGETS }} --release
       - if: ${{ ! inputs.msrv }}
-        run: cargo build --all-targets           --all-features
+        run: cargo build --all-targets                              --all-features
       - if: ${{ ! inputs.msrv}}
-        run: cargo test  --lib                   --all-features
+        run: cargo test  ${{ env.PCAP_CI_TEST_TARGETS }}            --all-features
       - if: ${{ ! inputs.msrv }}
-        run: cargo build --all-targets --release --all-features
+        run: cargo build --all-targets                   --release --all-features
       - if: ${{ ! inputs.msrv}}
-        run: cargo test  --lib         --release --all-features
+        run: cargo test  ${{ env.PCAP_CI_TEST_TARGETS }} --release --all-features
