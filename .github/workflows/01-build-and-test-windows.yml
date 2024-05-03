@@ -21,6 +21,7 @@ env:
   RUST_BACKTRACE: 1
   CARGO_TERM_VERBOSE: true
   CARGO_TERM_COLOR: always
+  PCAP_CI_TEST_TARGETS: ${{ (github.event_name == 'pull_request') && '--lib' || '--all-targets' }}
 
 jobs:
   build-and-test:
@@ -33,8 +34,8 @@ jobs:
           echo "LIB=C:/npcap-sdk/Lib/x64" >> $env:GITHUB_ENV
       # Secrets are not passed to workflows that are triggered by a pull request from a fork.
       # https://docs.github.com/actions/automating-your-workflow-with-github-actions/creating-and-using-encrypted-secrets
-      # - if: github.event_name != 'pull_request'
-      - run: |
+      - if: github.event_name != 'pull_request'
+        run: |
           $SecPassword = ConvertTo-SecureString "${{ secrets.NPCAP_OEM_PASSWORD }}" -AsPlainText -Force
           $CredObject = New-Object System.Management.Automation.PSCredential ("${{ secrets.NPCAP_OEM_USERNAME }}", $SecPassword)
           Invoke-WebRequest -Uri "https://npcap.com/oem/dist/npcap-1.71-oem.exe" -OutFile C:/npcap-oem.exe -Credential $CredObject
@@ -44,18 +45,17 @@ jobs:
           rustup override set ${{ inputs.toolchain }}
       - if: inputs.msrv
         run: cp msrv.lock Cargo.lock
-      # Until #275 is resolved, we will not run integration tests on Windows. Note that since
-      # secrets are not passed to workflows triggered by a pull request from a fork, it will still
-      # not be possible to run integration tests on pull requests.
+      # Note that since secrets are not passed to workflows triggered by a pull request from a fork,
+      # it is not possible to run integration tests on pull requests.
       - run: cargo build --all-targets
-      - run: cargo test  --all-targets
-      - run: cargo build --all-targets --release
-      - run: cargo test  --all-targets --release
+      - run: cargo test  ${{ env.PCAP_CI_TEST_TARGETS }}
+      - run: cargo build --all-targets                   --release
+      - run: cargo test  ${{ env.PCAP_CI_TEST_TARGETS }} --release
       - if: ${{ ! inputs.msrv }}
-        run: cargo build --all-targets           --all-features
+        run: cargo build --all-targets                              --all-features
       - if: ${{ ! inputs.msrv}}
-        run: cargo test  --all-targets           --all-features
+        run: cargo test  ${{ env.PCAP_CI_TEST_TARGETS }}            --all-features
       - if: ${{ ! inputs.msrv }}
-        run: cargo build --all-targets --release --all-features
+        run: cargo build --all-targets                   --release --all-features
       - if: ${{ ! inputs.msrv}}
-        run: cargo test  --all-targets --release --all-features
+        run: cargo test  ${{ env.PCAP_CI_TEST_TARGETS }} --release --all-features
