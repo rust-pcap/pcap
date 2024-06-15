@@ -41,7 +41,7 @@ impl Capture<Inactive> {
     pub fn open(self) -> Result<Capture<Active>, Error> {
         unsafe {
             self.check_err(raw::pcap_activate(self.handle.as_ptr()) == 0)?;
-            Ok(mem::transmute(self))
+            Ok(mem::transmute::<Capture<Inactive>, Capture<Active>>(self))
         }
     }
 
