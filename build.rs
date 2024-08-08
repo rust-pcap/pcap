@@ -160,11 +160,17 @@ fn emit_cfg_flags(version: Version) {
         "required pcap lib version: >=1.0.0"
     );
 
-    for v in Version::list().iter().filter(|&v| v <= &version) {
+    for v in Version::list().iter() {
         println!(
-            "cargo:rustc-cfg=libpcap_{}_{}_{}",
+            "cargo:rustc-check-cfg=cfg(libpcap_{}_{}_{})",
             v.major, v.minor, v.micro
         );
+        if v <= &version {
+            println!(
+                "cargo:rustc-cfg=libpcap_{}_{}_{}",
+                v.major, v.minor, v.micro
+            );
+        }
     }
 }
 
