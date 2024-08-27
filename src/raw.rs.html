@@ -4348,7 +4348,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">#[cfg(windows)]</pre>
+                <pre class="has-background-white py-0 px-2">#[cfg(target_os = &quot;macos&quot;)]</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4380,7 +4380,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">pub mod ffi_windows {</pre>
+                <pre class="has-background-white py-0 px-2">pub mod ffi_macos {</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4396,7 +4396,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">    use windows_sys::Win32::Foundation::HANDLE;</pre>
+                <pre class="has-background-white py-0 px-2">    use super::*;</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4428,7 +4428,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">    use super::*;</pre>
+                <pre class="has-background-white py-0 px-2">    #[cfg(libpcap_1_5_3)]</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4444,7 +4444,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2"></pre>
+                <pre class="has-background-white py-0 px-2">    extern &quot;C&quot; {</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4460,7 +4460,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">    pub const WINPCAP_MINTOCOPY_DEFAULT: c_int = 16000;</pre>
+                <pre class="has-background-white py-0 px-2">        pub fn pcap_set_want_pktap(arg1: *mut pcap_t, arg2: c_int) -&gt; c_int;</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4476,7 +4476,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2"></pre>
+                <pre class="has-background-white py-0 px-2">    }</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4492,7 +4492,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">    #[link(name = &quot;wpcap&quot;)]</pre>
+                <pre class="has-background-white py-0 px-2">}</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4508,7 +4508,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">    extern &quot;C&quot; {</pre>
+                <pre class="has-background-white py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4524,7 +4524,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">        pub fn pcap_setmintocopy(arg1: *mut pcap_t, arg2: c_int) -&gt; c_int;</pre>
+                <pre class="has-background-white py-0 px-2">#[cfg(windows)]</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4540,7 +4540,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">        pub fn pcap_getevent(p: *mut pcap_t) -&gt; HANDLE;</pre>
+                <pre class="has-background-white py-0 px-2">#[cfg_attr(test, automock)]</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4556,7 +4556,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">        pub fn pcap_sendqueue_alloc(memsize: c_uint) -&gt; *mut pcap_send_queue;</pre>
+                <pre class="has-background-white py-0 px-2">pub mod ffi_windows {</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4572,7 +4572,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">        pub fn pcap_sendqueue_destroy(queue: *mut pcap_send_queue);</pre>
+                <pre class="has-background-white py-0 px-2">    use windows_sys::Win32::Foundation::HANDLE;</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4588,7 +4588,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">        pub fn pcap_sendqueue_queue(</pre>
+                <pre class="has-background-white py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4604,7 +4604,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">            queue: *mut pcap_send_queue,</pre>
+                <pre class="has-background-white py-0 px-2">    use super::*;</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4620,7 +4620,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">            pkt_header: *const pcap_pkthdr,</pre>
+                <pre class="has-background-white py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4636,7 +4636,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">            pkt_data: *const c_uchar,</pre>
+                <pre class="has-background-white py-0 px-2">    pub const WINPCAP_MINTOCOPY_DEFAULT: c_int = 16000;</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4652,7 +4652,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">        ) -&gt; c_int;</pre>
+                <pre class="has-background-white py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4668,7 +4668,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">        pub fn pcap_sendqueue_transmit(</pre>
+                <pre class="has-background-white py-0 px-2">    #[link(name = &quot;wpcap&quot;)]</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4684,7 +4684,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">            p: *mut pcap_t,</pre>
+                <pre class="has-background-white py-0 px-2">    extern &quot;C&quot; {</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4700,7 +4700,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">            queue: *mut pcap_send_queue,</pre>
+                <pre class="has-background-white py-0 px-2">        pub fn pcap_setmintocopy(arg1: *mut pcap_t, arg2: c_int) -&gt; c_int;</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4716,7 +4716,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">            sync: c_int,</pre>
+                <pre class="has-background-white py-0 px-2">        pub fn pcap_getevent(p: *mut pcap_t) -&gt; HANDLE;</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4732,7 +4732,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">        ) -&gt; c_uint;</pre>
+                <pre class="has-background-white py-0 px-2">        pub fn pcap_sendqueue_alloc(memsize: c_uint) -&gt; *mut pcap_send_queue;</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4748,7 +4748,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">    }</pre>
+                <pre class="has-background-white py-0 px-2">        pub fn pcap_sendqueue_destroy(queue: *mut pcap_send_queue);</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4764,7 +4764,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">}</pre>
+                <pre class="has-background-white py-0 px-2">        pub fn pcap_sendqueue_queue(</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4780,7 +4780,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2"></pre>
+                <pre class="has-background-white py-0 px-2">            queue: *mut pcap_send_queue,</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4796,7 +4796,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F; The conventional solution is to use `mockall_double`. However, automock&#x27;s requirement for an</pre>
+                <pre class="has-background-white py-0 px-2">            pkt_header: *const pcap_pkthdr,</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4812,7 +4812,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F; inner module would require changing the imports in all the files using this module. This approach</pre>
+                <pre class="has-background-white py-0 px-2">            pkt_data: *const c_uchar,</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4828,7 +4828,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F; allows all the other modules to keep using the `raw` module as before.</pre>
+                <pre class="has-background-white py-0 px-2">        ) -&gt; c_int;</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4844,7 +4844,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">#[cfg(not(test))]</pre>
+                <pre class="has-background-white py-0 px-2">        pub fn pcap_sendqueue_transmit(</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4860,7 +4860,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">pub use ffi::*;</pre>
+                <pre class="has-background-white py-0 px-2">            p: *mut pcap_t,</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4876,7 +4876,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2"></pre>
+                <pre class="has-background-white py-0 px-2">            queue: *mut pcap_send_queue,</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4892,7 +4892,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">#[cfg(not(test))]</pre>
+                <pre class="has-background-white py-0 px-2">            sync: c_int,</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4908,7 +4908,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">#[cfg(not(windows))]</pre>
+                <pre class="has-background-white py-0 px-2">        ) -&gt; c_uint;</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4924,7 +4924,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">pub use ffi_unix::*;</pre>
+                <pre class="has-background-white py-0 px-2">    }</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4940,7 +4940,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2"></pre>
+                <pre class="has-background-white py-0 px-2">}</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4956,7 +4956,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">#[cfg(not(test))]</pre>
+                <pre class="has-background-white py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4972,7 +4972,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">#[cfg(windows)]</pre>
+                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F; The conventional solution is to use `mockall_double`. However, automock&#x27;s requirement for an</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4988,7 +4988,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">pub use ffi_windows::*;</pre>
+                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F; inner module would require changing the imports in all the files using this module. This approach</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -5004,7 +5004,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2"></pre>
+                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F; allows all the other modules to keep using the `raw` module as before.</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -5020,7 +5020,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">#[cfg(test)]</pre>
+                <pre class="has-background-white py-0 px-2">#[cfg(not(test))]</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -5036,7 +5036,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">pub use mock_ffi::*;</pre>
+                <pre class="has-background-white py-0 px-2">pub use ffi::*;</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -5068,7 +5068,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">#[cfg(test)]</pre>
+                <pre class="has-background-white py-0 px-2">#[cfg(not(test))]</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -5100,7 +5100,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">pub use mock_ffi_unix::*;</pre>
+                <pre class="has-background-white py-0 px-2">pub use ffi_unix::*;</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -5132,7 +5132,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">#[cfg(test)]</pre>
+                <pre class="has-background-white py-0 px-2">#[cfg(not(test))]</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -5148,7 +5148,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">#[cfg(windows)]</pre>
+                <pre class="has-background-white py-0 px-2">#[cfg(target_os = &quot;macos&quot;)]</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -5164,7 +5164,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">pub use mock_ffi_windows::*;</pre>
+                <pre class="has-background-white py-0 px-2">pub use ffi_macos::*;</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -5196,7 +5196,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">#[cfg(test)]</pre>
+                <pre class="has-background-white py-0 px-2">#[cfg(not(test))]</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -5212,7 +5212,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">pub mod testmod {</pre>
+                <pre class="has-background-white py-0 px-2">#[cfg(windows)]</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -5228,7 +5228,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">    use std::{ffi::CString, sync::Mutex};</pre>
+                <pre class="has-background-white py-0 px-2">pub use ffi_windows::*;</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -5260,7 +5260,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">    use once_cell::sync::Lazy;</pre>
+                <pre class="has-background-white py-0 px-2">#[cfg(test)]</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -5276,7 +5276,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2"></pre>
+                <pre class="has-background-white py-0 px-2">pub use mock_ffi::*;</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -5292,7 +5292,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">    use super::*;</pre>
+                <pre class="has-background-white py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -5308,7 +5308,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2"></pre>
+                <pre class="has-background-white py-0 px-2">#[cfg(test)]</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -5324,7 +5324,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">    pub struct GeterrContext(__pcap_geterr::Context);</pre>
+                <pre class="has-background-white py-0 px-2">#[cfg(not(windows))]</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -5340,7 +5340,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2"></pre>
+                <pre class="has-background-white py-0 px-2">pub use mock_ffi_unix::*;</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -5356,7 +5356,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">    &#x2F;&#x2F; Must be acquired by any test using mock FFI.</pre>
+                <pre class="has-background-white py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -5372,7 +5372,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">    pub static RAWMTX: Lazy&lt;Mutex&lt;()&gt;&gt; = Lazy::new(|| Mutex::new(()));</pre>
+                <pre class="has-background-white py-0 px-2">#[cfg(test)]</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -5388,7 +5388,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2"></pre>
+                <pre class="has-background-white py-0 px-2">#[cfg(target_os = &quot;macos&quot;)]</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -5404,7 +5404,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">    pub fn as_pcap_t&lt;T: ?Sized&gt;(value: &amp;mut T) -&gt; *mut pcap_t {</pre>
+                <pre class="has-background-white py-0 px-2">pub use mock_ffi_macos::*;</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -5420,7 +5420,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">        value as *mut T as *mut pcap_t</pre>
+                <pre class="has-background-white py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -5436,7 +5436,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">    }</pre>
+                <pre class="has-background-white py-0 px-2">#[cfg(test)]</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -5452,7 +5452,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2"></pre>
+                <pre class="has-background-white py-0 px-2">#[cfg(windows)]</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -5468,7 +5468,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">    pub fn as_pcap_dumper_t&lt;T: ?Sized&gt;(value: &amp;mut T) -&gt; *mut pcap_dumper_t {</pre>
+                <pre class="has-background-white py-0 px-2">pub use mock_ffi_windows::*;</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -5484,7 +5484,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">        value as *mut T as *mut pcap_dumper_t</pre>
+                <pre class="has-background-white py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -5500,7 +5500,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">    }</pre>
+                <pre class="has-background-white py-0 px-2">#[cfg(test)]</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -5516,7 +5516,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2"></pre>
+                <pre class="has-background-white py-0 px-2">pub mod testmod {</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -5532,7 +5532,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">    pub fn geterr_expect(pcap: *mut pcap_t) -&gt; GeterrContext {</pre>
+                <pre class="has-background-white py-0 px-2">    use std::{ffi::CString, sync::Mutex};</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -5548,7 +5548,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">        &#x2F;&#x2F; Lock must be acquired by caller.</pre>
+                <pre class="has-background-white py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -5564,7 +5564,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">        assert!(RAWMTX.try_lock().is_err());</pre>
+                <pre class="has-background-white py-0 px-2">    use once_cell::sync::Lazy;</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -5596,7 +5596,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">        let err = CString::new(&quot;oh oh&quot;).unwrap();</pre>
+                <pre class="has-background-white py-0 px-2">    use super::*;</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -5612,7 +5612,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">        let ctx = pcap_geterr_context();</pre>
+                <pre class="has-background-white py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -5628,7 +5628,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">        ctx.checkpoint();</pre>
+                <pre class="has-background-white py-0 px-2">    pub struct GeterrContext(__pcap_geterr::Context);</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -5644,7 +5644,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">        ctx.expect()</pre>
+                <pre class="has-background-white py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -5660,7 +5660,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">            .withf_st(move |arg1| *arg1 == pcap)</pre>
+                <pre class="has-background-white py-0 px-2">    &#x2F;&#x2F; Must be acquired by any test using mock FFI.</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -5676,7 +5676,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">            .return_once_st(|_| err.into_raw());</pre>
+                <pre class="has-background-white py-0 px-2">    pub static RAWMTX: Lazy&lt;Mutex&lt;()&gt;&gt; = Lazy::new(|| Mutex::new(()));</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -5708,7 +5708,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">        GeterrContext(ctx)</pre>
+                <pre class="has-background-white py-0 px-2">    pub fn as_pcap_t&lt;T: ?Sized&gt;(value: &amp;mut T) -&gt; *mut pcap_t {</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -5724,7 +5724,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">    }</pre>
+                <pre class="has-background-white py-0 px-2">        value as *mut T as *mut pcap_t</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -5740,7 +5740,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">}</pre>
+                <pre class="has-background-white py-0 px-2">    }</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -5756,13 +5756,317 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
+                <pre class="has-background-white py-0 px-2"></pre>
+            </div>
+        </div><div class="columns p-0 m-0" role="row">
+            <div
+                class="column is-1 is-narrow p-0 has-text-centered"
+                id="359"
+                role="cell">
+                <a href="#359">359</a>
+            </div>
+            <div
+                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white"
+                role="cell" aria-label="no coverage">
+                
+            </div>
+            <div class="column has-background-white p-0"
+                 role="cell">
+                <pre class="has-background-white py-0 px-2">    pub fn as_pcap_dumper_t&lt;T: ?Sized&gt;(value: &amp;mut T) -&gt; *mut pcap_dumper_t {</pre>
+            </div>
+        </div><div class="columns p-0 m-0" role="row">
+            <div
+                class="column is-1 is-narrow p-0 has-text-centered"
+                id="360"
+                role="cell">
+                <a href="#360">360</a>
+            </div>
+            <div
+                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white"
+                role="cell" aria-label="no coverage">
+                
+            </div>
+            <div class="column has-background-white p-0"
+                 role="cell">
+                <pre class="has-background-white py-0 px-2">        value as *mut T as *mut pcap_dumper_t</pre>
+            </div>
+        </div><div class="columns p-0 m-0" role="row">
+            <div
+                class="column is-1 is-narrow p-0 has-text-centered"
+                id="361"
+                role="cell">
+                <a href="#361">361</a>
+            </div>
+            <div
+                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white"
+                role="cell" aria-label="no coverage">
+                
+            </div>
+            <div class="column has-background-white p-0"
+                 role="cell">
+                <pre class="has-background-white py-0 px-2">    }</pre>
+            </div>
+        </div><div class="columns p-0 m-0" role="row">
+            <div
+                class="column is-1 is-narrow p-0 has-text-centered"
+                id="362"
+                role="cell">
+                <a href="#362">362</a>
+            </div>
+            <div
+                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white"
+                role="cell" aria-label="no coverage">
+                
+            </div>
+            <div class="column has-background-white p-0"
+                 role="cell">
+                <pre class="has-background-white py-0 px-2"></pre>
+            </div>
+        </div><div class="columns p-0 m-0" role="row">
+            <div
+                class="column is-1 is-narrow p-0 has-text-centered"
+                id="363"
+                role="cell">
+                <a href="#363">363</a>
+            </div>
+            <div
+                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white"
+                role="cell" aria-label="no coverage">
+                
+            </div>
+            <div class="column has-background-white p-0"
+                 role="cell">
+                <pre class="has-background-white py-0 px-2">    pub fn geterr_expect(pcap: *mut pcap_t) -&gt; GeterrContext {</pre>
+            </div>
+        </div><div class="columns p-0 m-0" role="row">
+            <div
+                class="column is-1 is-narrow p-0 has-text-centered"
+                id="364"
+                role="cell">
+                <a href="#364">364</a>
+            </div>
+            <div
+                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white"
+                role="cell" aria-label="no coverage">
+                
+            </div>
+            <div class="column has-background-white p-0"
+                 role="cell">
+                <pre class="has-background-white py-0 px-2">        &#x2F;&#x2F; Lock must be acquired by caller.</pre>
+            </div>
+        </div><div class="columns p-0 m-0" role="row">
+            <div
+                class="column is-1 is-narrow p-0 has-text-centered"
+                id="365"
+                role="cell">
+                <a href="#365">365</a>
+            </div>
+            <div
+                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white"
+                role="cell" aria-label="no coverage">
+                
+            </div>
+            <div class="column has-background-white p-0"
+                 role="cell">
+                <pre class="has-background-white py-0 px-2">        assert!(RAWMTX.try_lock().is_err());</pre>
+            </div>
+        </div><div class="columns p-0 m-0" role="row">
+            <div
+                class="column is-1 is-narrow p-0 has-text-centered"
+                id="366"
+                role="cell">
+                <a href="#366">366</a>
+            </div>
+            <div
+                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white"
+                role="cell" aria-label="no coverage">
+                
+            </div>
+            <div class="column has-background-white p-0"
+                 role="cell">
+                <pre class="has-background-white py-0 px-2"></pre>
+            </div>
+        </div><div class="columns p-0 m-0" role="row">
+            <div
+                class="column is-1 is-narrow p-0 has-text-centered"
+                id="367"
+                role="cell">
+                <a href="#367">367</a>
+            </div>
+            <div
+                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white"
+                role="cell" aria-label="no coverage">
+                
+            </div>
+            <div class="column has-background-white p-0"
+                 role="cell">
+                <pre class="has-background-white py-0 px-2">        let err = CString::new(&quot;oh oh&quot;).unwrap();</pre>
+            </div>
+        </div><div class="columns p-0 m-0" role="row">
+            <div
+                class="column is-1 is-narrow p-0 has-text-centered"
+                id="368"
+                role="cell">
+                <a href="#368">368</a>
+            </div>
+            <div
+                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white"
+                role="cell" aria-label="no coverage">
+                
+            </div>
+            <div class="column has-background-white p-0"
+                 role="cell">
+                <pre class="has-background-white py-0 px-2">        let ctx = pcap_geterr_context();</pre>
+            </div>
+        </div><div class="columns p-0 m-0" role="row">
+            <div
+                class="column is-1 is-narrow p-0 has-text-centered"
+                id="369"
+                role="cell">
+                <a href="#369">369</a>
+            </div>
+            <div
+                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white"
+                role="cell" aria-label="no coverage">
+                
+            </div>
+            <div class="column has-background-white p-0"
+                 role="cell">
+                <pre class="has-background-white py-0 px-2">        ctx.checkpoint();</pre>
+            </div>
+        </div><div class="columns p-0 m-0" role="row">
+            <div
+                class="column is-1 is-narrow p-0 has-text-centered"
+                id="370"
+                role="cell">
+                <a href="#370">370</a>
+            </div>
+            <div
+                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white"
+                role="cell" aria-label="no coverage">
+                
+            </div>
+            <div class="column has-background-white p-0"
+                 role="cell">
+                <pre class="has-background-white py-0 px-2">        ctx.expect()</pre>
+            </div>
+        </div><div class="columns p-0 m-0" role="row">
+            <div
+                class="column is-1 is-narrow p-0 has-text-centered"
+                id="371"
+                role="cell">
+                <a href="#371">371</a>
+            </div>
+            <div
+                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white"
+                role="cell" aria-label="no coverage">
+                
+            </div>
+            <div class="column has-background-white p-0"
+                 role="cell">
+                <pre class="has-background-white py-0 px-2">            .withf_st(move |arg1| *arg1 == pcap)</pre>
+            </div>
+        </div><div class="columns p-0 m-0" role="row">
+            <div
+                class="column is-1 is-narrow p-0 has-text-centered"
+                id="372"
+                role="cell">
+                <a href="#372">372</a>
+            </div>
+            <div
+                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white"
+                role="cell" aria-label="no coverage">
+                
+            </div>
+            <div class="column has-background-white p-0"
+                 role="cell">
+                <pre class="has-background-white py-0 px-2">            .return_once_st(|_| err.into_raw());</pre>
+            </div>
+        </div><div class="columns p-0 m-0" role="row">
+            <div
+                class="column is-1 is-narrow p-0 has-text-centered"
+                id="373"
+                role="cell">
+                <a href="#373">373</a>
+            </div>
+            <div
+                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white"
+                role="cell" aria-label="no coverage">
+                
+            </div>
+            <div class="column has-background-white p-0"
+                 role="cell">
+                <pre class="has-background-white py-0 px-2"></pre>
+            </div>
+        </div><div class="columns p-0 m-0" role="row">
+            <div
+                class="column is-1 is-narrow p-0 has-text-centered"
+                id="374"
+                role="cell">
+                <a href="#374">374</a>
+            </div>
+            <div
+                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white"
+                role="cell" aria-label="no coverage">
+                
+            </div>
+            <div class="column has-background-white p-0"
+                 role="cell">
+                <pre class="has-background-white py-0 px-2">        GeterrContext(ctx)</pre>
+            </div>
+        </div><div class="columns p-0 m-0" role="row">
+            <div
+                class="column is-1 is-narrow p-0 has-text-centered"
+                id="375"
+                role="cell">
+                <a href="#375">375</a>
+            </div>
+            <div
+                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white"
+                role="cell" aria-label="no coverage">
+                
+            </div>
+            <div class="column has-background-white p-0"
+                 role="cell">
+                <pre class="has-background-white py-0 px-2">    }</pre>
+            </div>
+        </div><div class="columns p-0 m-0" role="row">
+            <div
+                class="column is-1 is-narrow p-0 has-text-centered"
+                id="376"
+                role="cell">
+                <a href="#376">376</a>
+            </div>
+            <div
+                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white"
+                role="cell" aria-label="no coverage">
+                
+            </div>
+            <div class="column has-background-white p-0"
+                 role="cell">
+                <pre class="has-background-white py-0 px-2">}</pre>
+            </div>
+        </div><div class="columns p-0 m-0" role="row">
+            <div
+                class="column is-1 is-narrow p-0 has-text-centered"
+                id="377"
+                role="cell">
+                <a href="#377">377</a>
+            </div>
+            <div
+                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white"
+                role="cell" aria-label="no coverage">
+                
+            </div>
+            <div class="column has-background-white p-0"
+                 role="cell">
                 <pre class="has-background-white py-0 px-2">&#x2F;&#x2F; GRCOV_EXCL_STOP</pre>
             </div>
         </div></div>
 </div>
         <footer class="footer">
             <div class="content has-text-centered">
-                <p class="heading">Date: 2024-08-08 17:20</p>
+                <p class="heading">Date: 2024-08-27 11:57</p>
             </div>
         </footer>
     </body>
