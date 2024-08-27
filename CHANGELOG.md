@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## [2.1.0] - 2024-08-27
+
+### Added
+
+- Add `want_pktap` on `Capture<Inactive>` for Mac OS.
+
 ## [2.0.0] - 2024-04-21
 
 ### Changed

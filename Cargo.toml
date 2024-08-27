@@ -1,6 +1,6 @@
 [package]
 name = "pcap"
-version = "2.0.0"
+version = "2.1.0"
 authors = ["Sean Bowe <ewillbefull@gmail.com>", "Wojciech Kozlowski <wk@wojciechkozlowski.eu>", "Hideki Sekine"]
 edition = "2021"
 rust-version = "1.63"
