@@ -29,6 +29,7 @@ impl Version {
         vec![
             Version::new(1, 2, 1),
             Version::new(1, 5, 0),
+            Version::new(1, 5, 3),
             Version::new(1, 7, 2),
             Version::new(1, 9, 0),
             Version::new(1, 9, 1),
