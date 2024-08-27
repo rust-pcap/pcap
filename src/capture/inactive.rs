@@ -98,6 +98,14 @@ impl Capture<Inactive> {
         self
     }
 
+    /// Set want_pktap to true or false. The default is maintained by libpcap.
+    #[cfg(all(libpcap_1_5_3, target_os = "macos"))]
+    pub fn want_pktap(self, to: bool) -> Capture<Inactive> {
+        unsafe { raw::pcap_set_want_pktap(self.handle.as_ptr(), to as _) };
+
+        self
+    }
+
     /// Set rfmon mode on or off. The default is maintained by pcap.
     #[cfg(not(windows))]
     pub fn rfmon(self, to: bool) -> Capture<Inactive> {
@@ -355,6 +363,24 @@ mod tests {
 
         let _ctx = immediate_mode_expect(pcap);
         let _capture = capture.immediate_mode(false);
+    }
+
+    #[test]
+    #[cfg(all(libpcap_1_5_3, target_os = "macos"))]
+    fn test_want_pktap() {
+        let _m = RAWMTX.lock();
+
+        let mut dummy: isize = 777;
+        let pcap = as_pcap_t(&mut dummy);
+
+        let test_capture = test_capture::<Inactive>(pcap);
+        let capture = test_capture.capture;
+
+        let ctx = raw::pcap_set_want_pktap_context();
+        ctx.expect()
+            .withf_st(move |arg1, _| *arg1 == pcap)
+            .return_once(|_, _| 0);
+        let _capture = capture.want_pktap(true);
     }
 
     #[test]

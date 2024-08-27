@@ -43,6 +43,10 @@ jobs:
         run: cargo build --lib --tests
         env:
           LIBPCAP_VER: '1.5.0'
+      - name: 'LIBPCAP_VER: 1.5.3'
+        run: cargo build --lib --tests
+        env:
+          LIBPCAP_VER: '1.5.3'
       - name: 'LIBPCAP_VER: 1.7.2'
         run: cargo build --lib --tests
         env:

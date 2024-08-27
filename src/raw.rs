@@ -267,6 +267,17 @@ pub mod ffi_unix {
     }
 }
 
+#[cfg(target_os = "macos")]
+#[cfg_attr(test, automock)]
+pub mod ffi_macos {
+    use super::*;
+
+    #[cfg(libpcap_1_5_3)]
+    extern "C" {
+        pub fn pcap_set_want_pktap(arg1: *mut pcap_t, arg2: c_int) -> c_int;
+    }
+}
+
 #[cfg(windows)]
 #[cfg_attr(test, automock)]
 pub mod ffi_windows {
@@ -306,6 +317,10 @@ pub use ffi::*;
 pub use ffi_unix::*;
 
 #[cfg(not(test))]
+#[cfg(target_os = "macos")]
+pub use ffi_macos::*;
+
+#[cfg(not(test))]
 #[cfg(windows)]
 pub use ffi_windows::*;
 
@@ -315,6 +330,10 @@ pub use mock_ffi::*;
 #[cfg(test)]
 #[cfg(not(windows))]
 pub use mock_ffi_unix::*;
+
+#[cfg(test)]
+#[cfg(target_os = "macos")]
+pub use mock_ffi_macos::*;
 
 #[cfg(test)]
 #[cfg(windows)]
