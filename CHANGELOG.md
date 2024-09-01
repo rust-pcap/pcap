@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [2.2.0] - 2024-09-01
+
 ### Added
 
 - Added an implementation of `AsFd` on `Capture<Active>` on non-Windows.
