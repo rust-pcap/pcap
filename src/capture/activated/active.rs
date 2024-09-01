@@ -1,7 +1,7 @@
 use std::borrow::Borrow;
 
 #[cfg(not(windows))]
-use std::os::unix::io::{AsRawFd, RawFd};
+use std::os::unix::io::{AsFd, AsRawFd, BorrowedFd, RawFd};
 
 use crate::{
     capture::{Active, Capture},
@@ -37,6 +37,20 @@ impl AsRawFd for Capture<Active> {
         let fd = unsafe { raw::pcap_fileno(self.handle.as_ptr()) };
         assert!(fd != -1, "Unable to get file descriptor for live capture");
         fd
+    }
+}
+
+#[cfg(not(windows))]
+impl AsFd for Capture<Active> {
+    /// Returns the file descriptor for a live capture.
+    fn as_fd(&self) -> BorrowedFd {
+        // SAFETY: pcap_fileno always succeeds on a live capture,
+        // and we know this capture is live due to its State.
+        let fd = unsafe { raw::pcap_fileno(self.handle.as_ptr()) };
+        assert!(fd != -1, "Unable to get file descriptor for live capture");
+        // SAFETY: The lifetime is bound to self, which is correct.
+        // We have checked that fd != -1.
+        unsafe { BorrowedFd::borrow_raw(fd) }
     }
 }
 
@@ -141,5 +155,24 @@ mod tests {
             .return_once(|_| 7);
 
         assert_eq!(capture.as_raw_fd(), 7);
+    }
+
+    #[test]
+    #[cfg(not(windows))]
+    fn test_as_fd() {
+        let _m = RAWMTX.lock();
+
+        let mut dummy: isize = 777;
+        let pcap = as_pcap_t(&mut dummy);
+
+        let test_capture = test_capture::<Active>(pcap);
+        let capture = test_capture.capture;
+
+        let ctx = pcap_fileno_context();
+        ctx.expect()
+            .withf_st(move |arg1| *arg1 == pcap)
+            .return_once(|_| 7);
+
+        assert_eq!(capture.as_fd().as_raw_fd(), 7);
     }
 }
