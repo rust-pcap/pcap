@@ -459,6 +459,7 @@ mod testmod {
     pub struct NextExContext(raw::__pcap_next_ex::Context);
     pub fn next_ex_expect(pcap: *mut raw::pcap_t) -> NextExContext {
         let data_ptr: *const libc::c_uchar = DATA.as_ptr();
+        #[allow(unused_unsafe)] // unsafe still needed to compile on MSRV
         let pkthdr_ptr: *mut raw::pcap_pkthdr = unsafe { std::ptr::addr_of_mut!(PKTHDR) };
 
         let ctx = raw::pcap_next_ex_context();
