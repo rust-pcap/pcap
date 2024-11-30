@@ -17,7 +17,7 @@ impl<'a> Packet<'a> {
     }
 }
 
-impl<'b> Deref for Packet<'b> {
+impl Deref for Packet<'_> {
     type Target = [u8];
 
     fn deref(&self) -> &[u8] {

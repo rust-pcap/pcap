@@ -90,7 +90,6 @@ mod tests {
      * Return as a Capture<Inactive> in case the caller wants to set some
      * different options before opening it (maybe?)
      */
-
     fn capture_tap_interface() -> (Capture<pcap::Inactive>, Iface) {
         use tun_tap::Mode;
 
