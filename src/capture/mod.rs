@@ -222,6 +222,8 @@ pub mod testmod {
 
 #[cfg(test)]
 mod tests {
+    use core::ffi::c_void;
+
     use crate::{
         capture::testmod::test_capture,
         raw::testmod::{as_pcap_t, RAWMTX},
@@ -276,10 +278,10 @@ mod tests {
         let ctx = raw::pcap_getevent_context();
         ctx.expect()
             .withf_st(move |arg1| *arg1 == pcap)
-            .return_once(|_| 5);
+            .return_once(|_| 5 as *mut c_void);
 
         let handle = unsafe { capture.get_event() };
-        assert_eq!(handle, 5);
+        assert_eq!(handle, 5 as *mut c_void);
     }
 
     #[test]
