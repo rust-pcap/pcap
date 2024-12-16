@@ -108,3 +108,4 @@ required-features = ["capture-stream"]
 
 [package.metadata.docs.rs]
 all-features = true
+rustdoc-args = ["--generate-link-to-definition"]
