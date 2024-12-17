@@ -73,6 +73,11 @@ struct EventHandle {
     state: EventHandleState,
 }
 
+// SAFETY: EventHandle is Send automatically if not for HANDLE, which is a [non-autotrait'ed] pointer since windows-sys was updated to 0.59.
+// The capture device owns the original handle,
+// As long as the capture device isn't released before the EventHandle, this should be good.
+unsafe impl Send for EventHandle {}
+
 /// Newtype used to wrap `HANDLE` to make it `Send`:able
 struct InternalHandle(HANDLE);
 
