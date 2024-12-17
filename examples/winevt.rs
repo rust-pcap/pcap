@@ -23,10 +23,7 @@ mod windowsonly {
         const SHOW_STATS = 0b00000010;
 
         const ALL = {
-          let fl = 0;
-          let fl = fl | Self::KILL.bits();
-          let fl = fl | Self::SHOW_STATS.bits();
-          fl
+          Self::KILL.bits() | Self::SHOW_STATS.bits()
         };
       }
     }
