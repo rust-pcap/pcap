@@ -266,7 +266,7 @@ impl Address {
             return None;
         }
 
-        match (*ptr).sa_family as u32 {
+        match (*ptr).sa_family {
             WinSock::AF_INET => {
                 let ptr: *const WinSock::SOCKADDR_IN = std::mem::transmute(ptr);
                 let addr: [u8; 4] = ((*ptr).sin_addr.S_un.S_addr).to_ne_bytes();
@@ -372,7 +372,7 @@ mod tests {
         fn new() -> Self {
             let mut addr: Self = unsafe { std::mem::zeroed() };
             // The cast is only necessary due to a bug in windows_sys@v0.36.1
-            addr.sin_family = WinSock::AF_INET as u16;
+            addr.sin_family = WinSock::AF_INET;
             addr
         }
 
@@ -418,7 +418,7 @@ mod tests {
         fn new() -> Self {
             let mut addr: Self = unsafe { std::mem::zeroed() };
             // The cast is only necessary due to a bug in windows_sys@v0.36.1
-            addr.sin6_family = WinSock::AF_INET6 as u16;
+            addr.sin6_family = WinSock::AF_INET6;
             unsafe {
                 addr.sin6_addr.u.Byte[0] = 0xFE;
                 addr.sin6_addr.u.Byte[1] = 0x80;

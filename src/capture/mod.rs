@@ -276,10 +276,10 @@ mod tests {
         let ctx = raw::pcap_getevent_context();
         ctx.expect()
             .withf_st(move |arg1| *arg1 == pcap)
-            .return_once(|_| 5);
+            .return_once(|_| 5 as *mut std::ffi::c_void);
 
         let handle = unsafe { capture.get_event() };
-        assert_eq!(handle, 5);
+        assert_eq!(handle, 5 as *mut std::ffi::c_void);
     }
 
     #[test]
