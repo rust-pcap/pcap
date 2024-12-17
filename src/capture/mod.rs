@@ -149,6 +149,12 @@ impl<T: State + ?Sized> Capture<T> {
 
     /// Get handle to the Capture context's internal Win32 event semaphore.
     ///
+    /// Setting this event will cause a blocking capture call to unblock and return.
+    ///
+    /// # Example
+    /// The _winevt_ example demonstrates how to use the event semaphore to send command requests
+    /// to a capture loop running in a separate thread.
+    ///
     /// # Safety
     ///
     /// The caller must ensure that the `Capture` context outlives the returned `HANDLE` since it is
