@@ -1,6 +1,7 @@
 pub mod activated;
 pub mod inactive;
 #[cfg(all(not(windows), feature = "capture-stream"))]
+#[cfg_attr(docsrs, doc(cfg(all(not(windows), feature = "capture-stream"))))]
 pub mod selectable;
 
 use std::{
