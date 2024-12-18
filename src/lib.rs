@@ -58,6 +58,8 @@
 //! }
 //! ```
 
+#![cfg_attr(docsrs, feature(doc_cfg))]
+
 use std::ffi::{self, CStr};
 use std::fmt;
 
@@ -88,11 +90,13 @@ pub type TstampType = TimestampType;
 mod raw;
 
 #[cfg(windows)]
+#[cfg_attr(docsrs, doc(cfg(windows)))]
 pub mod sendqueue;
 
 #[cfg(feature = "capture-stream")]
 mod stream;
 #[cfg(feature = "capture-stream")]
+#[cfg_attr(docsrs, doc(cfg(feature = "capture-stream")))]
 pub use stream::PacketStream;
 
 /// An error received from pcap

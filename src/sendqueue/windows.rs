@@ -14,10 +14,20 @@ use crate::{
     raw, Error,
 };
 
+/// Representation of a batch of packets that can be transferred in a single call using
+/// [`SendQueue::transmit()`].
 pub struct SendQueue(NonNull<raw::pcap_send_queue>);
 
+/// Indicate whether to send packets as quickly as possible or delay the relative amount of time
+/// between packet header timestamps between packet transmissions.
 pub enum SendSync {
+    /// Ignore timestamps; send packets as quickly as possible.
     Off = 0,
+
+    /// Use the time difference between packets to delay between packet transmissions.
+    ///
+    /// # Notes
+    /// The internal (n/win)pcap implementations may implement the delay as a busy-wait loop.
     On = 1,
 }
 

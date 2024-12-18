@@ -104,6 +104,18 @@ Some dependencies no longer support our chosen MSRV. Since many crates do not co
 
 [Discuss the MSRV](https://github.com/rust-pcap/pcap/discussions/240).
 
+# Documentation labels
+
+Generating documentation with `cfg` labels requires a nightly toolchain.  To
+use this feature set the environment variables:
+
+```
+RUSTFLAGS="--cfg docsrs"
+RUSTDOCFLAGS="--cfg docsrs"
+```
+
+Then generate the documentation using `cargo +nightly doc --all-features`.
+
 # License
 
 Licensed under either of
