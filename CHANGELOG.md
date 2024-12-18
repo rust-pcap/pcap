@@ -7,6 +7,8 @@
 ### Added
 
 - Added an implementation of `AsFd` on `Capture<Active>` on non-Windows.
+- Added `SendQueue::packet_header_size()` for applications that want to
+  precalculate exact queue sizes.
 
 ## [2.1.0] - 2024-08-27
 
