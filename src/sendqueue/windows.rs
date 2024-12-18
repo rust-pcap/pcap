@@ -53,6 +53,12 @@ impl SendQueue {
         Ok(Self(squeue))
     }
 
+    /// Return the size of the packet header that is implicitly added to the queue with each new
+    /// packet.
+    pub const fn packet_header_size() -> usize {
+        std::mem::size_of::<raw::pcap_pkthdr>()
+    }
+
     pub fn maxlen(&self) -> u32 {
         unsafe { self.0.as_ref().maxlen }
     }
