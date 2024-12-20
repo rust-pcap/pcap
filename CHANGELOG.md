@@ -9,6 +9,11 @@
   `HANDLE` is a `isize` in `0.36`, but has been made a pointer in `0.59`,
   causing types containing it to no longer be autotraited with `Send`.
 
+### Added
+
+- Added `packet_header_size()` for applications that need to know the size of internal type
+  `pcap_pkthdr` (for instance to calculate exact send queue sizes).
+
 ## [2.2.0] - 2024-09-01
 
 ### Added

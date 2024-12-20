@@ -14,10 +14,20 @@ use crate::{
     raw, Error,
 };
 
+/// Representation of a batch of packets that can be transferred in a single call using
+/// [`SendQueue::transmit()`].
 pub struct SendQueue(NonNull<raw::pcap_send_queue>);
 
+/// Indicate whether to send packets as quickly as possible or delay the relative amount of time
+/// between packet header timestamps between packet transmissions.
 pub enum SendSync {
+    /// Ignore timestamps; send packets as quickly as possible.
     Off = 0,
+
+    /// Use the time difference between packets to delay between packet transmissions.
+    ///
+    /// # Notes
+    /// The internal (n/win)pcap implementations may implement the delay as a busy-wait loop.
     On = 1,
 }
 
@@ -46,6 +56,9 @@ impl SendQueue {
     ///
     /// The buffer size `memsize` must be able to contain both packet headers and actual packet
     /// contents.
+    ///
+    /// Applications that need to precalculate exact buffer sizes can use [`packet_header_size()`](crate::packet_header_size())
+    /// to get the size of the header that is implicitly added along with each packet.
     pub fn new(memsize: u32) -> Result<Self, Error> {
         let squeue = unsafe { raw::pcap_sendqueue_alloc(memsize) };
         let squeue = NonNull::new(squeue).ok_or(Error::InsufficientMemory)?;
