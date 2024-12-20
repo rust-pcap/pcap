@@ -227,6 +227,14 @@ impl From<std::io::ErrorKind> for Error {
     }
 }
 
+/// Return size of a commonly used packet header.
+///
+/// On Windows this packet header is implicitly added to send queues, so this size must be known
+/// if an application needs to precalculate the exact send queue buffer size.
+pub const fn packet_header_size() -> usize {
+    std::mem::size_of::<raw::pcap_pkthdr>()
+}
+
 #[cfg(test)]
 mod tests {
     use std::error::Error as StdError;
@@ -278,5 +286,13 @@ mod tests {
                 _ => assert!(error.cause().is_none()),
             }
         }
+    }
+
+    #[test]
+    fn test_packet_size() {
+        assert_eq!(
+            packet_header_size(),
+            std::mem::size_of::<raw::pcap_pkthdr>()
+        );
     }
 }
