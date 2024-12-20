@@ -46,6 +46,9 @@ impl SendQueue {
     ///
     /// The buffer size `memsize` must be able to contain both packet headers and actual packet
     /// contents.
+    ///
+    /// Applications that need to precalculate exact buffer sizes can use [`packet_header_size()`](crate::packet_header_size())
+    /// to get the size of the header that is implicitly added along with each packet.
     pub fn new(memsize: u32) -> Result<Self, Error> {
         let squeue = unsafe { raw::pcap_sendqueue_alloc(memsize) };
         let squeue = NonNull::new(squeue).ok_or(Error::InsufficientMemory)?;
