@@ -92,7 +92,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">pub mod selectable;</pre>
+                <pre class="has-background-white py-0 px-2">#[cfg_attr(docsrs, doc(cfg(all(not(windows), feature = &quot;capture-stream&quot;))))]</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -108,7 +108,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2"></pre>
+                <pre class="has-background-white py-0 px-2">pub mod selectable;</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -124,7 +124,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">use std::{</pre>
+                <pre class="has-background-white py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -140,7 +140,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">    ffi::CString,</pre>
+                <pre class="has-background-white py-0 px-2">use std::{</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -156,7 +156,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">    marker::PhantomData,</pre>
+                <pre class="has-background-white py-0 px-2">    ffi::CString,</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -172,7 +172,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">    ptr::{self, NonNull},</pre>
+                <pre class="has-background-white py-0 px-2">    marker::PhantomData,</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -188,7 +188,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">};</pre>
+                <pre class="has-background-white py-0 px-2">    ptr::{self, NonNull},</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -204,7 +204,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2"></pre>
+                <pre class="has-background-white py-0 px-2">};</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -220,7 +220,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">#[cfg(windows)]</pre>
+                <pre class="has-background-white py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -236,7 +236,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">use windows_sys::Win32::Foundation::HANDLE;</pre>
+                <pre class="has-background-white py-0 px-2">#[cfg(windows)]</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -252,7 +252,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2"></pre>
+                <pre class="has-background-white py-0 px-2">use windows_sys::Win32::Foundation::HANDLE;</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -268,7 +268,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">use crate::{raw, Error};</pre>
+                <pre class="has-background-white py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -284,7 +284,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2"></pre>
+                <pre class="has-background-white py-0 px-2">use crate::{raw, Error};</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -300,7 +300,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F;&#x2F; Phantom type representing an inactive capture handle.</pre>
+                <pre class="has-background-white py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -316,7 +316,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">pub enum Inactive {}</pre>
+                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F;&#x2F; Phantom type representing an inactive capture handle.</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -332,7 +332,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2"></pre>
+                <pre class="has-background-white py-0 px-2">pub enum Inactive {}</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -348,7 +348,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F;&#x2F; Phantom type representing an active capture handle.</pre>
+                <pre class="has-background-white py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -364,7 +364,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">pub enum Active {}</pre>
+                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F;&#x2F; Phantom type representing an active capture handle.</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -380,7 +380,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2"></pre>
+                <pre class="has-background-white py-0 px-2">pub enum Active {}</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -396,7 +396,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F;&#x2F; Phantom type representing an offline capture handle, from a pcap dump file.</pre>
+                <pre class="has-background-white py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -412,7 +412,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F;&#x2F; Implements `Activated` because it behaves nearly the same as a live handle.</pre>
+                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F;&#x2F; Phantom type representing an offline capture handle, from a pcap dump file.</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -428,7 +428,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">pub enum Offline {}</pre>
+                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F;&#x2F; Implements `Activated` because it behaves nearly the same as a live handle.</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -444,7 +444,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2"></pre>
+                <pre class="has-background-white py-0 px-2">pub enum Offline {}</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -460,7 +460,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F;&#x2F; Phantom type representing a dead capture handle.  This can be use to create</pre>
+                <pre class="has-background-white py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -476,7 +476,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F;&#x2F; new save files that are not generated from an active capture.</pre>
+                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F;&#x2F; Phantom type representing a dead capture handle.  This can be use to create</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -492,7 +492,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F;&#x2F; Implements `Activated` because it behaves nearly the same as a live handle.</pre>
+                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F;&#x2F; new save files that are not generated from an active capture.</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -508,7 +508,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">pub enum Dead {}</pre>
+                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F;&#x2F; Implements `Activated` because it behaves nearly the same as a live handle.</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -524,7 +524,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2"></pre>
+                <pre class="has-background-white py-0 px-2">pub enum Dead {}</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -540,7 +540,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F;&#x2F; `Capture`s can be in different states at different times, and in these states they</pre>
+                <pre class="has-background-white py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -556,7 +556,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F;&#x2F; may or may not have particular capabilities. This trait is implemented by phantom</pre>
+                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F;&#x2F; `Capture`s can be in different states at different times, and in these states they</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -572,7 +572,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F;&#x2F; types which allows us to punt these invariants to the type system to avoid runtime</pre>
+                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F;&#x2F; may or may not have particular capabilities. This trait is implemented by phantom</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -588,7 +588,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F;&#x2F; errors.</pre>
+                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F;&#x2F; types which allows us to punt these invariants to the type system to avoid runtime</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -604,7 +604,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">pub trait Activated: State {}</pre>
+                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F;&#x2F; errors.</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -620,7 +620,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2"></pre>
+                <pre class="has-background-white py-0 px-2">pub trait Activated: State {}</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -636,7 +636,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">impl Activated for Active {}</pre>
+                <pre class="has-background-white py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -652,7 +652,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2"></pre>
+                <pre class="has-background-white py-0 px-2">impl Activated for Active {}</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -668,7 +668,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">impl Activated for Offline {}</pre>
+                <pre class="has-background-white py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -684,7 +684,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2"></pre>
+                <pre class="has-background-white py-0 px-2">impl Activated for Offline {}</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -700,7 +700,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">impl Activated for Dead {}</pre>
+                <pre class="has-background-white py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -716,7 +716,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2"></pre>
+                <pre class="has-background-white py-0 px-2">impl Activated for Dead {}</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -732,7 +732,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F;&#x2F; `Capture`s can be in different states at different times, and in these states they</pre>
+                <pre class="has-background-white py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -748,7 +748,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F;&#x2F; may or may not have particular capabilities. This trait is implemented by phantom</pre>
+                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F;&#x2F; `Capture`s can be in different states at different times, and in these states they</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -764,7 +764,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F;&#x2F; types which allows us to punt these invariants to the type system to avoid runtime</pre>
+                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F;&#x2F; may or may not have particular capabilities. This trait is implemented by phantom</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -780,7 +780,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F;&#x2F; errors.</pre>
+                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F;&#x2F; types which allows us to punt these invariants to the type system to avoid runtime</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -796,7 +796,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">pub trait State {}</pre>
+                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F;&#x2F; errors.</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -812,7 +812,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2"></pre>
+                <pre class="has-background-white py-0 px-2">pub trait State {}</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -828,7 +828,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">impl State for Inactive {}</pre>
+                <pre class="has-background-white py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -844,7 +844,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2"></pre>
+                <pre class="has-background-white py-0 px-2">impl State for Inactive {}</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -860,7 +860,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">impl State for Active {}</pre>
+                <pre class="has-background-white py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -876,7 +876,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2"></pre>
+                <pre class="has-background-white py-0 px-2">impl State for Active {}</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -892,7 +892,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">impl State for Offline {}</pre>
+                <pre class="has-background-white py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -908,7 +908,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2"></pre>
+                <pre class="has-background-white py-0 px-2">impl State for Offline {}</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -924,7 +924,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">impl State for Dead {}</pre>
+                <pre class="has-background-white py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -940,7 +940,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2"></pre>
+                <pre class="has-background-white py-0 px-2">impl State for Dead {}</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -956,7 +956,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F;&#x2F; This is a pcap capture handle which is an abstraction over the `pcap_t` provided by pcap.</pre>
+                <pre class="has-background-white py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -972,7 +972,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F;&#x2F; There are many ways to instantiate and interact with a pcap handle, so phantom types are</pre>
+                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F;&#x2F; This is a pcap capture handle which is an abstraction over the `pcap_t` provided by pcap.</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -988,7 +988,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F;&#x2F; used to express these behaviors.</pre>
+                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F;&#x2F; There are many ways to instantiate and interact with a pcap handle, so phantom types are</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -1004,7 +1004,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F;&#x2F;</pre>
+                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F;&#x2F; used to express these behaviors.</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -1020,7 +1020,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F;&#x2F; **`Capture&lt;Inactive&gt;`** is created via `Capture::from_device()`. This handle is inactive,</pre>
+                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F;&#x2F;</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -1036,7 +1036,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F;&#x2F; so you cannot (yet) obtain packets from it. However, you can configure things like the</pre>
+                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F;&#x2F; **`Capture&lt;Inactive&gt;`** is created via `Capture::from_device()`. This handle is inactive,</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -1052,7 +1052,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F;&#x2F; buffer size, snaplen, timeout, and promiscuity before you activate it.</pre>
+                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F;&#x2F; so you cannot (yet) obtain packets from it. However, you can configure things like the</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -1068,7 +1068,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F;&#x2F;</pre>
+                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F;&#x2F; buffer size, snaplen, timeout, and promiscuity before you activate it.</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -1084,7 +1084,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F;&#x2F; **`Capture&lt;Active&gt;`** is created by calling `.open()` on a `Capture&lt;Inactive&gt;`. This</pre>
+                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F;&#x2F;</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -1100,7 +1100,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F;&#x2F; activates the capture handle, allowing you to get packets with `.next_packet()` or apply filters</pre>
+                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F;&#x2F; **`Capture&lt;Active&gt;`** is created by calling `.open()` on a `Capture&lt;Inactive&gt;`. This</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -1116,7 +1116,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F;&#x2F; with `.filter()`.</pre>
+                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F;&#x2F; activates the capture handle, allowing you to get packets with `.next_packet()` or apply filters</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -1132,7 +1132,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F;&#x2F;</pre>
+                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F;&#x2F; with `.filter()`.</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -1148,7 +1148,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F;&#x2F; **`Capture&lt;Offline&gt;`** is created via `Capture::from_file()`. This allows you to read a</pre>
+                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F;&#x2F;</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -1164,7 +1164,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F;&#x2F; pcap format dump file as if you were opening an interface -- very useful for testing or</pre>
+                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F;&#x2F; **`Capture&lt;Offline&gt;`** is created via `Capture::from_file()`. This allows you to read a</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -1180,7 +1180,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F;&#x2F; analysis.</pre>
+                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F;&#x2F; pcap format dump file as if you were opening an interface -- very useful for testing or</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -1196,7 +1196,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F;&#x2F;</pre>
+                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F;&#x2F; analysis.</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -1212,7 +1212,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F;&#x2F; **`Capture&lt;Dead&gt;`** is created via `Capture::dead()`. This allows you to create a pcap</pre>
+                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F;&#x2F;</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -1228,7 +1228,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F;&#x2F; format dump file without needing an active capture.</pre>
+                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F;&#x2F; **`Capture&lt;Dead&gt;`** is created via `Capture::dead()`. This allows you to create a pcap</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -1244,7 +1244,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F;&#x2F;</pre>
+                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F;&#x2F; format dump file without needing an active capture.</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -1260,7 +1260,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F;&#x2F; # Example:</pre>
+                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F;&#x2F;</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -1276,7 +1276,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F;&#x2F;</pre>
+                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F;&#x2F; # Example:</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -1292,7 +1292,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F;&#x2F; ```no_run</pre>
+                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F;&#x2F;</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -1308,7 +1308,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F;&#x2F; # use pcap::{Capture, Device};</pre>
+                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F;&#x2F; ```no_run</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -1324,7 +1324,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F;&#x2F; let mut cap = Capture::from_device(Device::lookup().unwrap().unwrap()) &#x2F;&#x2F; open the &quot;default&quot; interface</pre>
+                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F;&#x2F; # use pcap::{Capture, Device};</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -1340,7 +1340,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F;&#x2F;               .unwrap() &#x2F;&#x2F; assume the device exists and we are authorized to open it</pre>
+                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F;&#x2F; let mut cap = Capture::from_device(Device::lookup().unwrap().unwrap()) &#x2F;&#x2F; open the &quot;default&quot; interface</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -1356,7 +1356,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F;&#x2F;               .open() &#x2F;&#x2F; activate the handle</pre>
+                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F;&#x2F;               .unwrap() &#x2F;&#x2F; assume the device exists and we are authorized to open it</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -1372,7 +1372,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F;&#x2F;               .unwrap(); &#x2F;&#x2F; assume activation worked</pre>
+                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F;&#x2F;               .open() &#x2F;&#x2F; activate the handle</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -1388,7 +1388,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F;&#x2F;</pre>
+                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F;&#x2F;               .unwrap(); &#x2F;&#x2F; assume activation worked</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -1404,7 +1404,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F;&#x2F; while let Ok(packet) = cap.next_packet() {</pre>
+                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F;&#x2F;</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -1420,7 +1420,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F;&#x2F;     println!(&quot;received packet! {:?}&quot;, packet);</pre>
+                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F;&#x2F; while let Ok(packet) = cap.next_packet() {</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -1436,7 +1436,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F;&#x2F; }</pre>
+                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F;&#x2F;     println!(&quot;received packet! {:?}&quot;, packet);</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -1452,7 +1452,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F;&#x2F; ```</pre>
+                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F;&#x2F; }</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -1468,7 +1468,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">pub struct Capture&lt;T: State + ?Sized&gt; {</pre>
+                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F;&#x2F; ```</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -1484,7 +1484,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">    nonblock: bool,</pre>
+                <pre class="has-background-white py-0 px-2">pub struct Capture&lt;T: State + ?Sized&gt; {</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -1500,7 +1500,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">    handle: NonNull&lt;raw::pcap_t&gt;,</pre>
+                <pre class="has-background-white py-0 px-2">    nonblock: bool,</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -1516,7 +1516,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">    _marker: PhantomData&lt;T&gt;,</pre>
+                <pre class="has-background-white py-0 px-2">    handle: NonNull&lt;raw::pcap_t&gt;,</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -1532,7 +1532,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">}</pre>
+                <pre class="has-background-white py-0 px-2">    _marker: PhantomData&lt;T&gt;,</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -1548,7 +1548,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2"></pre>
+                <pre class="has-background-white py-0 px-2">}</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -1564,7 +1564,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F; A Capture is safe to Send as it encapsulates the entire lifetime of `raw::pcap_t *`, but it is</pre>
+                <pre class="has-background-white py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -1580,7 +1580,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F; not safe to Sync as libpcap does not promise thread-safe access to the same `raw::pcap_t *` from</pre>
+                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F; A Capture is safe to Send as it encapsulates the entire lifetime of `raw::pcap_t *`, but it is</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -1596,7 +1596,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F; multiple threads.</pre>
+                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F; not safe to Sync as libpcap does not promise thread-safe access to the same `raw::pcap_t *` from</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -1612,7 +1612,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">unsafe impl&lt;T: State + ?Sized&gt; Send for Capture&lt;T&gt; {}</pre>
+                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F; multiple threads.</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -1628,7 +1628,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2"></pre>
+                <pre class="has-background-white py-0 px-2">unsafe impl&lt;T: State + ?Sized&gt; Send for Capture&lt;T&gt; {}</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -1644,7 +1644,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">impl&lt;T: State + ?Sized&gt; From&lt;NonNull&lt;raw::pcap_t&gt;&gt; for Capture&lt;T&gt; {</pre>
+                <pre class="has-background-white py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -1654,13 +1654,13 @@
                 <a href="#102">102</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success"
-                role="cell" aria-label="169">
-                169
+                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white"
+                role="cell" aria-label="no coverage">
+                
             </div>
-            <div class="column has-background-success-light p-0"
+            <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-success-light py-0 px-2">    fn from(handle: NonNull&lt;raw::pcap_t&gt;) -&gt; Self {</pre>
+                <pre class="has-background-white py-0 px-2">impl&lt;T: State + ?Sized&gt; From&lt;NonNull&lt;raw::pcap_t&gt;&gt; for Capture&lt;T&gt; {</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -1676,7 +1676,7 @@
             </div>
             <div class="column has-background-success-light p-0"
                  role="cell">
-                <pre class="has-background-success-light py-0 px-2">        Capture {</pre>
+                <pre class="has-background-success-light py-0 px-2">    fn from(handle: NonNull&lt;raw::pcap_t&gt;) -&gt; Self {</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -1692,7 +1692,7 @@
             </div>
             <div class="column has-background-success-light p-0"
                  role="cell">
-                <pre class="has-background-success-light py-0 px-2">            nonblock: false,</pre>
+                <pre class="has-background-success-light py-0 px-2">        Capture {</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -1708,7 +1708,7 @@
             </div>
             <div class="column has-background-success-light p-0"
                  role="cell">
-                <pre class="has-background-success-light py-0 px-2">            handle,</pre>
+                <pre class="has-background-success-light py-0 px-2">            nonblock: false,</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -1724,7 +1724,7 @@
             </div>
             <div class="column has-background-success-light p-0"
                  role="cell">
-                <pre class="has-background-success-light py-0 px-2">            _marker: PhantomData,</pre>
+                <pre class="has-background-success-light py-0 px-2">            handle,</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -1740,7 +1740,7 @@
             </div>
             <div class="column has-background-success-light p-0"
                  role="cell">
-                <pre class="has-background-success-light py-0 px-2">        }</pre>
+                <pre class="has-background-success-light py-0 px-2">            _marker: PhantomData,</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -1756,7 +1756,7 @@
             </div>
             <div class="column has-background-success-light p-0"
                  role="cell">
-                <pre class="has-background-success-light py-0 px-2">    }</pre>
+                <pre class="has-background-success-light py-0 px-2">        }</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -1766,13 +1766,13 @@
                 <a href="#109">109</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white"
-                role="cell" aria-label="no coverage">
-                
+                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success"
+                role="cell" aria-label="169">
+                169
             </div>
-            <div class="column has-background-white p-0"
+            <div class="column has-background-success-light p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">}</pre>
+                <pre class="has-background-success-light py-0 px-2">    }</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -1788,7 +1788,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2"></pre>
+                <pre class="has-background-white py-0 px-2">}</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -1804,7 +1804,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">impl&lt;T: State + ?Sized&gt; Capture&lt;T&gt; {</pre>
+                <pre class="has-background-white py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -1814,13 +1814,13 @@
                 <a href="#112">112</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success"
-                role="cell" aria-label="38">
-                38
+                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white"
+                role="cell" aria-label="no coverage">
+                
             </div>
-            <div class="column has-background-success-light p-0"
+            <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-success-light py-0 px-2">    fn new_raw&lt;F&gt;(path: Option&lt;&amp;str&gt;, func: F) -&gt; Result&lt;Capture&lt;T&gt;, Error&gt;</pre>
+                <pre class="has-background-white py-0 px-2">impl&lt;T: State + ?Sized&gt; Capture&lt;T&gt; {</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -1836,7 +1836,7 @@
             </div>
             <div class="column has-background-success-light p-0"
                  role="cell">
-                <pre class="has-background-success-light py-0 px-2">    where</pre>
+                <pre class="has-background-success-light py-0 px-2">    fn new_raw&lt;F&gt;(path: Option&lt;&amp;str&gt;, func: F) -&gt; Result&lt;Capture&lt;T&gt;, Error&gt;</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -1852,7 +1852,7 @@
             </div>
             <div class="column has-background-success-light p-0"
                  role="cell">
-                <pre class="has-background-success-light py-0 px-2">        F: FnOnce(*const libc::c_char, *mut libc::c_char) -&gt; *mut raw::pcap_t,</pre>
+                <pre class="has-background-success-light py-0 px-2">    where</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -1868,7 +1868,7 @@
             </div>
             <div class="column has-background-success-light p-0"
                  role="cell">
-                <pre class="has-background-success-light py-0 px-2">    {</pre>
+                <pre class="has-background-success-light py-0 px-2">        F: FnOnce(*const libc::c_char, *mut libc::c_char) -&gt; *mut raw::pcap_t,</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -1884,7 +1884,7 @@
             </div>
             <div class="column has-background-success-light p-0"
                  role="cell">
-                <pre class="has-background-success-light py-0 px-2">        Error::with_errbuf(|err| {</pre>
+                <pre class="has-background-success-light py-0 px-2">    {</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -1900,7 +1900,7 @@
             </div>
             <div class="column has-background-success-light p-0"
                  role="cell">
-                <pre class="has-background-success-light py-0 px-2">            let handle = match path {</pre>
+                <pre class="has-background-success-light py-0 px-2">        Error::with_errbuf(|err| {</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -1911,12 +1911,12 @@
             </div>
             <div
                 class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success"
-                role="cell" aria-label="6">
-                6
+                role="cell" aria-label="38">
+                38
             </div>
             <div class="column has-background-success-light p-0"
                  role="cell">
-                <pre class="has-background-success-light py-0 px-2">                None =&gt; func(ptr::null(), err),</pre>
+                <pre class="has-background-success-light py-0 px-2">            let handle = match path {</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -1927,12 +1927,12 @@
             </div>
             <div
                 class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success"
-                role="cell" aria-label="32">
-                32
+                role="cell" aria-label="6">
+                6
             </div>
             <div class="column has-background-success-light p-0"
                  role="cell">
-                <pre class="has-background-success-light py-0 px-2">                Some(path) =&gt; {</pre>
+                <pre class="has-background-success-light py-0 px-2">                None =&gt; func(ptr::null(), err),</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -1948,7 +1948,7 @@
             </div>
             <div class="column has-background-success-light p-0"
                  role="cell">
-                <pre class="has-background-success-light py-0 px-2">                    let path = CString::new(path)?;</pre>
+                <pre class="has-background-success-light py-0 px-2">                Some(path) =&gt; {</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -1964,7 +1964,7 @@
             </div>
             <div class="column has-background-success-light p-0"
                  role="cell">
-                <pre class="has-background-success-light py-0 px-2">                    func(path.as_ptr(), err)</pre>
+                <pre class="has-background-success-light py-0 px-2">                    let path = CString::new(path)?;</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -1974,13 +1974,13 @@
                 <a href="#122">122</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white"
-                role="cell" aria-label="no coverage">
-                
+                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success"
+                role="cell" aria-label="32">
+                32
             </div>
-            <div class="column has-background-white p-0"
+            <div class="column has-background-success-light p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">                }</pre>
+                <pre class="has-background-success-light py-0 px-2">                    func(path.as_ptr(), err)</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -1996,7 +1996,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">            };</pre>
+                <pre class="has-background-white py-0 px-2">                }</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -2012,7 +2012,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">            Ok(Capture::from(</pre>
+                <pre class="has-background-white py-0 px-2">            };</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -2020,6 +2020,22 @@
                 id="125"
                 role="cell">
                 <a href="#125">125</a>
+            </div>
+            <div
+                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white"
+                role="cell" aria-label="no coverage">
+                
+            </div>
+            <div class="column has-background-white p-0"
+                 role="cell">
+                <pre class="has-background-white py-0 px-2">            Ok(Capture::from(</pre>
+            </div>
+        </div><div class="columns p-0 m-0" role="row">
+            <div
+                class="column is-1 is-narrow p-0 has-text-centered"
+                id="126"
+                role="cell">
+                <a href="#126">126</a>
             </div>
             <div
                 class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success"
@@ -2033,9 +2049,9 @@
         </div><div class="columns p-0 m-0" role="row">
             <div
                 class="column is-1 is-narrow p-0 has-text-centered"
-                id="126"
+                id="127"
                 role="cell">
-                <a href="#126">126</a>
+                <a href="#127">127</a>
             </div>
             <div
                 class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white"
@@ -2045,22 +2061,6 @@
             <div class="column has-background-white p-0"
                  role="cell">
                 <pre class="has-background-white py-0 px-2">            ))</pre>
-            </div>
-        </div><div class="columns p-0 m-0" role="row">
-            <div
-                class="column is-1 is-narrow p-0 has-text-centered"
-                id="127"
-                role="cell">
-                <a href="#127">127</a>
-            </div>
-            <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success"
-                role="cell" aria-label="38">
-                38
-            </div>
-            <div class="column has-background-success-light p-0"
-                 role="cell">
-                <pre class="has-background-success-light py-0 px-2">        })</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -2076,7 +2076,7 @@
             </div>
             <div class="column has-background-success-light p-0"
                  role="cell">
-                <pre class="has-background-success-light py-0 px-2">    }</pre>
+                <pre class="has-background-success-light py-0 px-2">        })</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -2086,13 +2086,13 @@
                 <a href="#129">129</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white"
-                role="cell" aria-label="no coverage">
-                
+                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success"
+                role="cell" aria-label="38">
+                38
             </div>
-            <div class="column has-background-white p-0"
+            <div class="column has-background-success-light p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2"></pre>
+                <pre class="has-background-success-light py-0 px-2">    }</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -2102,13 +2102,13 @@
                 <a href="#130">130</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success"
-                role="cell" aria-label="12">
-                12
+                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white"
+                role="cell" aria-label="no coverage">
+                
             </div>
-            <div class="column has-background-success-light p-0"
+            <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-success-light py-0 px-2">    pub fn is_nonblock(&amp;self) -&gt; bool {</pre>
+                <pre class="has-background-white py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -2124,7 +2124,7 @@
             </div>
             <div class="column has-background-success-light p-0"
                  role="cell">
-                <pre class="has-background-success-light py-0 px-2">        self.nonblock</pre>
+                <pre class="has-background-success-light py-0 px-2">    pub fn is_nonblock(&amp;self) -&gt; bool {</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -2140,7 +2140,7 @@
             </div>
             <div class="column has-background-success-light p-0"
                  role="cell">
-                <pre class="has-background-success-light py-0 px-2">    }</pre>
+                <pre class="has-background-success-light py-0 px-2">        self.nonblock</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -2150,13 +2150,13 @@
                 <a href="#133">133</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white"
-                role="cell" aria-label="no coverage">
-                
+                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success"
+                role="cell" aria-label="12">
+                12
             </div>
-            <div class="column has-background-white p-0"
+            <div class="column has-background-success-light p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2"></pre>
+                <pre class="has-background-success-light py-0 px-2">    }</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -2166,13 +2166,13 @@
                 <a href="#134">134</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success"
-                role="cell" aria-label="6">
-                6
+                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white"
+                role="cell" aria-label="no coverage">
+                
             </div>
-            <div class="column has-background-success-light p-0"
+            <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-success-light py-0 px-2">    pub fn as_ptr(&amp;self) -&gt; *mut raw::pcap_t {</pre>
+                <pre class="has-background-white py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -2188,7 +2188,7 @@
             </div>
             <div class="column has-background-success-light p-0"
                  role="cell">
-                <pre class="has-background-success-light py-0 px-2">        self.handle.as_ptr()</pre>
+                <pre class="has-background-success-light py-0 px-2">    pub fn as_ptr(&amp;self) -&gt; *mut raw::pcap_t {</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -2204,7 +2204,7 @@
             </div>
             <div class="column has-background-success-light p-0"
                  role="cell">
-                <pre class="has-background-success-light py-0 px-2">    }</pre>
+                <pre class="has-background-success-light py-0 px-2">        self.handle.as_ptr()</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -2214,13 +2214,13 @@
                 <a href="#137">137</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white"
-                role="cell" aria-label="no coverage">
-                
+                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success"
+                role="cell" aria-label="6">
+                6
             </div>
-            <div class="column has-background-white p-0"
+            <div class="column has-background-success-light p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2"></pre>
+                <pre class="has-background-success-light py-0 px-2">    }</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -2236,7 +2236,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">    &#x2F;&#x2F;&#x2F; Set the minumum amount of data received by the kernel in a single call.</pre>
+                <pre class="has-background-white py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -2252,7 +2252,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">    &#x2F;&#x2F;&#x2F;</pre>
+                <pre class="has-background-white py-0 px-2">    &#x2F;&#x2F;&#x2F; Set the minumum amount of data received by the kernel in a single call.</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -2268,7 +2268,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">    &#x2F;&#x2F;&#x2F; Note that this value is set to 0 when the capture is set to immediate mode. You should not</pre>
+                <pre class="has-background-white py-0 px-2">    &#x2F;&#x2F;&#x2F;</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -2284,7 +2284,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">    &#x2F;&#x2F;&#x2F; call `min_to_copy` on captures in immediate mode if you want them to stay in immediate mode.</pre>
+                <pre class="has-background-white py-0 px-2">    &#x2F;&#x2F;&#x2F; Note that this value is set to 0 when the capture is set to immediate mode. You should not</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -2300,7 +2300,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">    #[cfg(windows)]</pre>
+                <pre class="has-background-white py-0 px-2">    &#x2F;&#x2F;&#x2F; call `min_to_copy` on captures in immediate mode if you want them to stay in immediate mode.</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -2316,7 +2316,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">    pub fn min_to_copy(self, to: i32) -&gt; Capture&lt;T&gt; {</pre>
+                <pre class="has-background-white py-0 px-2">    #[cfg(windows)]</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -2332,7 +2332,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">        unsafe {</pre>
+                <pre class="has-background-white py-0 px-2">    pub fn min_to_copy(self, to: i32) -&gt; Capture&lt;T&gt; {</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -2348,7 +2348,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">            raw::pcap_setmintocopy(self.handle.as_ptr(), to as _);</pre>
+                <pre class="has-background-white py-0 px-2">        unsafe {</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -2364,7 +2364,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">        }</pre>
+                <pre class="has-background-white py-0 px-2">            raw::pcap_setmintocopy(self.handle.as_ptr(), to as _);</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -2380,7 +2380,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">        self</pre>
+                <pre class="has-background-white py-0 px-2">        }</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -2396,7 +2396,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">    }</pre>
+                <pre class="has-background-white py-0 px-2">        self</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -2412,7 +2412,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2"></pre>
+                <pre class="has-background-white py-0 px-2">    }</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -2428,7 +2428,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">    &#x2F;&#x2F;&#x2F; Get handle to the Capture context&#x27;s internal Win32 event semaphore.</pre>
+                <pre class="has-background-white py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -2444,7 +2444,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">    &#x2F;&#x2F;&#x2F;</pre>
+                <pre class="has-background-white py-0 px-2">    &#x2F;&#x2F;&#x2F; Get handle to the Capture context&#x27;s internal Win32 event semaphore.</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -2460,7 +2460,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">    &#x2F;&#x2F;&#x2F; Setting this event will cause a blocking capture call to unblock and return.</pre>
+                <pre class="has-background-white py-0 px-2">    &#x2F;&#x2F;&#x2F;</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -2476,7 +2476,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">    &#x2F;&#x2F;&#x2F;</pre>
+                <pre class="has-background-white py-0 px-2">    &#x2F;&#x2F;&#x2F; Setting this event will cause a blocking capture call to unblock and return.</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -2492,7 +2492,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">    &#x2F;&#x2F;&#x2F; # Example</pre>
+                <pre class="has-background-white py-0 px-2">    &#x2F;&#x2F;&#x2F;</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -2508,7 +2508,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">    &#x2F;&#x2F;&#x2F; The _winevt_ example demonstrates how to use the event semaphore to send command requests</pre>
+                <pre class="has-background-white py-0 px-2">    &#x2F;&#x2F;&#x2F; # Example</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -2524,7 +2524,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">    &#x2F;&#x2F;&#x2F; to a capture loop running in a separate thread.</pre>
+                <pre class="has-background-white py-0 px-2">    &#x2F;&#x2F;&#x2F; The _winevt_ example demonstrates how to use the event semaphore to send command requests</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -2540,7 +2540,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">    &#x2F;&#x2F;&#x2F;</pre>
+                <pre class="has-background-white py-0 px-2">    &#x2F;&#x2F;&#x2F; to a capture loop running in a separate thread.</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -2556,7 +2556,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">    &#x2F;&#x2F;&#x2F; # Safety</pre>
+                <pre class="has-background-white py-0 px-2">    &#x2F;&#x2F;&#x2F;</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -2572,7 +2572,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">    &#x2F;&#x2F;&#x2F;</pre>
+                <pre class="has-background-white py-0 px-2">    &#x2F;&#x2F;&#x2F; # Safety</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -2588,7 +2588,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">    &#x2F;&#x2F;&#x2F; The caller must ensure that the `Capture` context outlives the returned `HANDLE` since it is</pre>
+                <pre class="has-background-white py-0 px-2">    &#x2F;&#x2F;&#x2F;</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -2604,7 +2604,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">    &#x2F;&#x2F;&#x2F; a kernel object owned by the `Capture`&#x27;s pcap context.</pre>
+                <pre class="has-background-white py-0 px-2">    &#x2F;&#x2F;&#x2F; The caller must ensure that the `Capture` context outlives the returned `HANDLE` since it is</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -2620,7 +2620,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">    #[cfg(windows)]</pre>
+                <pre class="has-background-white py-0 px-2">    &#x2F;&#x2F;&#x2F; a kernel object owned by the `Capture`&#x27;s pcap context.</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -2636,7 +2636,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">    pub unsafe fn get_event(&amp;self) -&gt; HANDLE {</pre>
+                <pre class="has-background-white py-0 px-2">    #[cfg(windows)]</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -2652,7 +2652,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">        raw::pcap_getevent(self.handle.as_ptr())</pre>
+                <pre class="has-background-white py-0 px-2">    pub unsafe fn get_event(&amp;self) -&gt; HANDLE {</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -2668,7 +2668,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">    }</pre>
+                <pre class="has-background-white py-0 px-2">        raw::pcap_getevent(self.handle.as_ptr())</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -2684,7 +2684,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2"></pre>
+                <pre class="has-background-white py-0 px-2">    }</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -2694,13 +2694,13 @@
                 <a href="#167">167</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success"
-                role="cell" aria-label="78">
-                78
+                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white"
+                role="cell" aria-label="no coverage">
+                
             </div>
-            <div class="column has-background-success-light p-0"
+            <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-success-light py-0 px-2">    fn check_err(&amp;self, success: bool) -&gt; Result&lt;(), Error&gt; {</pre>
+                <pre class="has-background-white py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -2716,7 +2716,7 @@
             </div>
             <div class="column has-background-success-light p-0"
                  role="cell">
-                <pre class="has-background-success-light py-0 px-2">        if success {</pre>
+                <pre class="has-background-success-light py-0 px-2">    fn check_err(&amp;self, success: bool) -&gt; Result&lt;(), Error&gt; {</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -2724,6 +2724,22 @@
                 id="169"
                 role="cell">
                 <a href="#169">169</a>
+            </div>
+            <div
+                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success"
+                role="cell" aria-label="78">
+                78
+            </div>
+            <div class="column has-background-success-light p-0"
+                 role="cell">
+                <pre class="has-background-success-light py-0 px-2">        if success {</pre>
+            </div>
+        </div><div class="columns p-0 m-0" role="row">
+            <div
+                class="column is-1 is-narrow p-0 has-text-centered"
+                id="170"
+                role="cell">
+                <a href="#170">170</a>
             </div>
             <div
                 class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success"
@@ -2737,9 +2753,9 @@
         </div><div class="columns p-0 m-0" role="row">
             <div
                 class="column is-1 is-narrow p-0 has-text-centered"
-                id="170"
+                id="171"
                 role="cell">
-                <a href="#170">170</a>
+                <a href="#171">171</a>
             </div>
             <div
                 class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white"
@@ -2753,9 +2769,9 @@
         </div><div class="columns p-0 m-0" role="row">
             <div
                 class="column is-1 is-narrow p-0 has-text-centered"
-                id="171"
+                id="172"
                 role="cell">
-                <a href="#171">171</a>
+                <a href="#172">172</a>
             </div>
             <div
                 class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success"
@@ -2769,9 +2785,9 @@
         </div><div class="columns p-0 m-0" role="row">
             <div
                 class="column is-1 is-narrow p-0 has-text-centered"
-                id="172"
+                id="173"
                 role="cell">
-                <a href="#172">172</a>
+                <a href="#173">173</a>
             </div>
             <div
                 class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white"
@@ -2785,9 +2801,9 @@
         </div><div class="columns p-0 m-0" role="row">
             <div
                 class="column is-1 is-narrow p-0 has-text-centered"
-                id="173"
+                id="174"
                 role="cell">
-                <a href="#173">173</a>
+                <a href="#174">174</a>
             </div>
             <div
                 class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success"
@@ -2801,9 +2817,9 @@
         </div><div class="columns p-0 m-0" role="row">
             <div
                 class="column is-1 is-narrow p-0 has-text-centered"
-                id="174"
+                id="175"
                 role="cell">
-                <a href="#174">174</a>
+                <a href="#175">175</a>
             </div>
             <div
                 class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white"
@@ -2813,22 +2829,6 @@
             <div class="column has-background-white p-0"
                  role="cell">
                 <pre class="has-background-white py-0 px-2"></pre>
-            </div>
-        </div><div class="columns p-0 m-0" role="row">
-            <div
-                class="column is-1 is-narrow p-0 has-text-centered"
-                id="175"
-                role="cell">
-                <a href="#175">175</a>
-            </div>
-            <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success"
-                role="cell" aria-label="32">
-                32
-            </div>
-            <div class="column has-background-success-light p-0"
-                 role="cell">
-                <pre class="has-background-success-light py-0 px-2">    fn get_err(&amp;self) -&gt; Error {</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -2844,7 +2844,7 @@
             </div>
             <div class="column has-background-success-light p-0"
                  role="cell">
-                <pre class="has-background-success-light py-0 px-2">        unsafe { Error::new(raw::pcap_geterr(self.handle.as_ptr())) }</pre>
+                <pre class="has-background-success-light py-0 px-2">    fn get_err(&amp;self) -&gt; Error {</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -2860,7 +2860,7 @@
             </div>
             <div class="column has-background-success-light p-0"
                  role="cell">
-                <pre class="has-background-success-light py-0 px-2">    }</pre>
+                <pre class="has-background-success-light py-0 px-2">        unsafe { Error::new(raw::pcap_geterr(self.handle.as_ptr())) }</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -2870,13 +2870,13 @@
                 <a href="#178">178</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white"
-                role="cell" aria-label="no coverage">
-                
+                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success"
+                role="cell" aria-label="32">
+                32
             </div>
-            <div class="column has-background-white p-0"
+            <div class="column has-background-success-light p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">}</pre>
+                <pre class="has-background-success-light py-0 px-2">    }</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -2892,7 +2892,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2"></pre>
+                <pre class="has-background-white py-0 px-2">}</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -2908,7 +2908,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">impl&lt;T: State + ?Sized&gt; Drop for Capture&lt;T&gt; {</pre>
+                <pre class="has-background-white py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -2918,13 +2918,13 @@
                 <a href="#181">181</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success"
-                role="cell" aria-label="148">
-                148
+                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white"
+                role="cell" aria-label="no coverage">
+                
             </div>
-            <div class="column has-background-success-light p-0"
+            <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-success-light py-0 px-2">    fn drop(&amp;mut self) {</pre>
+                <pre class="has-background-white py-0 px-2">impl&lt;T: State + ?Sized&gt; Drop for Capture&lt;T&gt; {</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -2940,7 +2940,7 @@
             </div>
             <div class="column has-background-success-light p-0"
                  role="cell">
-                <pre class="has-background-success-light py-0 px-2">        unsafe { raw::pcap_close(self.handle.as_ptr()) }</pre>
+                <pre class="has-background-success-light py-0 px-2">    fn drop(&amp;mut self) {</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -2956,7 +2956,7 @@
             </div>
             <div class="column has-background-success-light p-0"
                  role="cell">
-                <pre class="has-background-success-light py-0 px-2">    }</pre>
+                <pre class="has-background-success-light py-0 px-2">        unsafe { raw::pcap_close(self.handle.as_ptr()) }</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -2966,13 +2966,13 @@
                 <a href="#184">184</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white"
-                role="cell" aria-label="no coverage">
-                
+                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success"
+                role="cell" aria-label="148">
+                148
             </div>
-            <div class="column has-background-white p-0"
+            <div class="column has-background-success-light p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">}</pre>
+                <pre class="has-background-success-light py-0 px-2">    }</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -2988,7 +2988,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2"></pre>
+                <pre class="has-background-white py-0 px-2">}</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -3004,7 +3004,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">#[repr(u32)]</pre>
+                <pre class="has-background-white py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -3020,7 +3020,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">#[derive(Debug, PartialEq, Eq, Clone, Copy)]</pre>
+                <pre class="has-background-white py-0 px-2">#[repr(u32)]</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -3036,7 +3036,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F;&#x2F; Timestamp resolution types</pre>
+                <pre class="has-background-white py-0 px-2">#[derive(Debug, PartialEq, Eq, Clone, Copy)]</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -3052,7 +3052,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F;&#x2F;</pre>
+                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F;&#x2F; Timestamp resolution types</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -3068,7 +3068,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F;&#x2F; Not all systems and interfaces will necessarily support all of these resolutions when doing</pre>
+                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F;&#x2F;</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -3084,7 +3084,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F;&#x2F; live captures; all of them can be requested when reading a safefile.</pre>
+                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F;&#x2F; Not all systems and interfaces will necessarily support all of these resolutions when doing</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -3100,7 +3100,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">pub enum Precision {</pre>
+                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F;&#x2F; live captures; all of them can be requested when reading a safefile.</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -3116,7 +3116,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">    &#x2F;&#x2F;&#x2F; Use timestamps with microsecond precision. This is the default.</pre>
+                <pre class="has-background-white py-0 px-2">pub enum Precision {</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -3132,7 +3132,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">    Micro = 0,</pre>
+                <pre class="has-background-white py-0 px-2">    &#x2F;&#x2F;&#x2F; Use timestamps with microsecond precision. This is the default.</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -3148,7 +3148,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">    &#x2F;&#x2F;&#x2F; Use timestamps with nanosecond precision.</pre>
+                <pre class="has-background-white py-0 px-2">    Micro = 0,</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -3164,7 +3164,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">    Nano = 1,</pre>
+                <pre class="has-background-white py-0 px-2">    &#x2F;&#x2F;&#x2F; Use timestamps with nanosecond precision.</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -3180,7 +3180,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">}</pre>
+                <pre class="has-background-white py-0 px-2">    Nano = 1,</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -3196,7 +3196,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2"></pre>
+                <pre class="has-background-white py-0 px-2">}</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -3212,7 +3212,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F; GRCOV_EXCL_START</pre>
+                <pre class="has-background-white py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -3228,7 +3228,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">#[cfg(test)]</pre>
+                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F; GRCOV_EXCL_START</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -3244,7 +3244,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">pub mod testmod {</pre>
+                <pre class="has-background-white py-0 px-2">#[cfg(test)]</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -3260,7 +3260,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">    use raw::testmod::RAWMTX;</pre>
+                <pre class="has-background-white py-0 px-2">pub mod testmod {</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -3276,7 +3276,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2"></pre>
+                <pre class="has-background-white py-0 px-2">    use raw::testmod::RAWMTX;</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -3292,7 +3292,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">    use super::*;</pre>
+                <pre class="has-background-white py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -3308,7 +3308,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2"></pre>
+                <pre class="has-background-white py-0 px-2">    use super::*;</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -3324,7 +3324,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">    pub struct TestCapture&lt;T: State + ?Sized&gt; {</pre>
+                <pre class="has-background-white py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -3340,7 +3340,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">        pub capture: Capture&lt;T&gt;,</pre>
+                <pre class="has-background-white py-0 px-2">    pub struct TestCapture&lt;T: State + ?Sized&gt; {</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -3356,7 +3356,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">        _close_ctx: raw::__pcap_close::Context,</pre>
+                <pre class="has-background-white py-0 px-2">        pub capture: Capture&lt;T&gt;,</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -3372,7 +3372,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">    }</pre>
+                <pre class="has-background-white py-0 px-2">        _close_ctx: raw::__pcap_close::Context,</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -3388,7 +3388,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2"></pre>
+                <pre class="has-background-white py-0 px-2">    }</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -3404,7 +3404,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">    pub fn test_capture&lt;T: State + ?Sized&gt;(pcap: *mut raw::pcap_t) -&gt; TestCapture&lt;T&gt; {</pre>
+                <pre class="has-background-white py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -3420,7 +3420,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">        &#x2F;&#x2F; Lock must be acquired by caller.</pre>
+                <pre class="has-background-white py-0 px-2">    pub fn test_capture&lt;T: State + ?Sized&gt;(pcap: *mut raw::pcap_t) -&gt; TestCapture&lt;T&gt; {</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -3436,7 +3436,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">        assert!(RAWMTX.try_lock().is_err());</pre>
+                <pre class="has-background-white py-0 px-2">        &#x2F;&#x2F; Lock must be acquired by caller.</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -3452,7 +3452,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2"></pre>
+                <pre class="has-background-white py-0 px-2">        assert!(RAWMTX.try_lock().is_err());</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -3468,7 +3468,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">        let ctx = raw::pcap_close_context();</pre>
+                <pre class="has-background-white py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -3484,7 +3484,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">        ctx.checkpoint();</pre>
+                <pre class="has-background-white py-0 px-2">        let ctx = raw::pcap_close_context();</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -3500,7 +3500,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">        ctx.expect()</pre>
+                <pre class="has-background-white py-0 px-2">        ctx.checkpoint();</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -3516,7 +3516,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">            .withf_st(move |ptr| *ptr == pcap)</pre>
+                <pre class="has-background-white py-0 px-2">        ctx.expect()</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -3532,7 +3532,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">            .return_once(|_| {});</pre>
+                <pre class="has-background-white py-0 px-2">            .withf_st(move |ptr| *ptr == pcap)</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -3548,7 +3548,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2"></pre>
+                <pre class="has-background-white py-0 px-2">            .return_once(|_| {});</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -3564,7 +3564,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">        TestCapture {</pre>
+                <pre class="has-background-white py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -3580,7 +3580,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">            capture: Capture::&lt;T&gt;::from(NonNull::new(pcap).unwrap()),</pre>
+                <pre class="has-background-white py-0 px-2">        TestCapture {</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -3596,7 +3596,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">            _close_ctx: ctx,</pre>
+                <pre class="has-background-white py-0 px-2">            capture: Capture::&lt;T&gt;::from(NonNull::new(pcap).unwrap()),</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -3612,7 +3612,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">        }</pre>
+                <pre class="has-background-white py-0 px-2">            _close_ctx: ctx,</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -3628,7 +3628,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">    }</pre>
+                <pre class="has-background-white py-0 px-2">        }</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -3644,7 +3644,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">}</pre>
+                <pre class="has-background-white py-0 px-2">    }</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -3660,7 +3660,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F; GRCOV_EXCL_STOP</pre>
+                <pre class="has-background-white py-0 px-2">}</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -3676,7 +3676,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2"></pre>
+                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F; GRCOV_EXCL_STOP</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -3692,7 +3692,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">#[cfg(test)]</pre>
+                <pre class="has-background-white py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -3708,7 +3708,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">mod tests {</pre>
+                <pre class="has-background-white py-0 px-2">#[cfg(test)]</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -3724,7 +3724,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">    use crate::{</pre>
+                <pre class="has-background-white py-0 px-2">mod tests {</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -3740,7 +3740,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">        capture::testmod::test_capture,</pre>
+                <pre class="has-background-white py-0 px-2">    use crate::{</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -3756,7 +3756,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">        raw::testmod::{as_pcap_t, RAWMTX},</pre>
+                <pre class="has-background-white py-0 px-2">        capture::testmod::test_capture,</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -3772,7 +3772,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">    };</pre>
+                <pre class="has-background-white py-0 px-2">        raw::testmod::{as_pcap_t, RAWMTX},</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -3788,7 +3788,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2"></pre>
+                <pre class="has-background-white py-0 px-2">    };</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -3804,7 +3804,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">    use super::*;</pre>
+                <pre class="has-background-white py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -3820,7 +3820,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2"></pre>
+                <pre class="has-background-white py-0 px-2">    use super::*;</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -3836,7 +3836,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">    #[test]</pre>
+                <pre class="has-background-white py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -3852,7 +3852,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">    fn test_capture_getters() {</pre>
+                <pre class="has-background-white py-0 px-2">    #[test]</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -3868,7 +3868,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">        let _m = RAWMTX.lock();</pre>
+                <pre class="has-background-white py-0 px-2">    fn test_capture_getters() {</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -3884,7 +3884,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2"></pre>
+                <pre class="has-background-white py-0 px-2">        let _m = RAWMTX.lock();</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -3900,7 +3900,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">        let mut dummy: isize = 777;</pre>
+                <pre class="has-background-white py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -3916,7 +3916,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">        let pcap = as_pcap_t(&amp;mut dummy);</pre>
+                <pre class="has-background-white py-0 px-2">        let mut dummy: isize = 777;</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -3932,7 +3932,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2"></pre>
+                <pre class="has-background-white py-0 px-2">        let pcap = as_pcap_t(&amp;mut dummy);</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -3948,7 +3948,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">        let test_capture = test_capture::&lt;Active&gt;(pcap);</pre>
+                <pre class="has-background-white py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -3964,7 +3964,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">        let capture = test_capture.capture;</pre>
+                <pre class="has-background-white py-0 px-2">        let test_capture = test_capture::&lt;Active&gt;(pcap);</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -3980,7 +3980,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2"></pre>
+                <pre class="has-background-white py-0 px-2">        let capture = test_capture.capture;</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -3996,7 +3996,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">        assert!(!capture.is_nonblock());</pre>
+                <pre class="has-background-white py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4012,7 +4012,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">        assert_eq!(capture.as_ptr(), capture.handle.as_ptr());</pre>
+                <pre class="has-background-white py-0 px-2">        assert!(!capture.is_nonblock());</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4028,7 +4028,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">    }</pre>
+                <pre class="has-background-white py-0 px-2">        assert_eq!(capture.as_ptr(), capture.handle.as_ptr());</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4044,7 +4044,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2"></pre>
+                <pre class="has-background-white py-0 px-2">    }</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4060,7 +4060,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">    #[test]</pre>
+                <pre class="has-background-white py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4076,7 +4076,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">    #[cfg(windows)]</pre>
+                <pre class="has-background-white py-0 px-2">    #[test]</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4092,7 +4092,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">    fn test_min_to_copy() {</pre>
+                <pre class="has-background-white py-0 px-2">    #[cfg(windows)]</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4108,7 +4108,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">        let _m = RAWMTX.lock();</pre>
+                <pre class="has-background-white py-0 px-2">    fn test_min_to_copy() {</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4124,7 +4124,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2"></pre>
+                <pre class="has-background-white py-0 px-2">        let _m = RAWMTX.lock();</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4140,7 +4140,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">        let mut dummy: isize = 777;</pre>
+                <pre class="has-background-white py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4156,7 +4156,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">        let pcap = as_pcap_t(&amp;mut dummy);</pre>
+                <pre class="has-background-white py-0 px-2">        let mut dummy: isize = 777;</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4172,7 +4172,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2"></pre>
+                <pre class="has-background-white py-0 px-2">        let pcap = as_pcap_t(&amp;mut dummy);</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4188,7 +4188,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">        let test_capture = test_capture::&lt;Active&gt;(pcap);</pre>
+                <pre class="has-background-white py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4204,7 +4204,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">        let capture = test_capture.capture;</pre>
+                <pre class="has-background-white py-0 px-2">        let test_capture = test_capture::&lt;Active&gt;(pcap);</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4220,7 +4220,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2"></pre>
+                <pre class="has-background-white py-0 px-2">        let capture = test_capture.capture;</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4236,7 +4236,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">        let ctx = raw::pcap_setmintocopy_context();</pre>
+                <pre class="has-background-white py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4252,7 +4252,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">        ctx.expect()</pre>
+                <pre class="has-background-white py-0 px-2">        let ctx = raw::pcap_setmintocopy_context();</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4268,7 +4268,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">            .withf_st(move |arg1, _| *arg1 == pcap)</pre>
+                <pre class="has-background-white py-0 px-2">        ctx.expect()</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4284,7 +4284,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">            .return_once(|_, _| 0);</pre>
+                <pre class="has-background-white py-0 px-2">            .withf_st(move |arg1, _| *arg1 == pcap)</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4300,7 +4300,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2"></pre>
+                <pre class="has-background-white py-0 px-2">            .return_once(|_, _| 0);</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4316,7 +4316,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">        let _capture = capture.min_to_copy(5);</pre>
+                <pre class="has-background-white py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4332,7 +4332,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">    }</pre>
+                <pre class="has-background-white py-0 px-2">        let _capture = capture.min_to_copy(5);</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4348,7 +4348,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2"></pre>
+                <pre class="has-background-white py-0 px-2">    }</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4364,7 +4364,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">    #[test]</pre>
+                <pre class="has-background-white py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4380,7 +4380,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">    #[cfg(windows)]</pre>
+                <pre class="has-background-white py-0 px-2">    #[test]</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4396,7 +4396,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">    fn test_get_event() {</pre>
+                <pre class="has-background-white py-0 px-2">    #[cfg(windows)]</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4412,7 +4412,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">        let _m = RAWMTX.lock();</pre>
+                <pre class="has-background-white py-0 px-2">    fn test_get_event() {</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4428,7 +4428,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2"></pre>
+                <pre class="has-background-white py-0 px-2">        let _m = RAWMTX.lock();</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4444,7 +4444,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">        let mut dummy: isize = 777;</pre>
+                <pre class="has-background-white py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4460,7 +4460,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">        let pcap = as_pcap_t(&amp;mut dummy);</pre>
+                <pre class="has-background-white py-0 px-2">        let mut dummy: isize = 777;</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4476,7 +4476,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2"></pre>
+                <pre class="has-background-white py-0 px-2">        let pcap = as_pcap_t(&amp;mut dummy);</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4492,7 +4492,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">        let test_capture = test_capture::&lt;Active&gt;(pcap);</pre>
+                <pre class="has-background-white py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4508,7 +4508,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">        let capture = test_capture.capture;</pre>
+                <pre class="has-background-white py-0 px-2">        let test_capture = test_capture::&lt;Active&gt;(pcap);</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4524,7 +4524,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2"></pre>
+                <pre class="has-background-white py-0 px-2">        let capture = test_capture.capture;</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4540,7 +4540,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">        let ctx = raw::pcap_getevent_context();</pre>
+                <pre class="has-background-white py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4556,7 +4556,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">        ctx.expect()</pre>
+                <pre class="has-background-white py-0 px-2">        let ctx = raw::pcap_getevent_context();</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4572,7 +4572,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">            .withf_st(move |arg1| *arg1 == pcap)</pre>
+                <pre class="has-background-white py-0 px-2">        ctx.expect()</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4588,7 +4588,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">            .return_once(|_| 5);</pre>
+                <pre class="has-background-white py-0 px-2">            .withf_st(move |arg1| *arg1 == pcap)</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4604,7 +4604,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2"></pre>
+                <pre class="has-background-white py-0 px-2">            .return_once(|_| 5);</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4620,7 +4620,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">        let handle = unsafe { capture.get_event() };</pre>
+                <pre class="has-background-white py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4636,7 +4636,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">        assert_eq!(handle, 5);</pre>
+                <pre class="has-background-white py-0 px-2">        let handle = unsafe { capture.get_event() };</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4652,7 +4652,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">    }</pre>
+                <pre class="has-background-white py-0 px-2">        assert_eq!(handle, 5);</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4668,7 +4668,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2"></pre>
+                <pre class="has-background-white py-0 px-2">    }</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4684,7 +4684,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">    #[test]</pre>
+                <pre class="has-background-white py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4700,7 +4700,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">    fn test_precision() {</pre>
+                <pre class="has-background-white py-0 px-2">    #[test]</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4716,7 +4716,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">        assert_ne!(Precision::Micro, Precision::Nano);</pre>
+                <pre class="has-background-white py-0 px-2">    fn test_precision() {</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4732,7 +4732,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">    }</pre>
+                <pre class="has-background-white py-0 px-2">        assert_ne!(Precision::Micro, Precision::Nano);</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4748,13 +4748,29 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
+                <pre class="has-background-white py-0 px-2">    }</pre>
+            </div>
+        </div><div class="columns p-0 m-0" role="row">
+            <div
+                class="column is-1 is-narrow p-0 has-text-centered"
+                id="296"
+                role="cell">
+                <a href="#296">296</a>
+            </div>
+            <div
+                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white"
+                role="cell" aria-label="no coverage">
+                
+            </div>
+            <div class="column has-background-white p-0"
+                 role="cell">
                 <pre class="has-background-white py-0 px-2">}</pre>
             </div>
         </div></div>
 </div>
         <footer class="footer">
             <div class="content has-text-centered">
-                <p class="heading">Date: 2024-12-20 18:59</p>
+                <p class="heading">Date: 2024-12-20 20:16</p>
             </div>
         </footer>
     </body>
