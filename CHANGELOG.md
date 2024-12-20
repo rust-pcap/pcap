@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+### Changed
+
+- Updated `windows-sys` from `0.36.1` to `0.59.0`.
+  Users of `Capture::get_event()` on Windows platforms should note that
+  `HANDLE` is a `isize` in `0.36`, but has been made a pointer in `0.59`,
+  causing types containing it to no longer be autotraited with `Send`.
+
 ## [2.2.0] - 2024-09-01
 
 ### Added
