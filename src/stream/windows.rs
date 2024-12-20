@@ -73,6 +73,17 @@ struct EventHandle {
     state: EventHandleState,
 }
 
+// SAFETY: EventHandle needs to be Send because it's passed over a thread boundary.
+// It contains a HANDLE that is a raw pointer, so the Send autotrait doesn't apply.
+// The capture device owns the original handle; as long as the capture device isn't
+// released before the EventHandle, this should be good.
+unsafe impl Send for EventHandle {}
+
+/// Newtype used to wrap `HANDLE` to make it `Send`:able
+struct InternalHandle(HANDLE);
+
+unsafe impl Send for InternalHandle {}
+
 enum EventHandleState {
     /// We haven't started waiting for an event yet.
     Init,
@@ -98,12 +109,13 @@ impl EventHandle {
         loop {
             match self.state {
                 EventHandleState::Init => {
-                    let handle = self.handle;
+                    let handle = InternalHandle(self.handle);
                     self.state =
                         EventHandleState::Polling(tokio::task::spawn_blocking(move || {
                             const INFINITE: u32 = !0;
+                            let handle = handle; // avoid partial closure capture problems
                             unsafe {
-                                WaitForSingleObject(handle, INFINITE);
+                                WaitForSingleObject(handle.0, INFINITE);
                             }
                         }));
                 }
