@@ -16,7 +16,6 @@
 //! while let Ok(packet) = cap.next_packet() {
 //!     println!("received packet! {:?}", packet);
 //! }
-//!
 //! ```
 //!
 //! `Capture`'s `.next_packet()` will produce a `Packet` which can be dereferenced to access the
@@ -30,13 +29,18 @@
 //! turn it into a `Capture<Active>`.
 //!
 //! ```no_run
-//! use pcap::{Device, Capture};
+//! use pcap::{
+//!     Capture,
+//!     Device,
+//! };
 //!
 //! let main_device = Device::lookup().unwrap().unwrap();
-//! let mut cap = Capture::from_device(main_device).unwrap()
-//!                   .promisc(true)
-//!                   .snaplen(5000)
-//!                   .open().unwrap();
+//! let mut cap = Capture::from_device(main_device)
+//!     .unwrap()
+//!     .promisc(true)
+//!     .snaplen(5000)
+//!     .open()
+//!     .unwrap();
 //!
 //! while let Ok(packet) = cap.next_packet() {
 //!     println!("received packet! {:?}", packet);
@@ -49,7 +53,10 @@
 //! (`Capture<Offline>`) using generics and the [`Activated`] trait, for example:
 //!
 //! ```
-//! use pcap::{Activated, Capture};
+//! use pcap::{
+//!     Activated,
+//!     Capture,
+//! };
 //!
 //! fn read_packets<T: Activated>(mut capture: Capture<T>) {
 //!     while let Ok(packet) = capture.next_packet() {
@@ -60,8 +67,11 @@
 
 #![cfg_attr(docsrs, feature(doc_cfg))]
 
-use std::ffi::{self, CStr};
-use std::fmt;
+use std::{
+    borrow::Cow,
+    ffi::{self, CStr, CString},
+    fmt,
+};
 
 use self::Error::*;
 
@@ -76,7 +86,7 @@ pub use capture::activated::open_raw_fd;
 pub use capture::{
     activated::{iterator::PacketIter, BpfInstruction, BpfProgram, Direction, Savefile, Stat},
     inactive::TimestampType,
-    {Activated, Active, Capture, Dead, Inactive, Offline, Precision, State},
+    Activated, Active, Capture, Dead, Inactive, Offline, Precision, State,
 };
 pub use codec::PacketCodec;
 pub use device::{Address, ConnectionStatus, Device, DeviceFlags, IfFlags};
@@ -157,6 +167,23 @@ unsafe fn cstr_to_string(ptr: *const libc::c_char) -> Result<Option<String>, Err
     Ok(string)
 }
 
+// for 1.69.0
+// pub(crate) fn bytes_to_cstr(bytes: &[u8]) -> Cow<CStr> {
+//   match CStr::from_bytes_until_nul(&bytes) {
+//       Ok(cstr) => Cow::Borrowed(cstr),
+//       Err(_) => Cow::Owned(CString::new(bytes).unwrap()),
+//   }
+// }
+
+#[allow(dead_code)]
+pub(crate) fn bytes_to_cstr(bytes: &[u8]) -> Result<Cow<'_, CStr>, Error> {
+    if let Some(nul) = bytes.iter().position(|&b| b == 0) {
+        Ok(Cow::Borrowed(CStr::from_bytes_with_nul(&bytes[..=nul])?))
+    } else {
+        Ok(Cow::Owned(CString::new(bytes)?))
+    }
+}
+
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match *self {
@@ -213,6 +240,18 @@ impl From<ffi::NulError> for Error {
     }
 }
 
+impl From<ffi::FromBytesWithNulError> for Error {
+    fn from(_: ffi::FromBytesWithNulError) -> Error {
+        InvalidInputString
+    }
+}
+
+impl From<ffi::FromVecWithNulError> for Error {
+    fn from(_: ffi::FromVecWithNulError) -> Error {
+        InvalidInputString
+    }
+}
+
 impl From<std::str::Utf8Error> for Error {
     fn from(obj: std::str::Utf8Error) -> Error {
         MalformedError(obj)
@@ -241,14 +280,13 @@ pub const fn packet_header_size() -> usize {
 
 #[cfg(test)]
 mod tests {
-    use std::error::Error as StdError;
-    use std::{ffi::CString, io};
+    use std::{error::Error as StdError, ffi::CString, io};
 
     use super::*;
 
     #[test]
     fn test_error_invalid_utf8() {
-        let bytes: [u8; 8] = [0x78, 0xfe, 0xe9, 0x89, 0x00, 0x00, 0xed, 0x4f];
+        let bytes: [u8; 8] = [0x78, 0xFE, 0xE9, 0x89, 0x00, 0x00, 0xED, 0x4F];
         let error = unsafe { Error::new(&bytes as *const _ as _) };
         assert!(matches!(error, Error::MalformedError(_)));
     }
@@ -264,7 +302,7 @@ mod tests {
     fn test_errors() {
         let mut errors: Vec<Error> = vec![];
 
-        let bytes: [u8; 8] = [0x78, 0xfe, 0xe9, 0x89, 0x00, 0x00, 0xed, 0x4f];
+        let bytes: [u8; 8] = [0x78, 0xFE, 0xE9, 0x89, 0x00, 0x00, 0xED, 0x4F];
         let cstr = unsafe { CStr::from_ptr(&bytes as *const _ as _) };
 
         errors.push(cstr.to_str().unwrap_err().into());
@@ -298,5 +336,24 @@ mod tests {
             packet_header_size(),
             std::mem::size_of::<raw::pcap_pkthdr>()
         );
+    }
+
+    #[test]
+    fn test_bytes_to_cstr() {
+        let bytes_with_nul = b"hello world\0";
+        let cstr = bytes_to_cstr(bytes_with_nul).unwrap();
+        assert_eq!(cstr.to_bytes_with_nul(), bytes_with_nul);
+
+        let bytes = b"hello world";
+        let cstr = bytes_to_cstr(bytes).unwrap();
+        assert_eq!(cstr.to_bytes_with_nul(), bytes_with_nul);
+
+        let bytes = b"hello\0world";
+        let cstr = bytes_to_cstr(bytes).unwrap();
+        assert_eq!(cstr.to_bytes_with_nul(), b"hello\0");
+
+        let bytes = b"";
+        let cstr = bytes_to_cstr(bytes).unwrap();
+        assert_eq!(cstr.to_bytes_with_nul(), b"\0");
     }
 }

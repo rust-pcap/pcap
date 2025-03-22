@@ -49,6 +49,6 @@ mod tests {
         assert!(!capture.is_nonblock());
 
         let result = capture.stream(Codec);
-        assert!(result.is_err());
+        result.unwrap_err();
     }
 }

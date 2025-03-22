@@ -84,7 +84,7 @@ mod tests {
             .return_once(|_, _, _| 0);
 
         let result = capture.sendpacket(buffer);
-        assert!(result.is_ok());
+        result.unwrap();
 
         let ctx = pcap_sendpacket_context();
         ctx.checkpoint();
@@ -95,7 +95,7 @@ mod tests {
         let _err = geterr_expect(pcap);
 
         let result = capture.sendpacket(buffer);
-        assert!(result.is_err());
+        result.unwrap_err();
     }
 
     #[test]
@@ -135,7 +135,7 @@ mod tests {
             .return_once(|_, _, _| -1);
 
         let result = capture.setnonblock();
-        assert!(result.is_err());
+        result.unwrap_err();
     }
 
     #[test]
