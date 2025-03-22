@@ -570,7 +570,7 @@ mod tests {
         ctx.checkpoint();
 
         let result = Device::lookup();
-        assert!(result.is_err());
+        result.unwrap_err();
     }
 
     #[test]
@@ -630,7 +630,7 @@ mod tests {
         ctx.checkpoint();
 
         let result = Device::list();
-        assert!(result.is_err());
+        result.unwrap_err();
     }
 
     #[test]

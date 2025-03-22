@@ -16,6 +16,7 @@ use crate::{
 };
 
 /// Implement Stream for async use of pcap
+#[derive(Debug)]
 pub struct PacketStream<T: Activated + ?Sized, C> {
     inner: AsyncFd<SelectableCapture<T>>,
     codec: C,

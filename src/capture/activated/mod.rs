@@ -323,6 +323,7 @@ impl<T: Activated> From<Capture<T>> for Capture<dyn Activated> {
 }
 
 /// Abstraction for writing pcap savefiles, which can be read afterwards via `Capture::from_file()`.
+#[derive(Debug)]
 pub struct Savefile {
     handle: NonNull<raw::pcap_dumper_t>,
 }
@@ -369,6 +370,7 @@ impl Drop for Savefile {
 #[repr(transparent)]
 pub struct BpfInstruction(raw::bpf_insn);
 #[repr(transparent)]
+#[derive(Debug)]
 pub struct BpfProgram(raw::bpf_program);
 
 impl BpfProgram {
@@ -513,7 +515,7 @@ mod tests {
         let _err = geterr_expect(pcap);
 
         let result = capture.list_datalinks();
-        assert!(result.is_err());
+        result.unwrap_err();
 
         let mut datalinks: [i32; 4] = [0, 1, 2, 3];
         let links: *mut i32 = datalinks.as_mut_ptr();
@@ -555,7 +557,7 @@ mod tests {
             .return_once(|_, _| 0);
 
         let result = capture.set_datalink(Linktype::ETHERNET);
-        assert!(result.is_ok());
+        result.unwrap();
 
         let ctx = raw::pcap_set_datalink_context();
         ctx.checkpoint();
@@ -566,7 +568,7 @@ mod tests {
         let _err = geterr_expect(pcap);
 
         let result = capture.set_datalink(Linktype::ETHERNET);
-        assert!(result.is_err());
+        result.unwrap_err();
     }
 
     #[test]
@@ -637,7 +639,7 @@ mod tests {
             .return_once(|_| {});
 
         let result = capture.savefile("path/to/nowhere");
-        assert!(result.is_ok());
+        result.unwrap();
     }
 
     #[test]
@@ -665,7 +667,7 @@ mod tests {
             .return_once(|_| {});
 
         let result = capture.savefile_append("path/to/nowhere");
-        assert!(result.is_ok());
+        result.unwrap();
     }
 
     #[test]
@@ -686,7 +688,7 @@ mod tests {
         let _err = geterr_expect(pcap);
 
         let result = capture.savefile("path/to/nowhere");
-        assert!(result.is_err());
+        result.unwrap_err();
     }
 
     #[test]
@@ -708,7 +710,7 @@ mod tests {
         let _err = geterr_expect(pcap);
 
         let result = capture.savefile_append("path/to/nowhere");
-        assert!(result.is_err());
+        result.unwrap_err();
     }
 
     #[test]
@@ -740,7 +742,7 @@ mod tests {
             .return_once(|_| 0);
 
         let result = savefile.flush();
-        assert!(result.is_ok());
+        result.unwrap();
 
         let ctx = raw::pcap_dump_flush_context();
         ctx.checkpoint();
@@ -749,7 +751,7 @@ mod tests {
             .return_once(|_| -1);
 
         let result = savefile.flush();
-        assert!(result.is_err());
+        result.unwrap_err();
     }
 
     #[test]
@@ -768,7 +770,7 @@ mod tests {
             .return_once(|_, _| 0);
 
         let result = capture.direction(Direction::Out);
-        assert!(result.is_ok());
+        result.unwrap();
 
         let ctx = raw::pcap_setdirection_context();
         ctx.checkpoint();
@@ -779,7 +781,7 @@ mod tests {
         let _err = geterr_expect(pcap);
 
         let result = capture.direction(Direction::Out);
-        assert!(result.is_err());
+        result.unwrap_err();
 
         // For code coverage of the derive line.
         assert_ne!(Direction::In, Direction::InOut);
@@ -840,7 +842,7 @@ mod tests {
         let _err = geterr_expect(pcap);
 
         let result = capture.next_packet();
-        assert!(result.is_err());
+        result.unwrap_err();
     }
 
     #[test]
@@ -883,7 +885,7 @@ mod tests {
         ctx.expect().return_once(|_| {});
 
         let result = capture.compile("some bpf program", false);
-        assert!(result.is_err());
+        result.unwrap_err();
 
         let ctx = raw::pcap_compile_context();
         ctx.checkpoint();
@@ -896,7 +898,7 @@ mod tests {
         ctx.expect().return_once(|_| {});
 
         let result = capture.compile("some bpf program", false);
-        assert!(result.is_ok());
+        result.unwrap();
     }
 
     #[test]
@@ -925,7 +927,7 @@ mod tests {
         ctx.expect().return_once(|_| {});
 
         let result = capture.filter("some bpf program", false);
-        assert!(result.is_err());
+        result.unwrap_err();
 
         let ctx = raw::pcap_compile_context();
         ctx.checkpoint();
@@ -944,7 +946,7 @@ mod tests {
         ctx.expect().return_once(|_| {});
 
         let result = capture.compile("some bpf program", false);
-        assert!(result.is_ok());
+        result.unwrap();
     }
 
     #[test]
@@ -983,7 +985,7 @@ mod tests {
         let _err = geterr_expect(pcap);
 
         let result = capture.stats();
-        assert!(result.is_err());
+        result.unwrap_err();
     }
 
     #[test]

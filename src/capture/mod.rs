@@ -4,11 +4,7 @@ pub mod inactive;
 #[cfg_attr(docsrs, doc(cfg(all(not(windows), feature = "capture-stream"))))]
 pub mod selectable;
 
-use std::{
-    ffi::CString,
-    marker::PhantomData,
-    ptr::{self, NonNull},
-};
+use std::{marker::PhantomData, path::Path, ptr::NonNull};
 
 #[cfg(windows)]
 use windows_sys::Win32::Foundation::HANDLE;
@@ -16,18 +12,22 @@ use windows_sys::Win32::Foundation::HANDLE;
 use crate::{raw, Error};
 
 /// Phantom type representing an inactive capture handle.
+#[derive(Debug)]
 pub enum Inactive {}
 
 /// Phantom type representing an active capture handle.
+#[derive(Debug)]
 pub enum Active {}
 
 /// Phantom type representing an offline capture handle, from a pcap dump file.
 /// Implements `Activated` because it behaves nearly the same as a live handle.
+#[derive(Debug)]
 pub enum Offline {}
 
 /// Phantom type representing a dead capture handle.  This can be use to create
 /// new save files that are not generated from an active capture.
 /// Implements `Activated` because it behaves nearly the same as a live handle.
+#[derive(Debug)]
 pub enum Dead {}
 
 /// `Capture`s can be in different states at different times, and in these states they
@@ -88,6 +88,7 @@ impl State for Dead {}
 ///     println!("received packet! {:?}", packet);
 /// }
 /// ```
+#[derive(Debug)]
 pub struct Capture<T: State + ?Sized> {
     nonblock: bool,
     handle: NonNull<raw::pcap_t>,
@@ -110,18 +111,42 @@ impl<T: State + ?Sized> From<NonNull<raw::pcap_t>> for Capture<T> {
 }
 
 impl<T: State + ?Sized> Capture<T> {
-    fn new_raw<F>(path: Option<&str>, func: F) -> Result<Capture<T>, Error>
+    fn new_raw_with_path<F>(path: &Path, func: F) -> Result<Capture<T>, Error>
     where
         F: FnOnce(*const libc::c_char, *mut libc::c_char) -> *mut raw::pcap_t,
     {
         Error::with_errbuf(|err| {
-            let handle = match path {
-                None => func(ptr::null(), err),
-                Some(path) => {
-                    let path = CString::new(path)?;
-                    func(path.as_ptr(), err)
-                }
-            };
+            #[cfg(unix)]
+            use std::os::unix::ffi::OsStrExt;
+            #[cfg(unix)]
+            let path = crate::bytes_to_cstr(path.as_os_str().as_bytes())?;
+
+            #[cfg(windows)]
+            use std::os::windows::ffi::OsStrExt;
+            #[cfg(windows)]
+            let path: Vec<u8> = path
+                .as_os_str()
+                .encode_wide()
+                .chain(Some(0))
+                .flat_map(u16::to_ne_bytes)
+                .collect();
+            #[cfg(windows)]
+            let path: Vec<i8> = unsafe { std::mem::transmute(path) };
+
+            let handle = func(path.as_ptr(), err);
+            Ok(Capture::from(
+                NonNull::<raw::pcap_t>::new(handle).ok_or_else(|| unsafe { Error::new(err) })?,
+            ))
+        })
+    }
+
+    #[cfg(not(windows))]
+    fn new_raw<F>(func: F) -> Result<Capture<T>, Error>
+    where
+        F: FnOnce(*mut libc::c_char) -> *mut raw::pcap_t,
+    {
+        Error::with_errbuf(|err| {
+            let handle = func(err);
             Ok(Capture::from(
                 NonNull::<raw::pcap_t>::new(handle).ok_or_else(|| unsafe { Error::new(err) })?,
             ))
@@ -229,12 +254,11 @@ pub mod testmod {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
     use crate::{
         capture::testmod::test_capture,
         raw::testmod::{as_pcap_t, RAWMTX},
     };
-
-    use super::*;
 
     #[test]
     fn test_capture_getters() {

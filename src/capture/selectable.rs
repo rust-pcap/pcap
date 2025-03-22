@@ -6,6 +6,7 @@ use crate::{
 };
 
 /// Newtype [`Capture`] wrapper that exposes `pcap_get_selectable_fd()`.
+#[derive(Debug)]
 pub struct SelectableCapture<T: State + ?Sized> {
     inner: Capture<T>,
     fd: RawFd,
@@ -76,6 +77,6 @@ mod tests {
             .return_once(|_| -1);
 
         let result = SelectableCapture::new(capture);
-        assert!(result.is_err());
+        result.unwrap_err();
     }
 }
