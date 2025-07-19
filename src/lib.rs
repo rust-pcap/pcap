@@ -160,19 +160,19 @@ unsafe fn cstr_to_string(ptr: *const libc::c_char) -> Result<Option<String>, Err
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match *self {
-            MalformedError(ref e) => write!(f, "libpcap returned invalid UTF-8: {}", e),
+            MalformedError(ref e) => write!(f, "libpcap returned invalid UTF-8: {e}"),
             InvalidString => write!(f, "libpcap returned a null string"),
-            PcapError(ref e) => write!(f, "libpcap error: {}", e),
+            PcapError(ref e) => write!(f, "libpcap error: {e}"),
             InvalidLinktype => write!(f, "invalid or unknown linktype"),
             TimeoutExpired => write!(f, "timeout expired while reading from a live capture"),
             NonNonBlock => write!(f, "must be in non-blocking mode to function"),
             NoMorePackets => write!(f, "no more packets to read from the file"),
             InsufficientMemory => write!(f, "insufficient memory"),
             InvalidInputString => write!(f, "invalid input string (internal null)"),
-            IoError(ref e) => write!(f, "io error occurred: {:?}", e),
+            IoError(ref e) => write!(f, "io error occurred: {e:?}"),
             #[cfg(not(windows))]
             InvalidRawFd => write!(f, "invalid raw file descriptor provided"),
-            ErrnoError(ref e) => write!(f, "libpcap os errno: {}", e),
+            ErrnoError(ref e) => write!(f, "libpcap os errno: {e}"),
             BufferOverflow => write!(f, "buffer size too large"),
         }
     }

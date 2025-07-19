@@ -91,6 +91,6 @@ mod tests {
 
     #[test]
     fn test_packet_header_display() {
-        assert!(!format!("{:?}", HEADER).is_empty());
+        assert!(!format!("{HEADER:?}").is_empty());
     }
 }

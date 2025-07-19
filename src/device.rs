@@ -473,7 +473,7 @@ mod tests {
         assert_ne!(flags.connection_status, ConnectionStatus::Disconnected);
         assert_eq!(flags.connection_status, ConnectionStatus::NotApplicable);
 
-        assert!(!format!("{:?}", flags).is_empty());
+        assert!(!format!("{flags:?}").is_empty());
     }
 
     #[test]
@@ -520,7 +520,7 @@ mod tests {
         let device: Device = "device".into();
         let _capture: Capture<Active> = device.clone().open().unwrap();
 
-        assert!(!format!("{:?}", device).is_empty());
+        assert!(!format!("{device:?}").is_empty());
     }
 
     #[test]
@@ -647,7 +647,7 @@ mod tests {
         assert!(address.broadcast_addr.is_none());
         assert!(address.dst_addr.is_none());
 
-        assert!(!format!("{:?}", address).is_empty());
+        assert!(!format!("{address:?}").is_empty());
     }
 
     #[test]
@@ -679,6 +679,6 @@ mod tests {
         assert!(address.broadcast_addr.is_none());
         assert!(address.dst_addr.is_none());
 
-        assert!(!format!("{:?}", address).is_empty());
+        assert!(!format!("{address:?}").is_empty());
     }
 }

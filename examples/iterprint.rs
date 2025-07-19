@@ -34,7 +34,7 @@ fn main() -> Result<(), Box<dyn error::Error>> {
     for packet in cap.iter(Codec) {
         let packet = packet?;
 
-        println!("{:?}", packet);
+        println!("{packet:?}");
     }
 
     Ok(())

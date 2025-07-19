@@ -78,7 +78,7 @@ mod tests {
         if recv_len != pkt1.len() {
             // wtf!?
             let weird = PacketHeaders::from_ethernet_slice(test_sendpkt).unwrap();
-            panic!("weird packet !! {:#?}", weird);
+            panic!("weird packet !! {weird:#?}");
         }
         assert_eq!(pkt1.len(), recv_len);
         assert_eq!(pkt1, test_sendpkt);
@@ -104,7 +104,7 @@ mod tests {
                 panic!("Failed to bind the tap interface: PermissionDenied - please run with root/sudo!");
             }
             // common error is to not run these tests as root; provide a nicer message
-            panic!("Failed to bind the tap interface: {:#?}", e);
+            panic!("Failed to bind the tap interface: {e:#?}");
         }
         let iface = iface_result.unwrap();
         if cfg!(target_os = "linux") {
