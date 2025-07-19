@@ -22,7 +22,7 @@ fn main() {
         let p = cap.next_packet().unwrap();
 
         // print the packet out
-        println!("packet received on network: {:?}", p);
+        println!("packet received on network: {p:?}");
 
         // write the packet to the savefile
         savefile.write(&p);
@@ -35,5 +35,5 @@ fn main() {
     let p = cap.next_packet().unwrap();
 
     // print that packet out -- it should be the same as the one we printed above
-    println!("packet obtained from file: {:?}", p);
+    println!("packet obtained from file: {p:?}");
 }

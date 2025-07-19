@@ -18,7 +18,7 @@ fn main() {
     for counter in 0..5 {
         let mut save_file = Capture::dead(linktype)
             .unwrap()
-            .savefile(format!("dump_{}.pcap", counter))
+            .savefile(format!("dump_{counter}.pcap"))
             .unwrap();
 
         // ...30 packets each

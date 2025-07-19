@@ -16,7 +16,7 @@ fn main() -> Result<(), Box<dyn error::Error>> {
     for packet in cap {
         let packet = packet?;
 
-        println!("{:?}", packet);
+        println!("{packet:?}");
     }
 
     Ok(())

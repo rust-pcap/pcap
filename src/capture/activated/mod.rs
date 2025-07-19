@@ -994,7 +994,7 @@ mod tests {
             jf: 3,
             k: 4,
         });
-        assert_eq!(format!("{}", instr), "1 2 3 4");
+        assert_eq!(format!("{instr}"), "1 2 3 4");
     }
 
     #[test]

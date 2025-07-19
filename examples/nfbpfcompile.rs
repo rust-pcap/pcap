@@ -26,7 +26,7 @@ fn main() {
     let lt = match Linktype::from_name(&layertype) {
         Ok(t) => t,
         Err(_) => {
-            println!("Invalid linklayer type {}", layertype);
+            println!("Invalid linklayer type {layertype}");
             process::exit(1);
         }
     };
@@ -35,14 +35,14 @@ fn main() {
     let program: BpfProgram = match capture.compile(&prog, true) {
         Ok(p) => p,
         Err(e) => {
-            println!("{:?}", e);
+            println!("{e:?}");
             process::exit(1);
         }
     };
     let instructions = program.get_instructions();
     let def: String = instructions
         .iter()
-        .map(|ref op| format!("{}", op))
+        .map(|ref op| format!("{op}"))
         .collect::<Vec<_>>()
         .join(",");
     println!("{},{}", instructions.len(), def);

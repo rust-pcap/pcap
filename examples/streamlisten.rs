@@ -11,7 +11,7 @@ impl PacketCodec for SimpleDumpCodec {
     type Item = String;
 
     fn decode(&mut self, packet: Packet) -> Self::Item {
-        format!("{:?}", packet)
+        format!("{packet:?}")
     }
 }
 
@@ -19,7 +19,7 @@ async fn start_new_stream(device: Device) -> PacketStream<Active, SimpleDumpCode
     match new_stream(device) {
         Ok(stream) => stream,
         Err(e) => {
-            println!("{:?}", e);
+            println!("{e:?}");
             std::process::exit(1);
         }
     }
@@ -48,7 +48,7 @@ fn main() {
     let stream = rt.block_on(start_new_stream(device));
 
     let fut = stream.for_each(move |s| {
-        println!("{:?}", s);
+        println!("{s:?}");
         futures::future::ready(())
     });
     rt.block_on(fut);

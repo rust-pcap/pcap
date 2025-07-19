@@ -52,7 +52,7 @@ impl Version {
     }
 
     fn parse(s: &str) -> Result<Version, Box<dyn std::error::Error>> {
-        let err = format!("invalid pcap lib version: {}", s);
+        let err = format!("invalid pcap lib version: {s}");
 
         let re = regex::Regex::new(r"([[:digit:]]+)\.([[:digit:]]+)\.([[:digit:]]+)")?;
         let captures = re.captures(s).ok_or_else(|| err.clone())?;
@@ -76,7 +76,7 @@ impl std::fmt::Display for Version {
             minor,
             micro,
         } = self;
-        write!(f, "{}.{}.{}", major, minor, micro)
+        write!(f, "{major}.{minor}.{micro}")
     }
 }
 
@@ -120,7 +120,7 @@ fn get_libpcap_version(libdirpath: Option<PathBuf>) -> Result<Version, Box<dyn s
     let c_str: &CStr = unsafe { CStr::from_ptr(c_buf) };
     let v_str: &str = c_str.to_str()?;
 
-    let err = format!("cannot infer pcap lib version from: {}", v_str);
+    let err = format!("cannot infer pcap lib version from: {v_str}");
 
     #[cfg(not(windows))]
     {
@@ -184,7 +184,7 @@ fn main() {
     // that's not set, try last ditch effort to build even though library wasn't
     // explicitly given.
     let version = if let Ok(libdir) = env::var("LIBPCAP_LIBDIR") {
-        println!("cargo:rustc-link-search=native={}", libdir);
+        println!("cargo:rustc-link-search=native={libdir}");
         get_libpcap_version(Some(PathBuf::from(&libdir))).unwrap()
     } else if let Ok(library) = from_pkg_config() {
         Version::parse(&library.version).unwrap()
