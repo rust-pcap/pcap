@@ -2,12 +2,12 @@
 
 ## [Unreleased]
 
+## [2.3.0] - 2025-07-19
+
 ### Added
 
 - Added `packet_header_size()` for applications that need to know the size of internal type
   `pcap_pkthdr` (for instance to calculate exact send queue sizes).
-
-want to precalculate exact queue sizes.
 
 ## [2.2.0] - 2024-09-01
 
