@@ -43,7 +43,7 @@ impl AsRawFd for Capture<Active> {
 #[cfg(not(windows))]
 impl AsFd for Capture<Active> {
     /// Returns the file descriptor for a live capture.
-    fn as_fd(&self) -> BorrowedFd {
+    fn as_fd(&self) -> BorrowedFd<'_> {
         // SAFETY: pcap_fileno always succeeds on a live capture,
         // and we know this capture is live due to its State.
         let fd = unsafe { raw::pcap_fileno(self.handle.as_ptr()) };
