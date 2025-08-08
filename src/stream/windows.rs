@@ -16,6 +16,7 @@ use crate::{
 };
 
 /// Implement Stream for async use of pcap
+#[derive(Debug)]
 pub struct PacketStream<T: Activated + ?Sized, C> {
     event_handle: EventHandle,
     capture: Capture<T>,
@@ -68,11 +69,13 @@ impl<T: Activated + ?Sized, C: PacketCodec> futures::Stream for PacketStream<T, 
 /// from an asynchronous context. Once the call to `WaitForSingleObject`
 /// completes, the handle is considered ready and will keep returning `Ready`
 /// until it's reset.
+#[derive(Debug)]
 struct EventHandle {
     handle: HANDLE,
     state: EventHandleState,
 }
 
+#[derive(Debug)]
 enum EventHandleState {
     /// We haven't started waiting for an event yet.
     Init,

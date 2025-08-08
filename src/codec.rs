@@ -18,6 +18,7 @@ pub mod testmod {
 
     use super::*;
 
+    #[derive(Debug)]
     pub struct Codec;
 
     #[derive(Debug, PartialEq, Eq)]

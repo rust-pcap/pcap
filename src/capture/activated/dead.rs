@@ -58,7 +58,7 @@ mod tests {
             .return_once(|_| {});
 
         let result = Capture::dead(Linktype::ETHERNET);
-        assert!(result.is_ok());
+        result.unwrap();
     }
 
     #[test]
@@ -80,6 +80,6 @@ mod tests {
             .return_once(|_| {});
 
         let result = Capture::dead_with_precision(Linktype::ETHERNET, Precision::Nano);
-        assert!(result.is_ok());
+        result.unwrap();
     }
 }
