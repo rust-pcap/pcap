@@ -161,7 +161,7 @@ pub enum TimestampType {
     /// A timestamp provided by the host machine that is low precision but relatively cheap to
     /// fetch.
     ///
-    /// This is normally done using the system clock, so it's normally synchornized with times
+    /// This is normally done using the system clock, so it's normally synchronized with times
     /// you'd fetch from system calls.
     HostLowPrec = 1,
     /// A timestamp provided by the host machine that is high precision. It might be more expensive
