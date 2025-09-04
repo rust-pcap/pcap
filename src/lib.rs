@@ -98,6 +98,10 @@ mod stream;
 #[cfg(feature = "capture-stream")]
 #[cfg_attr(docsrs, doc(cfg(feature = "capture-stream")))]
 pub use stream::PacketStream;
+#[cfg(all(unix, feature = "capture-stream"))]
+mod sink;
+#[cfg(all(unix, feature = "capture-stream"))]
+pub use sink::PacketSink;
 
 /// An error received from pcap
 #[derive(Debug, PartialEq, Eq)]
