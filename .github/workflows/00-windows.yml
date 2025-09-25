@@ -22,7 +22,7 @@ jobs:
     uses: './.github/workflows/01-build-and-test-windows.yml'
     with:
       os: 'windows-latest'
-      toolchain: '1.63'
+      toolchain: '1.64'
       msrv: true
     secrets:
       NPCAP_OEM_PASSWORD: ${{ secrets.NPCAP_OEM_PASSWORD }}
