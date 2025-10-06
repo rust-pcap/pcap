@@ -1,4 +1,4 @@
-use std::mem;
+use std::{mem, path::Path};
 
 use crate::{
     capture::{Active, Capture, Inactive},
@@ -32,7 +32,7 @@ impl Capture<Inactive> {
     /// ```
     pub fn from_device<D: Into<Device>>(device: D) -> Result<Capture<Inactive>, Error> {
         let device: Device = device.into();
-        Capture::new_raw(Some(&device.name), |name, err| unsafe {
+        Capture::new_raw_with_path(Path::new(&device.name), |name, err| unsafe {
             raw::pcap_create(name, err)
         })
     }
@@ -206,7 +206,7 @@ mod tests {
             .return_once(|_| {});
 
         let result = Capture::from_device("some_device");
-        assert!(result.is_ok());
+        result.unwrap();
     }
 
     #[test]
@@ -217,7 +217,7 @@ mod tests {
         ctx.expect().return_once_st(|_, _| std::ptr::null_mut());
 
         let result = Capture::from_device("some_device");
-        assert!(result.is_err());
+        result.unwrap_err();
     }
 
     #[test]
@@ -236,7 +236,7 @@ mod tests {
             .return_once(|_| 0);
 
         let result = capture.open();
-        assert!(result.is_ok());
+        result.unwrap();
     }
 
     #[test]
@@ -257,7 +257,7 @@ mod tests {
         let _err = geterr_expect(pcap);
 
         let result = capture.open();
-        assert!(result.is_err());
+        result.unwrap_err();
     }
 
     #[test]

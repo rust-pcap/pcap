@@ -122,10 +122,10 @@ fn test_compile_error() {
     let program_str = "this is a terrible program";
 
     let result = bpf_capture.compile(program_str, false);
-    assert!(result.is_err());
+    result.unwrap_err();
 
     let result = bpf_capture.compile(program_str, true);
-    assert!(result.is_err());
+    result.unwrap_err();
 }
 
 #[test]
@@ -134,7 +134,7 @@ fn test_filter() {
     capture.filter("dst host 8.8.8.8", false).unwrap();
 
     let result = capture.next_packet();
-    assert!(result.is_ok());
+    result.unwrap();
 }
 
 #[test]
