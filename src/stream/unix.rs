@@ -58,6 +58,9 @@ impl<T: Activated + ?Sized, C: PacketCodec> futures::Stream for PacketStream<T, 
                     Err(e) => Ok(Err(e)),
                 },
             ) {
+                Ok(Ok(Err(Error::NoMorePackets))) => {
+                    return Poll::Ready(None);
+                }
                 Ok(result) => {
                     return Poll::Ready(Some(result?));
                 }
