@@ -666,6 +666,31 @@ mod tests {
     }
 
     #[test]
+    fn test_breakloop_capture_dropped() {
+        let _m = RAWMTX.lock();
+
+        let mut value: isize = 1234;
+        let pcap = as_pcap_t(&mut value);
+
+        let test_capture = test_capture::<Active>(pcap);
+        let mut capture: Capture<dyn Activated> = test_capture.capture.into();
+
+        let ctx = raw::pcap_breakloop_context();
+        ctx.expect()
+            .withf_st(move |h| *h == pcap)
+            .return_const(())
+            .times(1);
+
+        let break_handle = capture.breakloop_handle();
+
+        break_handle.breakloop();
+
+        drop(capture);
+
+        break_handle.breakloop(); // this call does not trigger mock after drop
+    }
+
+    #[test]
     fn test_savefile() {
         let _m = RAWMTX.lock();
 
