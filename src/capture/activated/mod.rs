@@ -12,13 +12,14 @@ use std::{
     path::Path,
     ptr::{self, NonNull},
     slice,
+    sync::{Arc, Weak},
 };
 
 #[cfg(not(windows))]
 use std::os::unix::io::RawFd;
 
 use crate::{
-    capture::{Activated, Capture},
+    capture::{Activated, Capture, Handle},
     codec::PacketCodec,
     linktype::Linktype,
     packet::{Packet, PacketHeader},
@@ -216,23 +217,55 @@ impl<T: Activated + ?Sized> Capture<T> {
             None => -1,
         };
 
-        let mut handler = Handler {
+        let mut handler = HandlerFn {
             func: AssertUnwindSafe(handler),
             panic_payload: None,
-            handle: self.handle,
+            handle: self.handle.clone(),
         };
         let return_code = unsafe {
             raw::pcap_loop(
                 self.handle.as_ptr(),
                 cnt,
-                Handler::<F>::callback,
-                &mut handler as *mut Handler<AssertUnwindSafe<F>> as *mut u8,
+                HandlerFn::<F>::callback,
+                &mut handler as *mut HandlerFn<AssertUnwindSafe<F>> as *mut u8,
             )
         };
         if let Some(e) = handler.panic_payload {
             resume_unwind(e);
         }
         self.check_err(return_code == 0)
+    }
+
+    /// Returns a thread-safe `BreakLoop` handle for calling pcap_breakloop() on an active capture.
+    ///
+    /// # Example
+    ///
+    /// ```no_run
+    /// // Using an active capture
+    /// use pcap::Device;
+    ///
+    /// let mut cap = Device::lookup().unwrap().unwrap().open().unwrap();
+    ///
+    /// let break_handle = cap.breakloop_handle();
+    ///
+    /// let capture_thread = std::thread::spawn(move || {
+    ///     while let Ok(packet) = cap.next_packet() {
+    ///         println!("received packet! {:?}", packet);
+    ///     }
+    /// });
+    ///
+    /// // Send break_handle to a seperate thread (i.e. could be signal handler)
+    /// std::thread::spawn(move || {
+    ///     std::thread::sleep(std::time::Duration::from_secs(1));
+    ///     break_handle.breakloop();
+    /// });
+    ///
+    /// capture_thread.join().unwrap();
+    /// ```
+    pub fn breakloop_handle(&mut self) -> BreakLoop {
+        BreakLoop {
+            handle: Arc::<Handle>::downgrade(&self.handle),
+        }
     }
 
     /// Compiles the string into a filter program using `pcap_compile`.
@@ -281,13 +314,13 @@ impl<T: Activated + ?Sized> Capture<T> {
 // Rust FnMut, which may be a closure with a captured environment. The *only* purpose of this
 // generic parameter is to ensure that in Capture::pcap_loop that we pass the right function
 // pointer and the right data pointer to pcap_loop.
-struct Handler<F> {
+struct HandlerFn<F> {
     func: F,
     panic_payload: Option<Box<dyn Any + Send>>,
-    handle: NonNull<raw::pcap_t>,
+    handle: Arc<Handle>,
 }
 
-impl<F> Handler<F>
+impl<F> HandlerFn<F>
 where
     F: FnMut(Packet),
 {
@@ -319,6 +352,25 @@ where
 impl<T: Activated> From<Capture<T>> for Capture<dyn Activated> {
     fn from(cap: Capture<T>) -> Capture<dyn Activated> {
         unsafe { mem::transmute(cap) }
+    }
+}
+
+/// Breakloop can safely be sent to other threads such as signal handlers to abort
+/// blocking capture loops such as `Capture::next_packet` and `Capture::for_each`.
+///
+/// See <https://www.tcpdump.org/manpages/pcap_breakloop.3pcap.html> for per-platform caveats about
+/// how breakloop can wake up blocked threads.
+pub struct BreakLoop {
+    handle: Weak<Handle>,
+}
+
+impl BreakLoop {
+    /// Calls `pcap_breakloop` to make the blocking loop of a pcap capture return.
+    /// The call is a no-op if the handle is invalid.
+    pub fn breakloop(&self) {
+        if let Some(handle) = self.handle.upgrade() {
+            unsafe { raw::pcap_breakloop(handle.as_ptr()) };
+        }
     }
 }
 

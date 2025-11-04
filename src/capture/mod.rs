@@ -8,6 +8,7 @@ use std::{
     ffi::CString,
     marker::PhantomData,
     ptr::{self, NonNull},
+    sync::Arc,
 };
 
 #[cfg(windows)]
@@ -90,8 +91,27 @@ impl State for Dead {}
 /// ```
 pub struct Capture<T: State + ?Sized> {
     nonblock: bool,
-    handle: NonNull<raw::pcap_t>,
+    handle: Arc<Handle>,
     _marker: PhantomData<T>,
+}
+
+struct Handle {
+    handle: NonNull<raw::pcap_t>,
+}
+
+impl Handle {
+    fn as_ptr(&self) -> *mut raw::pcap_t {
+        self.handle.as_ptr()
+    }
+}
+
+unsafe impl Send for Handle {}
+unsafe impl Sync for Handle {}
+
+impl Drop for Handle {
+    fn drop(&mut self) {
+        unsafe { raw::pcap_close(self.handle.as_ptr()) }
+    }
 }
 
 // A Capture is safe to Send as it encapsulates the entire lifetime of `raw::pcap_t *`, but it is
@@ -103,7 +123,7 @@ impl<T: State + ?Sized> From<NonNull<raw::pcap_t>> for Capture<T> {
     fn from(handle: NonNull<raw::pcap_t>) -> Self {
         Capture {
             nonblock: false,
-            handle,
+            handle: Arc::new(Handle { handle }),
             _marker: PhantomData,
         }
     }
@@ -175,12 +195,6 @@ impl<T: State + ?Sized> Capture<T> {
 
     fn get_err(&self) -> Error {
         unsafe { Error::new(raw::pcap_geterr(self.handle.as_ptr())) }
-    }
-}
-
-impl<T: State + ?Sized> Drop for Capture<T> {
-    fn drop(&mut self) {
-        unsafe { raw::pcap_close(self.handle.as_ptr()) }
     }
 }
 
