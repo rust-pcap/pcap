@@ -2,6 +2,9 @@
 use pcap::{Capture, Device, Packet, PacketCodec, PacketHeader};
 use std::error;
 
+#[path = "helpers/link.rs"]
+mod link;
+
 /// Represents a owned packet
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct PacketOwned {

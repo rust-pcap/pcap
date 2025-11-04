@@ -4,6 +4,9 @@ use std::error;
 
 use gat_std::gatify;
 
+#[path = "helpers/link.rs"]
+mod link;
+
 #[gatify]
 fn main() -> Result<(), Box<dyn error::Error>> {
     let device = Device::lookup()?.ok_or("no device available")?;

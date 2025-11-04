@@ -260,7 +260,6 @@ pub mod ffi {
 pub mod ffi_unix {
     use super::*;
 
-    #[link(name = "pcap")]
     extern "C" {
         // pub fn pcap_inject(arg1: *mut pcap_t, arg2: *const c_void, arg3: size_t) -> c_int;
         pub fn pcap_set_rfmon(arg1: *mut pcap_t, arg2: c_int) -> c_int;
@@ -287,7 +286,6 @@ pub mod ffi_windows {
 
     pub const WINPCAP_MINTOCOPY_DEFAULT: c_int = 16000;
 
-    #[link(name = "wpcap")]
     extern "C" {
         pub fn pcap_setmintocopy(arg1: *mut pcap_t, arg2: c_int) -> c_int;
         pub fn pcap_getevent(p: *mut pcap_t) -> HANDLE;
