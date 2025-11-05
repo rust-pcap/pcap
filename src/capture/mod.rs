@@ -105,8 +105,10 @@ impl Handle {
     }
 }
 
+// `PcapHandle` is safe to Send as it encapsulates the entire lifetime of `raw::pcap_t *`, but it is
+// not safe to Sync as libpcap does not promise thread-safe access to the same `raw::pcap_t *` from
+// multiple threads.
 unsafe impl Send for Handle {}
-unsafe impl Sync for Handle {}
 
 impl Drop for Handle {
     fn drop(&mut self) {
@@ -114,9 +116,6 @@ impl Drop for Handle {
     }
 }
 
-// A Capture is safe to Send as it encapsulates the entire lifetime of `raw::pcap_t *`, but it is
-// not safe to Sync as libpcap does not promise thread-safe access to the same `raw::pcap_t *` from
-// multiple threads.
 unsafe impl<T: State + ?Sized> Send for Capture<T> {}
 
 impl<T: State + ?Sized> From<NonNull<raw::pcap_t>> for Capture<T> {

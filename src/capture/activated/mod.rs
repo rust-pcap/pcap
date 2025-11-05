@@ -364,9 +364,21 @@ pub struct BreakLoop {
     handle: Weak<Handle>,
 }
 
+unsafe impl Send for BreakLoop {}
+unsafe impl Sync for BreakLoop {}
+
 impl BreakLoop {
     /// Calls `pcap_breakloop` to make the blocking loop of a pcap capture return.
     /// The call is a no-op if the handle is invalid.
+    ///
+    /// # Safety
+    ///
+    /// Can be called from any thread, but **must not** be used inside a
+    /// signal handler unless the owning `Capture` is guaranteed to still
+    /// be alive.
+    ///
+    /// The signal handler should defer the execution of `BreakLoop::breakloop()`
+    /// to a thread instead for safety.
     pub fn breakloop(&self) {
         if let Some(handle) = self.handle.upgrade() {
             unsafe { raw::pcap_breakloop(handle.as_ptr()) };
