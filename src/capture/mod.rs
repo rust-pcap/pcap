@@ -105,9 +105,9 @@ impl PcapHandle {
     }
 }
 
-// `PcapHandle` is safe to Send as it encapsulates the entire lifetime of `raw::pcap_t *`, but it is
-// not safe to Sync as libpcap does not promise thread-safe access to the same `raw::pcap_t *` from
-// multiple threads.
+// `PcapHandle` is safe to Send as it encapsulates the entire lifetime of `raw::pcap_t *`
+// `PcapHandle` is only Sync under special circumstances when used in thread-safe functions such as
+// the `pcap_breakloop` function. The Sync correctness is left to the wrapping structure to provide.
 unsafe impl Send for PcapHandle {}
 
 impl Drop for PcapHandle {
@@ -118,6 +118,9 @@ impl Drop for PcapHandle {
 
 unsafe impl<T: State + ?Sized> Send for Capture<T> {}
 
+// `Capture` is not safe to implement Sync as the libpcap functions it uses are not promised to have
+// thread-safe access to the same `raw::pcap_t *` from multiple threads.
+#[allow(clippy::arc_with_non_send_sync)]
 impl<T: State + ?Sized> From<NonNull<raw::pcap_t>> for Capture<T> {
     fn from(handle: NonNull<raw::pcap_t>) -> Self {
         Capture {
