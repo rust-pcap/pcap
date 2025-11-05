@@ -91,15 +91,15 @@ impl State for Dead {}
 /// ```
 pub struct Capture<T: State + ?Sized> {
     nonblock: bool,
-    handle: Arc<Handle>,
+    handle: Arc<PcapHandle>,
     _marker: PhantomData<T>,
 }
 
-struct Handle {
+struct PcapHandle {
     handle: NonNull<raw::pcap_t>,
 }
 
-impl Handle {
+impl PcapHandle {
     fn as_ptr(&self) -> *mut raw::pcap_t {
         self.handle.as_ptr()
     }
@@ -108,9 +108,9 @@ impl Handle {
 // `PcapHandle` is safe to Send as it encapsulates the entire lifetime of `raw::pcap_t *`, but it is
 // not safe to Sync as libpcap does not promise thread-safe access to the same `raw::pcap_t *` from
 // multiple threads.
-unsafe impl Send for Handle {}
+unsafe impl Send for PcapHandle {}
 
-impl Drop for Handle {
+impl Drop for PcapHandle {
     fn drop(&mut self) {
         unsafe { raw::pcap_close(self.handle.as_ptr()) }
     }
@@ -122,7 +122,7 @@ impl<T: State + ?Sized> From<NonNull<raw::pcap_t>> for Capture<T> {
     fn from(handle: NonNull<raw::pcap_t>) -> Self {
         Capture {
             nonblock: false,
-            handle: Arc::new(Handle { handle }),
+            handle: Arc::new(PcapHandle { handle }),
             _marker: PhantomData,
         }
     }

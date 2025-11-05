@@ -19,7 +19,7 @@ use std::{
 use std::os::unix::io::RawFd;
 
 use crate::{
-    capture::{Activated, Capture, Handle},
+    capture::{Activated, Capture, PcapHandle},
     codec::PacketCodec,
     linktype::Linktype,
     packet::{Packet, PacketHeader},
@@ -264,7 +264,7 @@ impl<T: Activated + ?Sized> Capture<T> {
     /// ```
     pub fn breakloop_handle(&mut self) -> BreakLoop {
         BreakLoop {
-            handle: Arc::<Handle>::downgrade(&self.handle),
+            handle: Arc::<PcapHandle>::downgrade(&self.handle),
         }
     }
 
@@ -317,7 +317,7 @@ impl<T: Activated + ?Sized> Capture<T> {
 struct HandlerFn<F> {
     func: F,
     panic_payload: Option<Box<dyn Any + Send>>,
-    handle: Arc<Handle>,
+    handle: Arc<PcapHandle>,
 }
 
 impl<F> HandlerFn<F>
@@ -361,7 +361,7 @@ impl<T: Activated> From<Capture<T>> for Capture<dyn Activated> {
 /// See <https://www.tcpdump.org/manpages/pcap_breakloop.3pcap.html> for per-platform caveats about
 /// how breakloop can wake up blocked threads.
 pub struct BreakLoop {
-    handle: Weak<Handle>,
+    handle: Weak<PcapHandle>,
 }
 
 unsafe impl Send for BreakLoop {}
