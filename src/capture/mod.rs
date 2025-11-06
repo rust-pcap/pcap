@@ -8,6 +8,7 @@ use std::{
     ffi::CString,
     marker::PhantomData,
     ptr::{self, NonNull},
+    sync::Arc,
 };
 
 #[cfg(windows)]
@@ -90,20 +91,41 @@ impl State for Dead {}
 /// ```
 pub struct Capture<T: State + ?Sized> {
     nonblock: bool,
-    handle: NonNull<raw::pcap_t>,
+    handle: Arc<PcapHandle>,
     _marker: PhantomData<T>,
 }
 
-// A Capture is safe to Send as it encapsulates the entire lifetime of `raw::pcap_t *`, but it is
-// not safe to Sync as libpcap does not promise thread-safe access to the same `raw::pcap_t *` from
-// multiple threads.
+struct PcapHandle {
+    handle: NonNull<raw::pcap_t>,
+}
+
+impl PcapHandle {
+    fn as_ptr(&self) -> *mut raw::pcap_t {
+        self.handle.as_ptr()
+    }
+}
+
+// `PcapHandle` is safe to Send as it encapsulates the entire lifetime of `raw::pcap_t *`
+// `PcapHandle` is only Sync under special circumstances when used in thread-safe functions such as
+// the `pcap_breakloop` function. The Sync correctness is left to the wrapping structure to provide.
+unsafe impl Send for PcapHandle {}
+
+impl Drop for PcapHandle {
+    fn drop(&mut self) {
+        unsafe { raw::pcap_close(self.handle.as_ptr()) }
+    }
+}
+
 unsafe impl<T: State + ?Sized> Send for Capture<T> {}
 
+// `Capture` is not safe to implement Sync as the libpcap functions it uses are not promised to have
+// thread-safe access to the same `raw::pcap_t *` from multiple threads.
+#[allow(clippy::arc_with_non_send_sync)]
 impl<T: State + ?Sized> From<NonNull<raw::pcap_t>> for Capture<T> {
     fn from(handle: NonNull<raw::pcap_t>) -> Self {
         Capture {
             nonblock: false,
-            handle,
+            handle: Arc::new(PcapHandle { handle }),
             _marker: PhantomData,
         }
     }
@@ -175,12 +197,6 @@ impl<T: State + ?Sized> Capture<T> {
 
     fn get_err(&self) -> Error {
         unsafe { Error::new(raw::pcap_geterr(self.handle.as_ptr())) }
-    }
-}
-
-impl<T: State + ?Sized> Drop for Capture<T> {
-    fn drop(&mut self) {
-        unsafe { raw::pcap_close(self.handle.as_ptr()) }
     }
 }
 

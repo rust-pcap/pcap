@@ -74,7 +74,9 @@ mod packet;
 #[cfg(not(windows))]
 pub use capture::activated::open_raw_fd;
 pub use capture::{
-    activated::{iterator::PacketIter, BpfInstruction, BpfProgram, Direction, Savefile, Stat},
+    activated::{
+        iterator::PacketIter, BpfInstruction, BpfProgram, BreakLoop, Direction, Savefile, Stat,
+    },
     inactive::TimestampType,
     {Activated, Active, Capture, Dead, Inactive, Offline, Precision, State},
 };

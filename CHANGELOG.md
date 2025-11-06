@@ -5,6 +5,7 @@
 ### Changed
 
 - MSRV is now `1.64`.
+- Binding for `pcap_breakloop` added. It can be accessed via the `breakloop_handle` call on Activated captures.
 
 ## [2.3.0] - 2025-07-19
 
