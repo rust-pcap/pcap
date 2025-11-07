@@ -19,6 +19,14 @@ type suseconds_t = libc::suseconds_t;
 #[allow(non_camel_case_types)]
 type suseconds_t = libc::c_long;
 
+#[cfg(not(windows))]
+#[link(name = "pcap")]
+extern "C" {}
+
+#[cfg(windows)]
+#[link(name = "wpcap")]
+extern "C" {}
+
 fn capture_from_test_file(file_name: &str) -> Capture<Offline> {
     let path = Path::new("tests/data/").join(file_name);
     Capture::from_file(path).unwrap()

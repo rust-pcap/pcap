@@ -33,6 +33,9 @@
 #[cfg(not(windows))]
 mod tests {
 
+    #[link(name = "pcap")]
+    extern "C" {}
+
     use etherparse::{PacketBuilder, PacketHeaders};
     use pcap::Capture;
     use tun_tap::Iface;

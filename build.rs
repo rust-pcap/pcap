@@ -197,6 +197,7 @@ fn main() {
 
 fn from_pkg_config() -> Result<pkg_config::Library, pkg_config::Error> {
     let mut config = pkg_config::Config::new();
+    config.cargo_metadata(false);
     // If the user has went out of their way to specify LIBPCAP_VER (even though
     // LIBCAP_LIBDIR wasn't set), respect it. Otherwise fall back to any version
     // as long as it's supported.
