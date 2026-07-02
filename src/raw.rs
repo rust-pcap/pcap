@@ -469,8 +469,6 @@ pcap_ffi! {
     pub mod ffi {
         unsafe extern "C" {
             // [OBSOLETE] pub fn pcap_lookupdev(arg1: *mut c_char) -> *mut c_char;
-            // pub fn pcap_lookupnet(arg1: *const c_char, arg2: *mut c_uint, arg3: *mut c_uint,
-            //                       arg4: *mut c_char) -> c_int;
             pub fn pcap_set_snaplen(arg1: *mut pcap_t, arg2: c_int) -> c_int;
             pub fn pcap_set_promisc(arg1: *mut pcap_t, arg2: c_int) -> c_int;
             // pub fn pcap_can_set_rfmon(arg1: *mut pcap_t) -> c_int;
@@ -654,6 +652,12 @@ pcap_ffi_library! {
     pub mod ffi_library {
         unsafe extern "C" {
             pub fn pcap_create(arg1: *const c_char, arg2: *mut c_char) -> *mut pcap_t;
+            pub fn pcap_lookupnet(
+                arg1: *const c_char,
+                arg2: *mut c_uint,
+                arg3: *mut c_uint,
+                arg4: *mut c_char,
+            ) -> c_int;
             pub fn pcap_open_dead(arg1: c_int, arg2: c_int) -> *mut pcap_t;
             pub fn pcap_open_offline(arg1: *const c_char, arg2: *mut c_char) -> *mut pcap_t;
             pub fn pcap_datalink_name_to_val(arg1: *const c_char) -> c_int;

@@ -366,7 +366,16 @@ impl<T: Activated + ?Sized> Capture<T> {
     }
 
     /// Compiles the string into a filter program using `pcap_compile`.
+    ///
+    /// On a capture opened from a device, `ip broadcast` uses the device's IPv4 netmask, it
+    /// also matches the subnet's broadcast address. Elsewhere, and on a device without an IPv4
+    /// address, it matches only 0.0.0.0 and 255.255.255.255.
     pub fn compile(&self, program: &str, optimize: bool) -> Result<BpfProgram, Error> {
+        let netmask = if program.contains("broadcast") {
+            self.netmask()
+        } else {
+            0
+        };
         let program = CString::new(program)?;
 
         unsafe {
@@ -376,9 +385,26 @@ impl<T: Activated + ?Sized> Capture<T> {
                 &mut bpf_program,
                 program.as_ptr(),
                 optimize as libc::c_int,
-                0,
+                u32::from_be(netmask),
             );
             self.check_err(ret != -1).and(Ok(BpfProgram(bpf_program)))
+        }
+    }
+
+    fn netmask(&self) -> u32 {
+        let Some(device) = &self.device else {
+            return 0;
+        };
+        let (mut net, mut mask) = (0, 0);
+        let found = Error::with_errbuf(|err| {
+            let library = raw::require_library()?;
+            Ok(unsafe {
+                raw::pcap_lookupnet(&library, device.as_ptr(), &mut net, &mut mask, err) == 0
+            })
+        });
+        match found {
+            Ok(true) => mask,
+            _ => 0,
         }
     }
 
