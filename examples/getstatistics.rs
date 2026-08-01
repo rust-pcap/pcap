@@ -1,3 +1,6 @@
+#[path = "helpers/link.rs"]
+mod link;
+
 fn main() {
     // get the default Device
     let device = pcap::Device::lookup()

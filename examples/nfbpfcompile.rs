@@ -7,6 +7,9 @@ use pcap::{BpfProgram, Capture, Linktype};
 use std::env;
 use std::process;
 
+#[path = "helpers/link.rs"]
+mod link;
+
 fn main() {
     let (layertype, prog) = match env::args().len() {
         2 => ("RAW".to_string(), env::args().nth(1).unwrap()),
