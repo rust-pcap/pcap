@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+### Added
+
+- Binding for `pcap_dispatch` added. It can be accessed via the `dispatch` call on Activated
+  captures and processes a batch of packets per call, making packet loss less likely in high
+  traffic situations.
+
 ## [2.4.0] - 2025-11-26
 
 ### Changed

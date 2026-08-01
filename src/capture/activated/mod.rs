@@ -162,6 +162,8 @@ impl<T: Activated + ?Sized> Capture<T> {
     /// This buffer has a finite length, so if the buffer fills completely new
     /// packets will be discarded temporarily. This means that in realtime situations,
     /// you probably want to minimize the time between calls to next_packet() method.
+    /// In high traffic situations, consider [`Self::dispatch()`] instead, which
+    /// processes a whole batch of packets per call.
     pub fn next_packet(&mut self) -> Result<Packet<'_>, Error> {
         unsafe {
             let mut header: *mut raw::pcap_pkthdr = ptr::null_mut();
@@ -234,6 +236,53 @@ impl<T: Activated + ?Sized> Capture<T> {
             resume_unwind(e);
         }
         self.check_err(return_code == 0)
+    }
+
+    /// Process a batch of packets from the capture using `pcap_dispatch`.
+    ///
+    /// Unlike [`Self::next_packet()`], which performs a system call for every packet, this
+    /// processes a whole buffer of packets in a single call, making packet loss less likely
+    /// in high traffic situations.
+    ///
+    /// At most `count` packets are processed. `None` processes all the packets received in
+    /// one buffer when reading a live capture, or all the packets in the file when reading
+    /// a savefile.
+    ///
+    /// Unlike [`Self::for_each()`], this does not block until `count` packets have been
+    /// processed: it returns the number of packets processed as soon as one buffer has been
+    /// handled, which may be zero if the timeout expired or there are no more packets to read.
+    pub fn dispatch<F>(&mut self, count: Option<usize>, handler: F) -> Result<usize, Error>
+    where
+        F: FnMut(Packet),
+    {
+        let cnt = match count {
+            // What passing 0 down to pcap_dispatch means depends on the libpcap version.
+            // We interpret it as "read nothing", so we just succeed immediately.
+            Some(0) => return Ok(0),
+            Some(cnt) => cnt
+                .try_into()
+                .expect("count of packets to read cannot exceed c_int::MAX"),
+            None => -1,
+        };
+
+        let mut handler = HandlerFn {
+            func: AssertUnwindSafe(handler),
+            panic_payload: None,
+            handle: self.handle.clone(),
+        };
+        let return_code = unsafe {
+            raw::pcap_dispatch(
+                self.handle.as_ptr(),
+                cnt,
+                HandlerFn::<F>::callback,
+                &mut handler as *mut HandlerFn<AssertUnwindSafe<F>> as *mut u8,
+            )
+        };
+        if let Some(e) = handler.panic_payload {
+            resume_unwind(e);
+        }
+        self.check_err(return_code >= 0)
+            .map(|_| return_code as usize)
     }
 
     /// Returns a thread-safe `BreakLoop` handle for calling pcap_breakloop() on an active capture.
@@ -1214,5 +1263,185 @@ mod tests {
             })
             .unwrap();
         assert_eq!(packets, 0);
+    }
+
+    #[test]
+    fn read_packets_via_pcap_dispatch() {
+        let _m = RAWMTX.lock();
+
+        let mut value: isize = 777;
+        let pcap = as_pcap_t(&mut value);
+
+        let test_capture = test_capture::<Active>(pcap);
+        let mut capture: Capture<dyn Activated> = test_capture.capture.into();
+
+        let ctx = raw::pcap_dispatch_context();
+        ctx.expect()
+            .withf_st(move |arg1, cnt, _, _| *arg1 == pcap && *cnt == -1)
+            .return_once_st(move |_, _, func, data| {
+                let header = raw::pcap_pkthdr {
+                    ts: libc::timeval {
+                        tv_sec: 0,
+                        tv_usec: 0,
+                    },
+                    caplen: 0,
+                    len: 0,
+                };
+                let packet_data = &[];
+                func(data, &header, packet_data.as_ptr());
+                func(data, &header, packet_data.as_ptr());
+                2
+            });
+
+        let mut packets = 0;
+        let processed = capture
+            .dispatch(None, |_| {
+                packets += 1;
+            })
+            .unwrap();
+        assert_eq!(packets, 2);
+        assert_eq!(processed, 2);
+    }
+
+    #[test]
+    #[should_panic = "panic in callback"]
+    fn panic_in_pcap_dispatch() {
+        let _m = RAWMTX.lock();
+
+        let mut value: isize = 777;
+        let pcap = as_pcap_t(&mut value);
+
+        let test_capture = test_capture::<Active>(pcap);
+        let mut capture: Capture<dyn Activated> = test_capture.capture.into();
+
+        let ctx = raw::pcap_dispatch_context();
+        ctx.expect()
+            .withf_st(move |arg1, cnt, _, _| *arg1 == pcap && *cnt == -1)
+            .return_once_st(move |_, _, func, data| {
+                let header = raw::pcap_pkthdr {
+                    ts: libc::timeval {
+                        tv_sec: 0,
+                        tv_usec: 0,
+                    },
+                    caplen: 0,
+                    len: 0,
+                };
+                let packet_data = &[];
+                func(data, &header, packet_data.as_ptr());
+                -2
+            });
+
+        let ctx = raw::pcap_breakloop_context();
+        ctx.expect()
+            .withf_st(move |arg1| *arg1 == pcap)
+            .return_once_st(move |_| {});
+
+        capture
+            .dispatch(None, |_| panic!("panic in callback"))
+            .unwrap();
+    }
+
+    #[test]
+    fn dispatch_with_count() {
+        let _m = RAWMTX.lock();
+
+        let mut value: isize = 777;
+        let pcap = as_pcap_t(&mut value);
+
+        let test_capture = test_capture::<Active>(pcap);
+        let mut capture: Capture<dyn Activated> = test_capture.capture.into();
+
+        let ctx = raw::pcap_dispatch_context();
+        ctx.expect()
+            .withf_st(move |arg1, cnt, _, _| *arg1 == pcap && *cnt == 2)
+            .return_once_st(move |_, _, func, data| {
+                let header = raw::pcap_pkthdr {
+                    ts: libc::timeval {
+                        tv_sec: 0,
+                        tv_usec: 0,
+                    },
+                    caplen: 0,
+                    len: 0,
+                };
+                let packet_data = &[];
+                func(data, &header, packet_data.as_ptr());
+                func(data, &header, packet_data.as_ptr());
+                2
+            });
+
+        let mut packets = 0;
+        let processed = capture
+            .dispatch(Some(2), |_| {
+                packets += 1;
+            })
+            .unwrap();
+        assert_eq!(packets, 2);
+        assert_eq!(processed, 2);
+    }
+
+    #[test]
+    fn dispatch_with_count_0() {
+        let _m = RAWMTX.lock();
+
+        let mut value: isize = 777;
+        let pcap = as_pcap_t(&mut value);
+
+        let test_capture = test_capture::<Active>(pcap);
+        let mut capture: Capture<dyn Activated> = test_capture.capture.into();
+
+        let mut packets = 0;
+        let processed = capture
+            .dispatch(Some(0), |_| {
+                packets += 1;
+            })
+            .unwrap();
+        assert_eq!(packets, 0);
+        assert_eq!(processed, 0);
+    }
+
+    #[test]
+    fn dispatch_timeout_expired() {
+        let _m = RAWMTX.lock();
+
+        let mut value: isize = 777;
+        let pcap = as_pcap_t(&mut value);
+
+        let test_capture = test_capture::<Active>(pcap);
+        let mut capture: Capture<dyn Activated> = test_capture.capture.into();
+
+        let ctx = raw::pcap_dispatch_context();
+        ctx.expect()
+            .withf_st(move |arg1, cnt, _, _| *arg1 == pcap && *cnt == -1)
+            .return_once_st(move |_, _, _, _| 0);
+
+        let mut packets = 0;
+        let processed = capture
+            .dispatch(None, |_| {
+                packets += 1;
+            })
+            .unwrap();
+        assert_eq!(packets, 0);
+        assert_eq!(processed, 0);
+    }
+
+    #[test]
+    fn dispatch_error() {
+        let _m = RAWMTX.lock();
+
+        let mut value: isize = 777;
+        let pcap = as_pcap_t(&mut value);
+
+        let test_capture = test_capture::<Active>(pcap);
+        let mut capture: Capture<dyn Activated> = test_capture.capture.into();
+
+        let ctx = raw::pcap_dispatch_context();
+        ctx.expect()
+            .withf_st(move |arg1, cnt, _, _| *arg1 == pcap && *cnt == -1)
+            .return_once_st(move |_, _, _, _| -1);
+
+        let _err = geterr_expect(pcap);
+
+        let result = capture.dispatch(None, |_| {});
+        assert!(result.is_err());
     }
 }

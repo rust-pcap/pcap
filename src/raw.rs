@@ -132,8 +132,12 @@ pub mod ffi {
             arg3: pcap_handler,
             arg4: *mut c_uchar,
         ) -> c_int;
-        // pub fn pcap_dispatch(arg1: *mut pcap_t, arg2: c_int, arg3: pcap_handler,
-        //                      arg4: *mut c_uchar)-> c_int;
+        pub fn pcap_dispatch(
+            arg1: *mut pcap_t,
+            arg2: c_int,
+            arg3: pcap_handler,
+            arg4: *mut c_uchar,
+        ) -> c_int;
         // pub fn pcap_next(arg1: *mut pcap_t, arg2: *mut pcap_pkthdr) -> *const c_uchar;
         pub fn pcap_next_ex(
             arg1: *mut pcap_t,
