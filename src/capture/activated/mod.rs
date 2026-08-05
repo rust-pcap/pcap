@@ -242,7 +242,8 @@ impl<T: Activated + ?Sized> Capture<T> {
     ///
     /// Unlike [`Self::next_packet()`], which performs a system call for every packet, this
     /// processes a whole buffer of packets in a single call, making packet loss less likely
-    /// in high traffic situations.
+    /// in high traffic situations. Packets are still dropped when the buffer fills up between
+    /// calls, so a busy interface also wants a larger [`Capture::buffer_size()`].
     ///
     /// At most `count` packets are processed. `None` processes all the packets received in
     /// one buffer when reading a live capture, or all the packets in the file when reading
@@ -250,7 +251,9 @@ impl<T: Activated + ?Sized> Capture<T> {
     ///
     /// Unlike [`Self::for_each()`], this does not block until `count` packets have been
     /// processed: it returns the number of packets processed as soon as one buffer has been
-    /// handled, which may be zero if the timeout expired or there are no more packets to read.
+    /// handled, which may be zero if there are no more packets to read. Note that on most
+    /// platforms the read timeout only starts once the first packet arrives, so a quiet live
+    /// capture can block instead of returning zero.
     pub fn dispatch<F>(&mut self, count: Option<usize>, handler: F) -> Result<usize, Error>
     where
         F: FnMut(Packet),
@@ -281,8 +284,10 @@ impl<T: Activated + ?Sized> Capture<T> {
         if let Some(e) = handler.panic_payload {
             resume_unwind(e);
         }
+        // A successful pcap_dispatch returns the number of packets processed, not 0 like
+        // pcap_loop.
         self.check_err(return_code >= 0)
-            .map(|_| return_code as usize)
+            .and(Ok(return_code as usize))
     }
 
     /// Returns a thread-safe `BreakLoop` handle for calling pcap_breakloop() on an active capture.
@@ -1380,6 +1385,83 @@ mod tests {
     }
 
     #[test]
+    fn dispatch_limited_by_packets() {
+        let _m = RAWMTX.lock();
+
+        let mut value: isize = 777;
+        let pcap = as_pcap_t(&mut value);
+
+        let test_capture = test_capture::<Active>(pcap);
+        let mut capture: Capture<dyn Activated> = test_capture.capture.into();
+
+        let ctx = raw::pcap_dispatch_context();
+        ctx.expect()
+            .withf_st(move |arg1, cnt, _, _| *arg1 == pcap && *cnt == 5)
+            .return_once_st(move |_, _, func, data| {
+                let header = raw::pcap_pkthdr {
+                    ts: libc::timeval {
+                        tv_sec: 0,
+                        tv_usec: 0,
+                    },
+                    caplen: 0,
+                    len: 0,
+                };
+                let packet_data = &[];
+                func(data, &header, packet_data.as_ptr());
+                func(data, &header, packet_data.as_ptr());
+                2
+            });
+
+        let mut packets = 0;
+        let processed = capture
+            .dispatch(Some(5), |_| {
+                packets += 1;
+            })
+            .unwrap();
+        assert_eq!(packets, 2);
+        assert_eq!(processed, 2);
+    }
+
+    #[test]
+    fn dispatch_limited_by_count() {
+        let _m = RAWMTX.lock();
+
+        let mut value: isize = 777;
+        let pcap = as_pcap_t(&mut value);
+
+        let test_capture = test_capture::<Active>(pcap);
+        let mut capture: Capture<dyn Activated> = test_capture.capture.into();
+
+        let ctx = raw::pcap_dispatch_context();
+        ctx.expect()
+            .withf_st(move |arg1, cnt, _, _| *arg1 == pcap && *cnt == 1)
+            .return_once_st(move |_, cnt, func, data| {
+                let header = raw::pcap_pkthdr {
+                    ts: libc::timeval {
+                        tv_sec: 0,
+                        tv_usec: 0,
+                    },
+                    caplen: 0,
+                    len: 0,
+                };
+                let packet_data = &[];
+                for _ in 0..cnt {
+                    func(data, &header, packet_data.as_ptr());
+                }
+                cnt
+            });
+
+        let mut packets = 0;
+        let processed = capture
+            .dispatch(Some(1), |_| {
+                packets += 1;
+            })
+            .unwrap();
+        assert_eq!(packets, 1);
+        assert_eq!(processed, 1);
+    }
+
+    #[test]
     fn dispatch_with_count_0() {
         let _m = RAWMTX.lock();
 
@@ -1388,6 +1470,25 @@ mod tests {
 
         let test_capture = test_capture::<Active>(pcap);
         let mut capture: Capture<dyn Activated> = test_capture.capture.into();
+
+        // Packets are available, so the handler must stay unused.
+        let ctx = raw::pcap_dispatch_context();
+        ctx.expect()
+            .withf_st(move |arg1, _, _, _| *arg1 == pcap)
+            .return_once_st(move |_, _, func, data| {
+                let header = raw::pcap_pkthdr {
+                    ts: libc::timeval {
+                        tv_sec: 0,
+                        tv_usec: 0,
+                    },
+                    caplen: 0,
+                    len: 0,
+                };
+                let packet_data = &[];
+                func(data, &header, packet_data.as_ptr());
+                func(data, &header, packet_data.as_ptr());
+                2
+            });
 
         let mut packets = 0;
         let processed = capture
@@ -1400,7 +1501,7 @@ mod tests {
     }
 
     #[test]
-    fn dispatch_timeout_expired() {
+    fn dispatch_no_packets() {
         let _m = RAWMTX.lock();
 
         let mut value: isize = 777;

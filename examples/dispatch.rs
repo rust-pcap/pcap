@@ -5,9 +5,10 @@ fn main() {
         .expect("no device available");
     println!("Using device {}", device.name);
 
-    // Setup Capture with a read timeout so dispatch returns even on a quiet interface
+    // Setup Capture with a big buffer, so packets are not dropped between dispatch calls
     let mut cap = pcap::Capture::from_device(device)
         .unwrap()
+        .buffer_size(16000000)
         .timeout(1000)
         .open()
         .unwrap();
