@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [2.5.0] - 2026-08-15
+
 ### Added
 
 - Binding for `pcap_dispatch` added. It can be accessed via the `dispatch` call on Activated
