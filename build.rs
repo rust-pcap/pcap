@@ -33,6 +33,7 @@ impl Version {
             Version::new(1, 7, 2),
             Version::new(1, 9, 0),
             Version::new(1, 9, 1),
+            Version::new(1, 10, 0),
         ]
     }
 

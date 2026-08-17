@@ -2,7 +2,7 @@
 #![allow(dead_code)]
 #![allow(non_camel_case_types)]
 
-use libc::{c_char, c_int, c_uchar, c_uint, c_ushort, sockaddr, timeval, FILE};
+use libc::{c_char, c_int, c_uchar, c_uint, c_ushort, sockaddr, timeval};
 
 #[cfg(test)]
 use mockall::automock;
@@ -124,7 +124,6 @@ pub mod ffi {
         //                       arg5: *mut c_char) -> *mut pcap_t;
         pub fn pcap_open_dead(arg1: c_int, arg2: c_int) -> *mut pcap_t;
         pub fn pcap_open_offline(arg1: *const c_char, arg2: *mut c_char) -> *mut pcap_t;
-        pub fn pcap_fopen_offline(arg1: *mut FILE, arg2: *mut c_char) -> *mut pcap_t;
         pub fn pcap_close(arg1: *mut pcap_t);
         pub fn pcap_loop(
             arg1: *mut pcap_t,
@@ -185,7 +184,6 @@ pub mod ffi {
         // pub fn pcap_file(arg1: *mut pcap_t) -> *mut FILE;
         pub fn pcap_fileno(arg1: *mut pcap_t) -> c_int;
         pub fn pcap_dump_open(arg1: *mut pcap_t, arg2: *const c_char) -> *mut pcap_dumper_t;
-        pub fn pcap_dump_fopen(arg1: *mut pcap_t, fp: *mut FILE) -> *mut pcap_dumper_t;
         // pub fn pcap_dump_file(arg1: *mut pcap_dumper_t) -> *mut FILE;
         // pub fn pcap_dump_ftell(arg1: *mut pcap_dumper_t) -> c_long;
         pub fn pcap_dump_flush(arg1: *mut pcap_dumper_t) -> c_int;
@@ -196,7 +194,6 @@ pub mod ffi {
         // pub fn pcap_lib_version() -> *const c_char;
         // pub fn bpf_image(arg1: *const bpf_insn, arg2: c_int) -> *mut c_char;
         // pub fn bpf_dump(arg1: *const bpf_program, arg2: c_int);
-        pub fn pcap_get_selectable_fd(arg1: *mut pcap_t) -> c_int;
     }
 
     #[cfg(libpcap_1_2_1)]
@@ -211,11 +208,6 @@ pub mod ffi {
 
     #[cfg(libpcap_1_5_0)]
     extern "C" {
-        pub fn pcap_fopen_offline_with_tstamp_precision(
-            arg1: *mut FILE,
-            arg2: c_uint,
-            arg3: *mut c_char,
-        ) -> *mut pcap_t;
         // pub fn pcap_get_tstamp_precision(arg1: *mut pcap_t) -> c_int;
         pub fn pcap_open_dead_with_tstamp_precision(
             arg1: c_int,
@@ -257,17 +249,41 @@ pub mod ffi {
     extern "C" {
         // pcap_datalink_val_to_description_or_dlt
     }
+
+    #[cfg(libpcap_1_10_0)]
+    extern "C" {
+        // pcap_init
+        // pcap_remoteact_accept_ex
+    }
 }
 
 #[cfg(not(windows))]
 #[cfg_attr(test, automock)]
 pub mod ffi_unix {
+    use libc::FILE;
+
     use super::*;
 
     #[link(name = "pcap")]
     extern "C" {
         // pub fn pcap_inject(arg1: *mut pcap_t, arg2: *const c_void, arg3: size_t) -> c_int;
         pub fn pcap_set_rfmon(arg1: *mut pcap_t, arg2: c_int) -> c_int;
+        pub fn pcap_get_selectable_fd(arg1: *mut pcap_t) -> c_int;
+        // wpcap exports no FILE * entry points: libpcap may be linked against a different C
+        // runtime than its caller. On Windows pcap.h defines these names as macros that pull
+        // the OS handle out of the FILE * and call pcap_hopen_offline()/pcap_dump_hopen().
+        pub fn pcap_fopen_offline(arg1: *mut FILE, arg2: *mut c_char) -> *mut pcap_t;
+        pub fn pcap_dump_fopen(arg1: *mut pcap_t, fp: *mut FILE) -> *mut pcap_dumper_t;
+    }
+
+    #[cfg(libpcap_1_5_0)]
+    #[link(name = "pcap")]
+    extern "C" {
+        pub fn pcap_fopen_offline_with_tstamp_precision(
+            arg1: *mut FILE,
+            arg2: c_uint,
+            arg3: *mut c_char,
+        ) -> *mut pcap_t;
     }
 }
 
