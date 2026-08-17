@@ -7,6 +7,8 @@
 - `TimestampType::HostHighPrecUnsynced`, which libpcap 1.10.0 added alongside committing
   `PCAP_TSTAMP_HOST_HIPREC` to being synchronized with the system clock. It is only present when
   building against libpcap 1.10.0 or later, since earlier versions do not know the type.
+- Binding for `pcap_dump_ftell64` added. It can be accessed via the `offset` call on `Savefile`
+  and reports how many bytes have been written to the file so far. Requires libpcap 1.9.0.
 
 ### Changed
 

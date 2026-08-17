@@ -65,6 +65,33 @@ fn capture_dead_savefile_append() {
 }
 
 #[test]
+#[cfg(libpcap_1_9_0)]
+fn capture_dead_savefile_offset() {
+    let mut packets = Packets::new();
+    packets.push(1460408319, 1234, 1, 1, &[1]);
+    packets.push(1460408320, 4321, 1, 1, &[2]);
+
+    let dir = TempDir::new().unwrap();
+    let tmpfile = dir.path().join("test.pcap");
+
+    let cap = Capture::dead(Linktype(1)).unwrap();
+    let mut save = cap.savefile(&tmpfile).unwrap();
+
+    // The file header has been written, the packets have not.
+    let header_only = save.offset().unwrap();
+    assert!(header_only > 0);
+
+    packets.foreach(|p| save.write(p));
+    let with_packets = save.offset().unwrap();
+    assert!(with_packets > header_only);
+
+    drop(save);
+
+    let written = std::fs::metadata(&tmpfile).unwrap().len();
+    assert_eq!(with_packets, written);
+}
+
+#[test]
 fn test_linktype() {
     let capture = capture_from_test_file("packet_snaplen_65535.pcap");
     let linktype = capture.get_datalink();
