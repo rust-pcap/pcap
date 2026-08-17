@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+### Added
+
+- Binding for `pcap_dump_ftell64` added. It can be accessed via the `offset` call on `Savefile`
+  and reports how many bytes have been written to the file so far. Requires libpcap 1.9.0.
+
 ### Changed
 
 - Rust Edition is now `2024`.

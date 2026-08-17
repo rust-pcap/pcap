@@ -470,6 +470,18 @@ impl Savefile {
 
         Ok(())
     }
+
+    /// Get the current offset of the savefile, that is the number of bytes written so far,
+    /// including any that are still buffered
+    #[cfg(libpcap_1_9_0)]
+    pub fn offset(&self) -> Result<u64, Error> {
+        let offset = unsafe { raw::pcap_dump_ftell64(self.handle.as_ptr()) };
+        if offset < 0 {
+            return Err(Error::ErrnoError(errno::errno()));
+        }
+
+        Ok(offset as u64)
+    }
 }
 
 impl From<NonNull<raw::pcap_dumper_t>> for Savefile {
@@ -888,6 +900,26 @@ mod tests {
 
         let result = savefile.flush();
         assert!(result.is_err());
+
+        #[cfg(libpcap_1_9_0)]
+        {
+            let ctx = raw::pcap_dump_ftell64_context();
+            ctx.expect()
+                .withf_st(move |arg1| *arg1 == pcap_dumper)
+                .return_once(|_| 6144);
+
+            let result = savefile.offset();
+            assert_eq!(result.unwrap(), 6144);
+
+            let ctx = raw::pcap_dump_ftell64_context();
+            ctx.checkpoint();
+            ctx.expect()
+                .withf_st(move |arg1| *arg1 == pcap_dumper)
+                .return_once(|_| -1);
+
+            let result = savefile.offset();
+            assert!(result.is_err());
+        }
     }
 
     #[test]

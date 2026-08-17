@@ -232,7 +232,7 @@ pub mod ffi {
     unsafe extern "C" {
         // pcap_bufsize
         // pcap_createsrcstr
-        // pcap_dump_ftell64
+        pub fn pcap_dump_ftell64(arg1: *mut pcap_dumper_t) -> i64;
         // pcap_findalldevs_ex
         // pcap_get_required_select_timeout
         // pcap_open
