@@ -21,6 +21,9 @@
   the savefile was recorded with.
 - Binding for `pcap_init` added. It can be accessed via the `init` call and selects the character
   encoding libpcap uses for strings. Requires libpcap 1.10.0.
+- `PacketSink`, a `futures::Sink` for sending packets from an active capture, can be created with
+  the `sink` call on `Capture<Active>`. On Linux the sink waits for the interface when it cannot
+  keep up.
 
 ### Changed
 
