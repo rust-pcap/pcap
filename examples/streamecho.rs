@@ -6,6 +6,9 @@ use futures::StreamExt;
 use pcap::{Active, Capture, Device, Error, Packet, PacketCodec, PacketStream};
 use std::error;
 
+#[path = "helpers/link.rs"]
+mod link;
+
 // Simple codec that returns owned copies, since the result may not
 // reference the input packet.
 pub struct BoxCodec;

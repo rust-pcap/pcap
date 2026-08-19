@@ -4,6 +4,9 @@
 //!    tcpdump -i en0 -U -w - | cargo run --example stdin
 //!
 
+#[path = "helpers/link.rs"]
+mod link;
+
 #[cfg(not(windows))]
 mod inner {
     use pcap::{Packet, PacketCodec, PacketHeader};

@@ -2,6 +2,9 @@ use futures::StreamExt;
 use pcap::{Active, Capture, Device, Error, Packet, PacketCodec, PacketStream};
 use std::error;
 
+#[path = "helpers/link.rs"]
+mod link;
+
 pub struct SimpleDumpCodec;
 
 impl PacketCodec for SimpleDumpCodec {
