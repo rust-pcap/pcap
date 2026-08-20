@@ -1,7 +1,7 @@
 use crate::{
+    Error,
     capture::{Activated, Capture},
     codec::PacketCodec,
-    Error,
 };
 
 /// Implement an Iterator of Packet
@@ -76,14 +76,14 @@ mod lending_iter {
 mod tests {
     use crate::{
         capture::{
-            activated::testmod::{next_ex_expect, PACKET},
-            testmod::test_capture,
             Active, Offline,
+            activated::testmod::{PACKET, next_ex_expect},
+            testmod::test_capture,
         },
         codec::testmod::Codec,
         raw::{
             self,
-            testmod::{as_pcap_t, geterr_expect, RAWMTX},
+            testmod::{RAWMTX, as_pcap_t, geterr_expect},
         },
     };
 

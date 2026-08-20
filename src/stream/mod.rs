@@ -9,9 +9,9 @@ pub mod windows;
 pub use windows::PacketStream;
 
 use crate::{
+    Error,
     capture::{Activated, Capture},
     codec::PacketCodec,
-    Error,
 };
 
 impl<T: Activated + ?Sized> Capture<T> {
@@ -32,9 +32,9 @@ impl<T: Activated + ?Sized> Capture<T> {
 #[cfg(test)]
 mod tests {
     use crate::{
-        capture::{testmod::test_capture, Active},
+        capture::{Active, testmod::test_capture},
         codec::testmod::Codec,
-        raw::testmod::{as_pcap_t, RAWMTX},
+        raw::testmod::{RAWMTX, as_pcap_t},
     };
 
     use super::PacketStream;

@@ -14,7 +14,7 @@ use std::{
 #[cfg(windows)]
 use windows_sys::Win32::Foundation::HANDLE;
 
-use crate::{raw, Error};
+use crate::{Error, raw};
 
 /// Phantom type representing an inactive capture handle.
 pub enum Inactive {}
@@ -184,15 +184,11 @@ impl<T: State + ?Sized> Capture<T> {
     /// a kernel object owned by the `Capture`'s pcap context.
     #[cfg(windows)]
     pub unsafe fn get_event(&self) -> HANDLE {
-        raw::pcap_getevent(self.handle.as_ptr())
+        unsafe { raw::pcap_getevent(self.handle.as_ptr()) }
     }
 
     fn check_err(&self, success: bool) -> Result<(), Error> {
-        if success {
-            Ok(())
-        } else {
-            Err(self.get_err())
-        }
+        if success { Ok(()) } else { Err(self.get_err()) }
     }
 
     fn get_err(&self) -> Error {
@@ -247,7 +243,7 @@ pub mod testmod {
 mod tests {
     use crate::{
         capture::testmod::test_capture,
-        raw::testmod::{as_pcap_t, RAWMTX},
+        raw::testmod::{RAWMTX, as_pcap_t},
     };
 
     use super::*;

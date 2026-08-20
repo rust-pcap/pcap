@@ -4,8 +4,9 @@ use std::path::Path;
 use std::os::unix::io::RawFd;
 
 use crate::{
+    Error,
     capture::{Capture, Offline},
-    raw, Error,
+    raw,
 };
 
 #[cfg(libpcap_1_5_0)]
@@ -41,8 +42,9 @@ impl Capture<Offline> {
     /// Unsafe, because the returned Capture assumes it is the sole owner of the file descriptor.
     #[cfg(not(windows))]
     pub unsafe fn from_raw_fd(fd: RawFd) -> Result<Capture<Offline>, Error> {
-        open_raw_fd(fd, b'r')
-            .and_then(|file| Capture::new_raw(None, |_, err| raw::pcap_fopen_offline(file, err)))
+        unsafe { open_raw_fd(fd, b'r') }.and_then(|file| {
+            Capture::new_raw(None, |_, err| unsafe { raw::pcap_fopen_offline(file, err) })
+        })
     }
 
     /// Opens an offline capture handle from a pcap dump file, given a file descriptor. Takes an
@@ -56,8 +58,8 @@ impl Capture<Offline> {
         fd: RawFd,
         precision: Precision,
     ) -> Result<Capture<Offline>, Error> {
-        open_raw_fd(fd, b'r').and_then(|file| {
-            Capture::new_raw(None, |_, err| {
+        unsafe { open_raw_fd(fd, b'r') }.and_then(|file| {
+            Capture::new_raw(None, |_, err| unsafe {
                 raw::pcap_fopen_offline_with_tstamp_precision(file, precision as _, err)
             })
         })
@@ -86,7 +88,7 @@ mod tests {
 
     use crate::{
         capture::testmod::test_capture,
-        raw::testmod::{as_pcap_t, RAWMTX},
+        raw::testmod::{RAWMTX, as_pcap_t},
     };
 
     use super::*;
