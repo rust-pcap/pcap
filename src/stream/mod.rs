@@ -37,6 +37,8 @@ mod tests {
         raw::testmod::{as_pcap_t, RAWMTX},
     };
 
+    use super::PacketStream;
+
     #[test]
     fn test_stream_error() {
         let _m = RAWMTX.lock();
@@ -50,5 +52,13 @@ mod tests {
 
         let result = capture.stream(Codec);
         assert!(result.is_err());
+    }
+
+    // On Windows the stream drives an event HANDLE, which is a raw pointer and so not Send on
+    // its own. Callers hand the stream to an executor, so make sure it stays Send.
+    #[test]
+    fn test_stream_is_send() {
+        fn assert_send<T: Send>() {}
+        assert_send::<PacketStream<Active, Codec>>();
     }
 }
