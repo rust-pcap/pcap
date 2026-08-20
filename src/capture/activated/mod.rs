@@ -1177,7 +1177,6 @@ mod tests {
     }
 
     #[test]
-    #[should_panic = "panic in callback"]
     fn panic_in_pcap_loop() {
         let _m = RAWMTX.lock();
 
@@ -1209,9 +1208,16 @@ mod tests {
             .withf_st(move |arg1| *arg1 == pcap)
             .return_once_st(move |_| {});
 
-        capture
-            .for_each(None, |_| panic!("panic in callback"))
-            .unwrap();
+        // Catch the unwind here instead of letting it leave the test. mockall skips its
+        // checkpoint while a thread is panicking, so the expectations above would stay
+        // registered for whichever test runs next to drop on the wrong thread.
+        let panic = catch_unwind(AssertUnwindSafe(|| {
+            capture
+                .for_each(None, |_| panic!("panic in callback"))
+                .unwrap()
+        }))
+        .unwrap_err();
+        assert_eq!(*panic.downcast_ref::<&str>().unwrap(), "panic in callback");
     }
 
     #[test]
@@ -1309,7 +1315,6 @@ mod tests {
     }
 
     #[test]
-    #[should_panic = "panic in callback"]
     fn panic_in_pcap_dispatch() {
         let _m = RAWMTX.lock();
 
@@ -1341,9 +1346,16 @@ mod tests {
             .withf_st(move |arg1| *arg1 == pcap)
             .return_once_st(move |_| {});
 
-        capture
-            .dispatch(None, |_| panic!("panic in callback"))
-            .unwrap();
+        // Catch the unwind here instead of letting it leave the test. mockall skips its
+        // checkpoint while a thread is panicking, so the expectations above would stay
+        // registered for whichever test runs next to drop on the wrong thread.
+        let panic = catch_unwind(AssertUnwindSafe(|| {
+            capture
+                .dispatch(None, |_| panic!("panic in callback"))
+                .unwrap()
+        }))
+        .unwrap_err();
+        assert_eq!(*panic.downcast_ref::<&str>().unwrap(), "panic in callback");
     }
 
     #[test]
