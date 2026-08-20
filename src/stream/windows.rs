@@ -5,14 +5,14 @@ use std::marker::Unpin;
 use std::pin::Pin;
 use std::task::{self, Poll};
 
-use futures::{ready, FutureExt};
+use futures::{FutureExt, ready};
 use tokio::task::JoinHandle;
 use windows_sys::Win32::{Foundation::HANDLE, System::Threading::WaitForSingleObject};
 
 use crate::{
+    Error,
     capture::{Activated, Capture},
     codec::PacketCodec,
-    Error,
 };
 
 /// Implement Stream for async use of pcap

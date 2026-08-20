@@ -4,7 +4,7 @@ use tempfile::TempDir;
 
 use pcap::{Capture, Linktype};
 
-use crate::{capture_from_test_file, Packets};
+use crate::{Packets, capture_from_test_file};
 
 #[test]
 fn read_packet_with_full_data() {

@@ -4,8 +4,9 @@ use std::borrow::Borrow;
 use std::os::unix::io::{AsFd, AsRawFd, BorrowedFd, RawFd};
 
 use crate::{
+    Error,
     capture::{Active, Capture},
-    raw, Error,
+    raw,
 };
 
 impl Capture<Active> {
@@ -60,7 +61,7 @@ mod tests {
         capture::testmod::test_capture,
         raw::{
             mock_ffi::*,
-            testmod::{as_pcap_t, geterr_expect, RAWMTX},
+            testmod::{RAWMTX, as_pcap_t, geterr_expect},
         },
     };
 

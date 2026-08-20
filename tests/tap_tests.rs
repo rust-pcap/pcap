@@ -101,7 +101,9 @@ mod tests {
         if let Err(e) = iface_result {
             if e.kind() == std::io::ErrorKind::PermissionDenied {
                 println!("Permission denied - needs tp be run as root/sudo!");
-                panic!("Failed to bind the tap interface: PermissionDenied - please run with root/sudo!");
+                panic!(
+                    "Failed to bind the tap interface: PermissionDenied - please run with root/sudo!"
+                );
             }
             // common error is to not run these tests as root; provide a nicer message
             panic!("Failed to bind the tap interface: {e:#?}");

@@ -10,9 +10,9 @@ use futures::ready;
 use tokio::io::unix::AsyncFd;
 
 use crate::{
-    capture::{selectable::SelectableCapture, Activated, Capture},
-    codec::PacketCodec,
     Error,
+    capture::{Activated, Capture, selectable::SelectableCapture},
+    codec::PacketCodec,
 };
 
 /// Implement Stream for async use of pcap
