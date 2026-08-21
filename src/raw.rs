@@ -17,6 +17,9 @@ pub const PCAP_IF_CONNECTION_STATUS_CONNECTED: u32 = 0x00000010;
 pub const PCAP_IF_CONNECTION_STATUS_DISCONNECTED: u32 = 0x00000020;
 pub const PCAP_IF_CONNECTION_STATUS_NOT_APPLICABLE: u32 = 0x00000030;
 
+pub const PCAP_CHAR_ENC_LOCAL: u32 = 0x00000000;
+pub const PCAP_CHAR_ENC_UTF_8: u32 = 0x00000001;
+
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct bpf_program {
@@ -252,7 +255,7 @@ pub mod ffi {
 
     #[cfg(libpcap_1_10_0)]
     unsafe extern "C" {
-        // pcap_init
+        pub fn pcap_init(arg1: c_uint, arg2: *mut c_char) -> c_int;
         // pcap_remoteact_accept_ex
     }
 }

@@ -250,10 +250,40 @@ pub const fn packet_header_size() -> usize {
     std::mem::size_of::<raw::pcap_pkthdr>()
 }
 
+#[cfg(libpcap_1_10_0)]
+#[repr(u32)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+/// The character encoding libpcap uses for strings. Use with `init`.
+pub enum CharEncoding {
+    /// Strings are in the local character encoding. On UN*X that is taken to be UTF-8, on Windows
+    /// it is the local ANSI code page. This is the default.
+    Local = raw::PCAP_CHAR_ENC_LOCAL,
+    /// Strings are in UTF-8.
+    Utf8 = raw::PCAP_CHAR_ENC_UTF_8,
+}
+
+/// Initialize the library, choosing the character encoding it uses for the strings it is given
+/// and the strings it returns.
+///
+/// This is optional, but it has to come before any other libpcap call, and a second call asking
+/// for a different encoding fails. Without it strings are in the local character encoding.
+#[cfg(libpcap_1_10_0)]
+pub fn init(encoding: CharEncoding) -> Result<(), Error> {
+    Error::with_errbuf(|err| {
+        if unsafe { raw::pcap_init(encoding as _, err) } != 0 {
+            return Err(unsafe { Error::new(err) });
+        }
+        Ok(())
+    })
+}
+
 #[cfg(test)]
 mod tests {
     use std::error::Error as StdError;
     use std::{ffi::CString, io};
+
+    #[cfg(libpcap_1_10_0)]
+    use crate::raw::testmod::RAWMTX;
 
     use super::*;
 
@@ -310,5 +340,28 @@ mod tests {
             packet_header_size(),
             std::mem::size_of::<raw::pcap_pkthdr>()
         );
+    }
+
+    #[test]
+    #[cfg(libpcap_1_10_0)]
+    fn test_init() {
+        let _m = RAWMTX.lock();
+
+        let ctx = raw::pcap_init_context();
+        ctx.expect()
+            .withf_st(|arg1, _| *arg1 == raw::PCAP_CHAR_ENC_UTF_8)
+            .return_once(|_, _| 0);
+
+        let result = init(CharEncoding::Utf8);
+        assert!(result.is_ok());
+
+        let ctx = raw::pcap_init_context();
+        ctx.checkpoint();
+        ctx.expect()
+            .withf_st(|arg1, _| *arg1 == raw::PCAP_CHAR_ENC_LOCAL)
+            .return_once(|_, _| -1);
+
+        let result = init(CharEncoding::Local);
+        assert!(result.is_err());
     }
 }
