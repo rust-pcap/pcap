@@ -2,7 +2,7 @@
 #![allow(dead_code)]
 #![allow(non_camel_case_types)]
 
-use libc::{c_char, c_int, c_uchar, c_uint, c_ushort, sockaddr, timeval, FILE};
+use libc::{FILE, c_char, c_int, c_uchar, c_uint, c_ushort, sockaddr, timeval};
 
 #[cfg(test)]
 use mockall::automock;
@@ -109,7 +109,7 @@ pub type pcap_handler =
 pub mod ffi {
     use super::*;
 
-    extern "C" {
+    unsafe extern "C" {
         // [OBSOLETE] pub fn pcap_lookupdev(arg1: *mut c_char) -> *mut c_char;
         // pub fn pcap_lookupnet(arg1: *const c_char, arg2: *mut c_uint, arg3: *mut c_uint,
         //                       arg4: *mut c_char) -> c_int;
@@ -200,7 +200,7 @@ pub mod ffi {
     }
 
     #[cfg(libpcap_1_2_1)]
-    extern "C" {
+    unsafe extern "C" {
         // pub fn pcap_free_tstamp_types(arg1: *mut c_int) -> ();
         // pub fn pcap_list_tstamp_types(arg1: *mut pcap_t, arg2: *mut *mut c_int) -> c_int;
         // pub fn pcap_tstamp_type_name_to_val(arg1: *const c_char) -> c_int;
@@ -210,7 +210,7 @@ pub mod ffi {
     }
 
     #[cfg(libpcap_1_5_0)]
-    extern "C" {
+    unsafe extern "C" {
         pub fn pcap_fopen_offline_with_tstamp_precision(
             arg1: *mut FILE,
             arg2: c_uint,
@@ -232,12 +232,12 @@ pub mod ffi {
     }
 
     #[cfg(libpcap_1_7_2)]
-    extern "C" {
+    unsafe extern "C" {
         pub fn pcap_dump_open_append(arg1: *mut pcap_t, arg2: *const c_char) -> *mut pcap_dumper_t;
     }
 
     #[cfg(libpcap_1_9_0)]
-    extern "C" {
+    unsafe extern "C" {
         // pcap_bufsize
         // pcap_createsrcstr
         // pcap_dump_ftell64
@@ -254,7 +254,7 @@ pub mod ffi {
     }
 
     #[cfg(libpcap_1_9_1)]
-    extern "C" {
+    unsafe extern "C" {
         // pcap_datalink_val_to_description_or_dlt
     }
 }
@@ -265,7 +265,7 @@ pub mod ffi_unix {
     use super::*;
 
     #[link(name = "pcap")]
-    extern "C" {
+    unsafe extern "C" {
         // pub fn pcap_inject(arg1: *mut pcap_t, arg2: *const c_void, arg3: size_t) -> c_int;
         pub fn pcap_set_rfmon(arg1: *mut pcap_t, arg2: c_int) -> c_int;
     }
@@ -277,7 +277,7 @@ pub mod ffi_macos {
     use super::*;
 
     #[cfg(libpcap_1_5_3)]
-    extern "C" {
+    unsafe extern "C" {
         pub fn pcap_set_want_pktap(arg1: *mut pcap_t, arg2: c_int) -> c_int;
     }
 }
@@ -292,7 +292,7 @@ pub mod ffi_windows {
     pub const WINPCAP_MINTOCOPY_DEFAULT: c_int = 16000;
 
     #[link(name = "wpcap")]
-    extern "C" {
+    unsafe extern "C" {
         pub fn pcap_setmintocopy(arg1: *mut pcap_t, arg2: c_int) -> c_int;
         pub fn pcap_getevent(p: *mut pcap_t) -> HANDLE;
         pub fn pcap_sendqueue_alloc(memsize: c_uint) -> *mut pcap_send_queue;

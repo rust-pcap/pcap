@@ -35,7 +35,7 @@ mod tests {
 
     use etherparse::{PacketBuilder, PacketHeaders};
     use pcap::Capture;
-    use tun_tap::Iface;
+    use tun_rs::SyncDevice;
 
     /***
      * Create a Tap interface and make sure that the sendpacket() and next_packet()
@@ -90,23 +90,30 @@ mod tests {
      * Return as a Capture<Inactive> in case the caller wants to set some
      * different options before opening it (maybe?)
      */
-    fn capture_tap_interface() -> (Capture<pcap::Inactive>, Iface) {
-        use tun_tap::Mode;
+    fn capture_tap_interface() -> (Capture<pcap::Inactive>, SyncDevice) {
+        use tun_rs::{DeviceBuilder, Layer};
 
-        // without_packet_info sets ioctl(fd, IFF_NO_PI ) on the tap fd
-        // as described in https://www.gabriel.urdhr.fr/2021/05/08/tuntap/#packet-information
+        // Layer::L2 is a tap rather than a tun. The builder leaves IFF_NO_PI set unless
+        // packet_information() asks for it, as described in
+        // https://www.gabriel.urdhr.fr/2021/05/08/tuntap/#packet-information
         // it's not useful for l2 tap packets, so wouldl like to skip to simplify tests
-        let iface_result = Iface::without_packet_info("testtap%d", Mode::Tap);
+        let iface_result = DeviceBuilder::new()
+            .name("testtap%d")
+            .layer(Layer::L2)
+            .build_sync();
         // I know this could/should be a match(), but I think this is cleaner...
         if let Err(e) = iface_result {
             if e.kind() == std::io::ErrorKind::PermissionDenied {
                 println!("Permission denied - needs tp be run as root/sudo!");
-                panic!("Failed to bind the tap interface: PermissionDenied - please run with root/sudo!");
+                panic!(
+                    "Failed to bind the tap interface: PermissionDenied - please run with root/sudo!"
+                );
             }
             // common error is to not run these tests as root; provide a nicer message
             panic!("Failed to bind the tap interface: {e:#?}");
         }
         let iface = iface_result.unwrap();
+        let iface_name = iface.name().unwrap();
         if cfg!(target_os = "linux") {
             // If IPv6 is enabled, it will broadcast all sorts of stuff on this interface
             // these broadcasts will periodically (heisenbug!) break tests that aren't smart enough
@@ -114,16 +121,15 @@ mod tests {
             // It's important to do this BEFORE bringing up the interface else there's still
             // a race condition (that we were losing more often than not!)
             safe_run_command(format!(
-                "sysctl -w net.ipv6.conf.{}.disable_ipv6=1",
-                iface.name()
+                "sysctl -w net.ipv6.conf.{iface_name}.disable_ipv6=1"
             ));
 
             // Under Linux, the interface is created, but defaults to 'down' state, where pcap needs it 'up'
             // Yes, it's a hack to use the command line instead of an API, but the netdev APIs are messy
             // TODO: decide if we should move to the https://crates.io/keywords/netlink crate
-            safe_run_command(format!("ip link set dev {} up", iface.name()));
+            safe_run_command(format!("ip link set dev {iface_name} up"));
         }
-        let device = pcap::Device::from(iface.name());
+        let device = pcap::Device::from(iface_name.as_str());
         (Capture::from_device(device).unwrap(), iface)
     }
 

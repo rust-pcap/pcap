@@ -175,7 +175,7 @@ fn test_raw_fd_api() {
 
     #[cfg(libpcap_1_5_0)]
     unsafe fn from_raw_fd_with_precision(fd: RawFd, precision: Precision) -> Capture<Offline> {
-        Capture::from_raw_fd_with_precision(fd, precision).unwrap()
+        unsafe { Capture::from_raw_fd_with_precision(fd, precision).unwrap() }
     }
 
     #[cfg(not(libpcap_1_5_0))]

@@ -6,12 +6,14 @@ use bitflags::bitflags;
 use windows_sys::Win32::Networking::WinSock;
 
 use crate::{
+    Error,
     capture::{Active, Capture},
-    cstr_to_string, raw, Error,
+    cstr_to_string, raw,
 };
 
 bitflags! {
     /// Network device flags.
+    #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
     pub struct IfFlags: u32 {
         /// Set if the device is a loopback interface
         const LOOPBACK = raw::PCAP_IF_LOOPBACK;
@@ -175,13 +177,13 @@ impl Device {
     {
         let all_devs = Error::with_errbuf(|err| {
             let mut all_devs: *mut raw::pcap_if_t = ptr::null_mut();
-            if raw::pcap_findalldevs(&mut all_devs, err) != 0 {
-                return Err(Error::new(err));
+            if unsafe { raw::pcap_findalldevs(&mut all_devs, err) } != 0 {
+                return Err(unsafe { Error::new(err) });
             }
             Ok(all_devs)
         })?;
         let result = func(all_devs);
-        raw::pcap_freealldevs(all_devs);
+        unsafe { raw::pcap_freealldevs(all_devs) };
         result
     }
 }
@@ -222,21 +224,23 @@ impl Address {
     unsafe fn new_vec(mut ptr: *const raw::pcap_addr_t) -> Vec<Address> {
         let mut vec = Vec::new();
         while !ptr.is_null() {
-            if let Some(addr) = Address::new(ptr) {
+            if let Some(addr) = unsafe { Address::new(ptr) } {
                 vec.push(addr);
             }
-            ptr = (*ptr).next;
+            ptr = unsafe { (*ptr).next };
         }
         vec
     }
 
     unsafe fn new(ptr: *const raw::pcap_addr_t) -> Option<Address> {
-        Self::convert_sockaddr((*ptr).addr).map(|addr| Address {
-            addr,
-            netmask: Self::convert_sockaddr((*ptr).netmask),
-            broadcast_addr: Self::convert_sockaddr((*ptr).broadaddr),
-            dst_addr: Self::convert_sockaddr((*ptr).dstaddr),
-        })
+        unsafe {
+            Self::convert_sockaddr((*ptr).addr).map(|addr| Address {
+                addr,
+                netmask: Self::convert_sockaddr((*ptr).netmask),
+                broadcast_addr: Self::convert_sockaddr((*ptr).broadaddr),
+                dst_addr: Self::convert_sockaddr((*ptr).dstaddr),
+            })
+        }
     }
 
     #[cfg(not(windows))]
@@ -245,18 +249,20 @@ impl Address {
             return None;
         }
 
-        match (*ptr).sa_family as i32 {
-            libc::AF_INET => {
-                let ptr: *const libc::sockaddr_in = std::mem::transmute(ptr);
-                Some(IpAddr::V4(u32::from_be((*ptr).sin_addr.s_addr).into()))
-            }
+        unsafe {
+            match (*ptr).sa_family as i32 {
+                libc::AF_INET => {
+                    let ptr: *const libc::sockaddr_in = std::mem::transmute(ptr);
+                    Some(IpAddr::V4(u32::from_be((*ptr).sin_addr.s_addr).into()))
+                }
 
-            libc::AF_INET6 => {
-                let ptr: *const libc::sockaddr_in6 = std::mem::transmute(ptr);
-                Some(IpAddr::V6((*ptr).sin6_addr.s6_addr.into()))
-            }
+                libc::AF_INET6 => {
+                    let ptr: *const libc::sockaddr_in6 = std::mem::transmute(ptr);
+                    Some(IpAddr::V6((*ptr).sin6_addr.s6_addr.into()))
+                }
 
-            _ => None,
+                _ => None,
+            }
         }
     }
 
@@ -266,19 +272,21 @@ impl Address {
             return None;
         }
 
-        match (*ptr).sa_family as u32 {
-            WinSock::AF_INET => {
-                let ptr: *const WinSock::SOCKADDR_IN = std::mem::transmute(ptr);
-                let addr: [u8; 4] = ((*ptr).sin_addr.S_un.S_addr).to_ne_bytes();
-                Some(IpAddr::from(addr))
-            }
-            WinSock::AF_INET6 => {
-                let ptr: *const WinSock::SOCKADDR_IN6 = std::mem::transmute(ptr);
-                let addr = (*ptr).sin6_addr.u.Byte;
-                Some(IpAddr::from(addr))
-            }
+        unsafe {
+            match (*ptr).sa_family {
+                WinSock::AF_INET => {
+                    let ptr: *const WinSock::SOCKADDR_IN = std::mem::transmute(ptr);
+                    let addr: [u8; 4] = ((*ptr).sin_addr.S_un.S_addr).to_ne_bytes();
+                    Some(IpAddr::from(addr))
+                }
+                WinSock::AF_INET6 => {
+                    let ptr: *const WinSock::SOCKADDR_IN6 = std::mem::transmute(ptr);
+                    let addr = (*ptr).sin6_addr.u.Byte;
+                    Some(IpAddr::from(addr))
+                }
 
-            _ => None,
+                _ => None,
+            }
         }
     }
 }
@@ -287,7 +295,7 @@ impl Address {
 mod tests {
     use std::ffi::CString;
 
-    use crate::raw::testmod::{as_pcap_t, RAWMTX};
+    use crate::raw::testmod::{RAWMTX, as_pcap_t};
 
     use super::*;
 
@@ -306,8 +314,8 @@ mod tests {
     impl Sockaddr {
         fn as_mut_ptr(&mut self) -> *mut libc::sockaddr {
             match self {
-                Sockaddr::SockaddrIn(ref mut sin) => sin as *mut _ as _,
-                Sockaddr::SockaddrIn6(ref mut sin6) => sin6 as *mut _ as _,
+                Sockaddr::SockaddrIn(sin) => sin as *mut _ as _,
+                Sockaddr::SockaddrIn6(sin6) => sin6 as *mut _ as _,
             }
         }
 
@@ -317,8 +325,8 @@ mod tests {
             let family = family as libc::sa_family_t;
 
             match self {
-                Sockaddr::SockaddrIn(ref mut sin) => sin.sin_family = family,
-                Sockaddr::SockaddrIn6(ref mut sin6) => sin6.sin6_family = family,
+                Sockaddr::SockaddrIn(sin) => sin.sin_family = family,
+                Sockaddr::SockaddrIn6(sin6) => sin6.sin6_family = family,
             }
         }
     }
@@ -371,8 +379,7 @@ mod tests {
     impl InetAddressV4 for WinSock::SOCKADDR_IN {
         fn new() -> Self {
             let mut addr: Self = unsafe { std::mem::zeroed() };
-            // The cast is only necessary due to a bug in windows_sys@v0.36.1
-            addr.sin_family = WinSock::AF_INET as u16;
+            addr.sin_family = WinSock::AF_INET;
             addr
         }
 
@@ -417,8 +424,7 @@ mod tests {
     impl InetAddressV6 for WinSock::SOCKADDR_IN6 {
         fn new() -> Self {
             let mut addr: Self = unsafe { std::mem::zeroed() };
-            // The cast is only necessary due to a bug in windows_sys@v0.36.1
-            addr.sin6_family = WinSock::AF_INET6 as u16;
+            addr.sin6_family = WinSock::AF_INET6;
             unsafe {
                 addr.sin6_addr.u.Byte[0] = 0xFE;
                 addr.sin6_addr.u.Byte[1] = 0x80;

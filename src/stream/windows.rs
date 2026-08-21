@@ -5,14 +5,14 @@ use std::marker::Unpin;
 use std::pin::Pin;
 use std::task::{self, Poll};
 
-use futures::{ready, FutureExt};
+use futures::{FutureExt, ready};
 use tokio::task::JoinHandle;
 use windows_sys::Win32::{Foundation::HANDLE, System::Threading::WaitForSingleObject};
 
 use crate::{
+    Error,
     capture::{Activated, Capture},
     codec::PacketCodec,
-    Error,
 };
 
 /// Implement Stream for async use of pcap
@@ -25,7 +25,7 @@ pub struct PacketStream<T: Activated + ?Sized, C> {
 impl<T: Activated + ?Sized, C> PacketStream<T, C> {
     pub(crate) fn new(capture: Capture<T>, codec: C) -> Result<Self, Error> {
         Ok(Self {
-            event_handle: EventHandle::new(&capture),
+            event_handle: EventHandle::new(),
             capture,
             codec,
         })
@@ -49,7 +49,7 @@ impl<T: Activated + ?Sized, C: PacketCodec> futures::Stream for PacketStream<T, 
         let codec = &mut stream.codec;
 
         loop {
-            ready!(stream.event_handle.poll_ready(cx));
+            ready!(stream.event_handle.poll_ready(cx, &stream.capture));
 
             let res = match stream.capture.next_packet() {
                 Ok(p) => Ok(codec.decode(p)),
@@ -64,13 +64,30 @@ impl<T: Activated + ?Sized, C: PacketCodec> futures::Stream for PacketStream<T, 
     }
 }
 
-/// A wrapper around a HANDLE that can be used to call `WaitForSingleObject`
-/// from an asynchronous context. Once the call to `WaitForSingleObject`
-/// completes, the handle is considered ready and will keep returning `Ready`
-/// until it's reset.
+/// Drives a call to `WaitForSingleObject` on the capture's event from an
+/// asynchronous context. Once the call completes, the event is considered
+/// ready and will keep returning `Ready` until it's reset.
 struct EventHandle {
-    handle: HANDLE,
     state: EventHandleState,
+}
+
+/// A `HANDLE` that can be handed to the thread doing the
+/// blocking wait. `HANDLE` is a raw pointer and therefore
+/// `!Send`, but the event is a kernel object that any thread
+/// in the process is allowed to wait on.
+#[derive(Clone, Copy)]
+struct SendHandle(HANDLE);
+
+// SAFETY: see the note on SendHandle.
+unsafe impl Send for SendHandle {}
+
+impl SendHandle {
+    // A method rather than a field access, so that a closure
+    // captures the whole SendHandle instead of just the
+    // `!Send` pointer inside it.
+    fn get(self) -> HANDLE {
+        self.0
+    }
 }
 
 enum EventHandleState {
@@ -83,27 +100,29 @@ enum EventHandleState {
 }
 
 impl EventHandle {
-    pub fn new<T: Activated + ?Sized>(capture: &Capture<T>) -> Self {
+    pub fn new() -> Self {
         Self {
-            handle: unsafe {
-                // SAFETY: PacketStream stores the handle before the capture,
-                // so the handle will be dropped before the capture.
-                capture.get_event()
-            },
             state: EventHandleState::Init,
         }
     }
 
-    pub fn poll_ready(&mut self, cx: &mut task::Context) -> Poll<()> {
+    pub fn poll_ready<T: Activated + ?Sized>(
+        &mut self,
+        cx: &mut task::Context,
+        capture: &Capture<T>,
+    ) -> Poll<()> {
         loop {
             match self.state {
                 EventHandleState::Init => {
-                    let handle = self.handle;
+                    // SAFETY: the event belongs to the capture's pcap context,
+                    // which is borrowed for this call, so the handle is live
+                    // when it is handed to the blocking task.
+                    let handle = SendHandle(unsafe { capture.get_event() });
                     self.state =
                         EventHandleState::Polling(tokio::task::spawn_blocking(move || {
                             const INFINITE: u32 = !0;
                             unsafe {
-                                WaitForSingleObject(handle, INFINITE);
+                                WaitForSingleObject(handle.get(), INFINITE);
                             }
                         }));
                 }
