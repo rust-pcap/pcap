@@ -60,8 +60,9 @@
 
 #![cfg_attr(docsrs, feature(doc_cfg))]
 
-use std::ffi::{self, CStr};
+use std::ffi::{self, CStr, CString};
 use std::fmt;
+use std::path::Path;
 
 use self::Error::*;
 
@@ -127,6 +128,9 @@ pub enum Error {
     #[cfg(not(windows))]
     /// An invalid raw file descriptor was provided
     InvalidRawFd,
+    #[cfg(windows)]
+    /// A path that libpcap cannot be given because it is not valid UTF-8
+    InvalidPath,
     /// Errno error
     ErrnoError(errno::Errno),
     /// Buffer size overflows capacity
@@ -168,6 +172,25 @@ unsafe fn cstr_to_string(ptr: *const libc::c_char) -> Result<Option<String>, Err
     Ok(string)
 }
 
+fn path_to_cstring(path: &Path) -> Result<CString, Error> {
+    #[cfg(not(windows))]
+    let bytes = {
+        use std::os::unix::ffi::OsStrExt;
+        path.as_os_str().as_bytes()
+    };
+    // libpcap has no entry points taking wide strings. It reads the path in the local code page,
+    // or in UTF-8 once pcap_init has been asked for that, so give it the UTF-8 form. A path that
+    // is not valid UTF-8 holds an unpaired surrogate, which has no form libpcap would accept.
+    #[cfg(windows)]
+    let bytes = path
+        .as_os_str()
+        .to_str()
+        .ok_or(Error::InvalidPath)?
+        .as_bytes();
+
+    Ok(CString::new(bytes)?)
+}
+
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match *self {
@@ -183,6 +206,8 @@ impl fmt::Display for Error {
             IoError(ref e) => write!(f, "io error occurred: {e:?}"),
             #[cfg(not(windows))]
             InvalidRawFd => write!(f, "invalid raw file descriptor provided"),
+            #[cfg(windows)]
+            InvalidPath => write!(f, "invalid path (not valid UTF-8)"),
             ErrnoError(ref e) => write!(f, "libpcap os errno: {e}"),
             BufferOverflow => write!(f, "buffer size too large"),
         }
@@ -205,6 +230,8 @@ impl std::error::Error for Error {
             IoError(..) => "io error occurred",
             #[cfg(not(windows))]
             InvalidRawFd => "invalid raw file descriptor provided",
+            #[cfg(windows)]
+            InvalidPath => "invalid path (not valid UTF-8)",
             ErrnoError(..) => "internal error, providing errno",
             BufferOverflow => "buffer size too large",
         }
@@ -321,6 +348,8 @@ mod tests {
         errors.push(io::Error::new(io::ErrorKind::Interrupted, "error").into());
         #[cfg(not(windows))]
         errors.push(Error::InvalidRawFd);
+        #[cfg(windows)]
+        errors.push(Error::InvalidPath);
         errors.push(Error::ErrnoError(errno::Errno(125)));
         errors.push(Error::BufferOverflow);
 
@@ -340,6 +369,18 @@ mod tests {
             packet_header_size(),
             std::mem::size_of::<raw::pcap_pkthdr>()
         );
+    }
+
+    #[test]
+    #[cfg(windows)]
+    fn test_path_to_cstring_not_utf8() {
+        use std::ffi::OsString;
+        use std::os::windows::ffi::OsStringExt;
+
+        // An unpaired surrogate, which a Windows path may hold and UTF-8 cannot express.
+        let name = OsString::from_wide(&[0xd800]);
+        let result = path_to_cstring(Path::new(&name));
+        assert_eq!(result.unwrap_err(), Error::InvalidPath);
     }
 
     #[test]

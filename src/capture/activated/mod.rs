@@ -24,7 +24,7 @@ use crate::{
     codec::PacketCodec,
     linktype::Linktype,
     packet::{Packet, PacketHeader},
-    raw,
+    path_to_cstring, raw,
 };
 
 use iterator::PacketIter;
@@ -97,7 +97,7 @@ impl<T: Activated + ?Sized> Capture<T> {
     /// Create a `Savefile` context for recording captured packets using this `Capture`'s
     /// configurations.
     pub fn savefile<P: AsRef<Path>>(&self, path: P) -> Result<Savefile, Error> {
-        let name = CString::new(path.as_ref().to_str().unwrap())?;
+        let name = path_to_cstring(path.as_ref())?;
         let handle_opt = NonNull::<raw::pcap_dumper_t>::new(unsafe {
             raw::pcap_dump_open(self.handle.as_ptr(), name.as_ptr())
         });
@@ -135,7 +135,7 @@ impl<T: Activated + ?Sized> Capture<T> {
     /// at the end of the file.
     #[cfg(libpcap_1_7_2)]
     pub fn savefile_append<P: AsRef<Path>>(&self, path: P) -> Result<Savefile, Error> {
-        let name = CString::new(path.as_ref().to_str().unwrap())?;
+        let name = path_to_cstring(path.as_ref())?;
         let handle_opt = NonNull::<raw::pcap_dumper_t>::new(unsafe {
             raw::pcap_dump_open_append(self.handle.as_ptr(), name.as_ptr())
         });

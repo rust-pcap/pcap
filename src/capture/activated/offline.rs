@@ -6,7 +6,7 @@ use std::os::unix::io::RawFd;
 use crate::{
     Error,
     capture::{Capture, Offline},
-    raw,
+    path_to_cstring, raw,
 };
 
 #[cfg(libpcap_1_5_0)]
@@ -18,7 +18,8 @@ use crate::capture::activated::open_raw_fd;
 impl Capture<Offline> {
     /// Opens an offline capture handle from a pcap dump file, given a path.
     pub fn from_file<P: AsRef<Path>>(path: P) -> Result<Capture<Offline>, Error> {
-        Capture::new_raw(path.as_ref().to_str(), |path, err| unsafe {
+        let path = path_to_cstring(path.as_ref())?;
+        Capture::new_raw(Some(path), |path, err| unsafe {
             raw::pcap_open_offline(path, err)
         })
     }
@@ -30,7 +31,8 @@ impl Capture<Offline> {
         path: P,
         precision: Precision,
     ) -> Result<Capture<Offline>, Error> {
-        Capture::new_raw(path.as_ref().to_str(), |path, err| unsafe {
+        let path = path_to_cstring(path.as_ref())?;
+        Capture::new_raw(Some(path), |path, err| unsafe {
             raw::pcap_open_offline_with_tstamp_precision(path, precision as _, err)
         })
     }

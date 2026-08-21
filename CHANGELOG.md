@@ -22,6 +22,7 @@
   `PCAP_ERRBUF_SIZE` without regard for character boundaries, so one quoting a long non-ASCII
   path used to arrive as `Error::MalformedError` with the message thrown away. It now arrives as
   `Error::PcapError`. Device and link-layer type names are still rejected when malformed.
+- `Error` has a new `InvalidPath` variant on Windows, which exhaustive matches have to cover.
 - `windows-sys` updated from 0.36 to 0.61. `HANDLE` is a raw pointer there rather than an `isize`,
   which changes the signature of `Capture::get_event` on Windows. A raw pointer is not `Send`, so
   a type of your own that stores the returned `HANDLE` no longer derives `Send` and can no longer
@@ -31,6 +32,14 @@
 
 - `IfFlags::from_bits_unchecked`, which `bitflags` 1 generated. `bitflags` 2 provides
   `IfFlags::from_bits_retain` instead.
+
+### Fixed
+
+- `Capture::from_file`, `Capture::from_file_with_precision`, `Capture::savefile` and
+  `Capture::savefile_append` no longer convert the path with `Path::to_str`. On UN*X the path is
+  handed to libpcap as bytes, so file names that are not valid UTF-8 now work. On Windows such a
+  path returns the new `Error::InvalidPath`, where `savefile` used to panic and `from_file` used
+  to report that a null pointer had been supplied as the file name.
 
 ## [2.5.0] - 2026-08-15
 
