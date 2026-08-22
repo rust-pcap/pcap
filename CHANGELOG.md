@@ -4,8 +4,11 @@
 
 ### Added
 
-- Binding for `pcap_dump_ftell64` added. It can be accessed via the `offset` call on `Savefile`
-  and reports how many bytes have been written to the file so far. Requires libpcap 1.9.0.
+- Bindings for `pcap_dump_ftell64` and `pcap_dump_ftell` added. They can be accessed via the
+  `offset` call on `Savefile`, which reports how many bytes have been written to the file so far.
+  `pcap_dump_ftell64` is used where it is available, that is from libpcap 1.9.0 on; before that
+  the offset comes back as a `long` and the call fails once the file has grown past 2 GB on the
+  platforms where that is a 32-bit type.
 - Binding for `pcap_init` added. It can be accessed via the `init` call and selects the character
   encoding libpcap uses for strings. Requires libpcap 1.10.0.
 
