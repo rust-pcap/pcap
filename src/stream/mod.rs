@@ -9,9 +9,9 @@ pub mod windows;
 pub use windows::PacketStream;
 
 use crate::{
+    Error,
     capture::{Activated, Capture},
     codec::PacketCodec,
-    Error,
 };
 
 impl<T: Activated + ?Sized> Capture<T> {
@@ -32,10 +32,12 @@ impl<T: Activated + ?Sized> Capture<T> {
 #[cfg(test)]
 mod tests {
     use crate::{
-        capture::{testmod::test_capture, Active},
+        capture::{Active, testmod::test_capture},
         codec::testmod::Codec,
-        raw::testmod::{as_pcap_t, RAWMTX},
+        raw::testmod::{RAWMTX, as_pcap_t},
     };
+
+    use super::PacketStream;
 
     #[test]
     fn test_stream_error() {
@@ -50,5 +52,13 @@ mod tests {
 
         let result = capture.stream(Codec);
         assert!(result.is_err());
+    }
+
+    // On Windows the stream drives an event HANDLE, which is a raw pointer and so not Send on
+    // its own. Callers hand the stream to an executor, so make sure it stays Send.
+    #[test]
+    fn test_stream_is_send() {
+        fn assert_send<T: Send>() {}
+        assert_send::<PacketStream<Active, Codec>>();
     }
 }

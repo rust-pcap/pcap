@@ -1,6 +1,6 @@
 use std::ffi::CString;
 
-use crate::{cstr_to_string, raw, Error};
+use crate::{Error, cstr_to_string, raw};
 
 /// This is a datalink link type.
 ///

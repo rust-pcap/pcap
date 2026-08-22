@@ -8,7 +8,7 @@ use std::{
     convert::TryInto,
     ffi::CString,
     fmt, mem,
-    panic::{catch_unwind, resume_unwind, AssertUnwindSafe},
+    panic::{AssertUnwindSafe, catch_unwind, resume_unwind},
     path::Path,
     ptr::{self, NonNull},
     slice,
@@ -19,11 +19,12 @@ use std::{
 use std::os::unix::io::RawFd;
 
 use crate::{
+    Error,
     capture::{Activated, Capture, PcapHandle},
     codec::PacketCodec,
     linktype::Linktype,
     packet::{Packet, PacketHeader},
-    raw, Error,
+    raw,
 };
 
 use iterator::PacketIter;
@@ -115,11 +116,10 @@ impl<T: Activated + ?Sized> Capture<T> {
     /// Unsafe, because the returned Savefile assumes it is the sole owner of the file descriptor.
     #[cfg(not(windows))]
     pub unsafe fn savefile_raw_fd(&self, fd: RawFd) -> Result<Savefile, Error> {
-        open_raw_fd(fd, b'w').and_then(|file| {
-            let handle_opt = NonNull::<raw::pcap_dumper_t>::new(raw::pcap_dump_fopen(
-                self.handle.as_ptr(),
-                file,
-            ));
+        unsafe { open_raw_fd(fd, b'w') }.and_then(|file| {
+            let handle_opt = NonNull::<raw::pcap_dumper_t>::new(unsafe {
+                raw::pcap_dump_fopen(self.handle.as_ptr(), file)
+            });
             let handle = self
                 .check_err(handle_opt.is_some())
                 .map(|_| handle_opt.unwrap())?;
@@ -539,8 +539,7 @@ unsafe impl Send for BpfProgram {}
 /// Unsafe, because the returned FILE assumes it is the sole owner of the file descriptor.
 pub unsafe fn open_raw_fd(fd: RawFd, mode: u8) -> Result<*mut libc::FILE, Error> {
     let mode = [mode, 0];
-    libc::fdopen(fd, mode.as_ptr() as _)
-        .as_mut()
+    unsafe { libc::fdopen(fd, mode.as_ptr() as _).as_mut() }
         .map(|f| f as _)
         .ok_or(Error::InvalidRawFd)
 }
@@ -601,11 +600,11 @@ mod testmod {
 mod tests {
     use crate::{
         capture::{
-            activated::testmod::{next_ex_expect, PACKET},
-            testmod::test_capture,
             Active, Capture, Offline,
+            activated::testmod::{PACKET, next_ex_expect},
+            testmod::test_capture,
         },
-        raw::testmod::{as_pcap_dumper_t, as_pcap_t, geterr_expect, RAWMTX},
+        raw::testmod::{RAWMTX, as_pcap_dumper_t, as_pcap_t, geterr_expect},
     };
 
     use super::*;
@@ -718,11 +717,7 @@ mod tests {
         }
 
         fn maybe(a: bool) -> Capture<dyn Activated> {
-            if a {
-                test1().into()
-            } else {
-                test2().into()
-            }
+            if a { test1().into() } else { test2().into() }
         }
 
         fn also_maybe(a: &mut Capture<dyn Activated>) {
@@ -1177,7 +1172,6 @@ mod tests {
     }
 
     #[test]
-    #[should_panic = "panic in callback"]
     fn panic_in_pcap_loop() {
         let _m = RAWMTX.lock();
 
@@ -1209,9 +1203,16 @@ mod tests {
             .withf_st(move |arg1| *arg1 == pcap)
             .return_once_st(move |_| {});
 
-        capture
-            .for_each(None, |_| panic!("panic in callback"))
-            .unwrap();
+        // Catch the unwind here instead of letting it leave the test. mockall skips its
+        // checkpoint while a thread is panicking, so the expectations above would stay
+        // registered for whichever test runs next to drop on the wrong thread.
+        let panic = catch_unwind(AssertUnwindSafe(|| {
+            capture
+                .for_each(None, |_| panic!("panic in callback"))
+                .unwrap()
+        }))
+        .unwrap_err();
+        assert_eq!(*panic.downcast_ref::<&str>().unwrap(), "panic in callback");
     }
 
     #[test]
@@ -1309,7 +1310,6 @@ mod tests {
     }
 
     #[test]
-    #[should_panic = "panic in callback"]
     fn panic_in_pcap_dispatch() {
         let _m = RAWMTX.lock();
 
@@ -1341,9 +1341,16 @@ mod tests {
             .withf_st(move |arg1| *arg1 == pcap)
             .return_once_st(move |_| {});
 
-        capture
-            .dispatch(None, |_| panic!("panic in callback"))
-            .unwrap();
+        // Catch the unwind here instead of letting it leave the test. mockall skips its
+        // checkpoint while a thread is panicking, so the expectations above would stay
+        // registered for whichever test runs next to drop on the wrong thread.
+        let panic = catch_unwind(AssertUnwindSafe(|| {
+            capture
+                .dispatch(None, |_| panic!("panic in callback"))
+                .unwrap()
+        }))
+        .unwrap_err();
+        assert_eq!(*panic.downcast_ref::<&str>().unwrap(), "panic in callback");
     }
 
     #[test]

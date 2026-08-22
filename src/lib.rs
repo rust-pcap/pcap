@@ -75,7 +75,7 @@ mod packet;
 pub use capture::activated::open_raw_fd;
 pub use capture::{
     activated::{
-        iterator::PacketIter, BpfInstruction, BpfProgram, BreakLoop, Direction, Savefile, Stat,
+        BpfInstruction, BpfProgram, BreakLoop, Direction, Savefile, Stat, iterator::PacketIter,
     },
     inactive::TimestampType,
     {Activated, Active, Capture, Dead, Inactive, Offline, Precision, State},
@@ -135,7 +135,7 @@ pub enum Error {
 
 impl Error {
     unsafe fn new(ptr: *const libc::c_char) -> Error {
-        match cstr_to_string(ptr) {
+        match unsafe { cstr_to_string(ptr) } {
             Err(e) => e as Error,
             Ok(string) => PcapError(string.unwrap_or_default()),
         }
@@ -154,7 +154,7 @@ unsafe fn cstr_to_string(ptr: *const libc::c_char) -> Result<Option<String>, Err
     let string = if ptr.is_null() {
         None
     } else {
-        Some(CStr::from_ptr(ptr as _).to_str()?.to_owned())
+        Some(unsafe { CStr::from_ptr(ptr as _) }.to_str()?.to_owned())
     };
     Ok(string)
 }

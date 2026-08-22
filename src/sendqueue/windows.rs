@@ -10,8 +10,9 @@ use std::io::IoSlice;
 use std::ptr::NonNull;
 
 use crate::{
+    Error,
     capture::{Active, Capture},
-    raw, Error,
+    raw,
 };
 
 /// Representation of a batch of packets that can be transferred in a single call using

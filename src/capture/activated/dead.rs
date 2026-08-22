@@ -1,9 +1,10 @@
 use std::ptr::NonNull;
 
 use crate::{
+    Error,
     capture::{Capture, Dead},
     linktype::Linktype,
-    raw, Error,
+    raw,
 };
 
 #[cfg(libpcap_1_5_0)]
@@ -38,7 +39,7 @@ mod tests {
     #[cfg(libpcap_1_5_0)]
     use mockall::predicate;
 
-    use crate::raw::testmod::{as_pcap_t, RAWMTX};
+    use crate::raw::testmod::{RAWMTX, as_pcap_t};
 
     use super::*;
 
