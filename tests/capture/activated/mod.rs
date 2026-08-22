@@ -92,7 +92,6 @@ fn capture_dead_savefile_append() {
 }
 
 #[test]
-#[cfg(libpcap_1_9_0)]
 fn capture_dead_savefile_offset() {
     let mut packets = Packets::new();
     packets.push(1460408319, 1234, 1, 1, &[1]);

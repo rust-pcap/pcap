@@ -473,9 +473,16 @@ impl Savefile {
 
     /// Get the current offset of the savefile, that is the number of bytes written so far,
     /// including any that are still buffered
-    #[cfg(libpcap_1_9_0)]
     pub fn offset(&self) -> Result<u64, Error> {
+        // Prior to 1.9.0 when `pcap_dump_ftell64` was introduced, the offset was only reported as
+        // a `long`. Where that is a 32-bit type, as it is on Windows, the call fails once the
+        // savefile has grown past 2 GB.
+        #[cfg(libpcap_1_9_0)]
         let offset = unsafe { raw::pcap_dump_ftell64(self.handle.as_ptr()) };
+
+        #[cfg(not(libpcap_1_9_0))]
+        let offset = unsafe { raw::pcap_dump_ftell(self.handle.as_ptr()) };
+
         if offset < 0 {
             return Err(Error::ErrnoError(errno::errno()));
         }
@@ -861,6 +868,36 @@ mod tests {
         assert!(result.is_err());
     }
 
+    #[cfg(libpcap_1_9_0)]
+    struct DumpFtellExpect(raw::__pcap_dump_ftell64::Context);
+
+    #[cfg(not(libpcap_1_9_0))]
+    struct DumpFtellExpect(raw::__pcap_dump_ftell::Context);
+
+    fn dump_ftell_expect(pcap_dumper: *mut raw::pcap_dumper_t, offset: i64) -> DumpFtellExpect {
+        // Lock must be acquired by caller.
+        assert!(RAWMTX.try_lock().is_err());
+
+        #[cfg(libpcap_1_9_0)]
+        {
+            let ctx = raw::pcap_dump_ftell64_context();
+            ctx.checkpoint();
+            ctx.expect()
+                .withf_st(move |arg1| *arg1 == pcap_dumper)
+                .return_once(move |_| offset);
+            DumpFtellExpect(ctx)
+        }
+        #[cfg(not(libpcap_1_9_0))]
+        {
+            let ctx = raw::pcap_dump_ftell_context();
+            ctx.checkpoint();
+            ctx.expect()
+                .withf_st(move |arg1| *arg1 == pcap_dumper)
+                .return_once(move |_| offset as _);
+            DumpFtellExpect(ctx)
+        }
+    }
+
     #[test]
     fn test_savefile_ops() {
         let _m = RAWMTX.lock();
@@ -901,25 +938,15 @@ mod tests {
         let result = savefile.flush();
         assert!(result.is_err());
 
-        #[cfg(libpcap_1_9_0)]
-        {
-            let ctx = raw::pcap_dump_ftell64_context();
-            ctx.expect()
-                .withf_st(move |arg1| *arg1 == pcap_dumper)
-                .return_once(|_| 6144);
+        let _ctx = dump_ftell_expect(pcap_dumper, 6144);
 
-            let result = savefile.offset();
-            assert_eq!(result.unwrap(), 6144);
+        let result = savefile.offset();
+        assert_eq!(result.unwrap(), 6144);
 
-            let ctx = raw::pcap_dump_ftell64_context();
-            ctx.checkpoint();
-            ctx.expect()
-                .withf_st(move |arg1| *arg1 == pcap_dumper)
-                .return_once(|_| -1);
+        let _ctx = dump_ftell_expect(pcap_dumper, -1);
 
-            let result = savefile.offset();
-            assert!(result.is_err());
-        }
+        let result = savefile.offset();
+        assert!(result.is_err());
     }
 
     #[test]
