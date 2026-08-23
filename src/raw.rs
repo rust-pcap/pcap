@@ -180,7 +180,7 @@ pub mod ffi {
         pub fn pcap_datalink_name_to_val(arg1: *const c_char) -> c_int;
         pub fn pcap_datalink_val_to_name(arg1: c_int) -> *const c_char;
         pub fn pcap_datalink_val_to_description(arg1: c_int) -> *const c_char;
-        // pub fn pcap_snapshot(arg1: *mut pcap_t) -> c_int;
+        pub fn pcap_snapshot(arg1: *mut pcap_t) -> c_int;
         // pub fn pcap_is_swapped(arg1: *mut pcap_t) -> c_int;
         pub fn pcap_major_version(arg1: *mut pcap_t) -> c_int;
         pub fn pcap_minor_version(arg1: *mut pcap_t) -> c_int;

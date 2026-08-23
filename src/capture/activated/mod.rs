@@ -97,6 +97,15 @@ impl<T: Activated + ?Sized> Capture<T> {
         unsafe { Linktype(raw::pcap_datalink(self.handle.as_ptr())) }
     }
 
+    /// Get the snapshot length, that is the maximum number of bytes captured from each packet.
+    ///
+    /// For a `Capture<Offline>` this is the length the savefile was recorded with, except that a
+    /// header claiming zero, or a length too large for an `i32`, is replaced with the largest
+    /// length the link-layer type can produce.
+    pub fn snaplen(&self) -> i32 {
+        unsafe { raw::pcap_snapshot(self.handle.as_ptr()) }
+    }
+
     /// Create a `Savefile` context for recording captured packets using this `Capture`'s
     /// configurations.
     pub fn savefile<P: AsRef<Path>>(&self, path: P) -> Result<Savefile, Error> {
@@ -739,6 +748,24 @@ mod tests {
 
         let linktype = capture.get_datalink();
         assert_eq!(linktype, Linktype::ETHERNET);
+    }
+
+    #[test]
+    fn test_snaplen() {
+        let _m = RAWMTX.lock();
+
+        let mut value: isize = 777;
+        let pcap = as_pcap_t(&mut value);
+
+        let test_capture = test_capture::<Active>(pcap);
+        let capture: Capture<dyn Activated> = test_capture.capture.into();
+
+        let ctx = raw::pcap_snapshot_context();
+        ctx.expect()
+            .withf_st(move |arg1| *arg1 == pcap)
+            .return_once(|_| 65535);
+
+        assert_eq!(capture.snaplen(), 65535);
     }
 
     #[test]

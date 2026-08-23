@@ -12,6 +12,10 @@
 - Binding for `pcap_dump_file` added. It can be accessed via the `file` call on `Savefile` and
   returns the `FILE *` the savefile is being written to. Not available on Windows, where wpcap
   may be linked against a different C runtime than its caller.
+- Binding for `pcap_snapshot` added. It can be accessed via the `snaplen` call on activated
+  captures and reports the snapshot length in effect, which the `snaplen` call on
+  `Capture<Inactive>` could previously only set. For a `Capture<Offline>` this reports the length
+  the savefile was recorded with.
 - Binding for `pcap_init` added. It can be accessed via the `init` call and selects the character
   encoding libpcap uses for strings. Requires libpcap 1.10.0.
 
