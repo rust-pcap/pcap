@@ -9,6 +9,9 @@
   `pcap_dump_ftell64` is used where it is available, that is from libpcap 1.9.0 on; before that
   the offset comes back as a `long` and the call fails once the file has grown past 2 GB on the
   platforms where that is a 32-bit type.
+- Binding for `pcap_dump_file` added. It can be accessed via the `file` call on `Savefile` and
+  returns the `FILE *` the savefile is being written to. Not available on Windows, where wpcap
+  may be linked against a different C runtime than its caller.
 - Binding for `pcap_init` added. It can be accessed via the `init` call and selects the character
   encoding libpcap uses for strings. Requires libpcap 1.10.0.
 

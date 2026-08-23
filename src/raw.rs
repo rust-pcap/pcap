@@ -187,7 +187,6 @@ pub mod ffi {
         // pub fn pcap_file(arg1: *mut pcap_t) -> *mut FILE;
         pub fn pcap_fileno(arg1: *mut pcap_t) -> c_int;
         pub fn pcap_dump_open(arg1: *mut pcap_t, arg2: *const c_char) -> *mut pcap_dumper_t;
-        // pub fn pcap_dump_file(arg1: *mut pcap_dumper_t) -> *mut FILE;
         pub fn pcap_dump_ftell(arg1: *mut pcap_dumper_t) -> c_long;
         pub fn pcap_dump_flush(arg1: *mut pcap_dumper_t) -> c_int;
         pub fn pcap_dump_close(arg1: *mut pcap_dumper_t);
@@ -277,6 +276,10 @@ pub mod ffi_unix {
         // the OS handle out of the FILE * and call pcap_hopen_offline()/pcap_dump_hopen().
         pub fn pcap_fopen_offline(arg1: *mut FILE, arg2: *mut c_char) -> *mut pcap_t;
         pub fn pcap_dump_fopen(arg1: *mut pcap_t, fp: *mut FILE) -> *mut pcap_dumper_t;
+        // wpcap does export this one, but the FILE * it hands back belongs to the C runtime
+        // wpcap was linked against, which is not necessarily the caller's, so it is no more
+        // usable on Windows than the entry points above.
+        pub fn pcap_dump_file(arg1: *mut pcap_dumper_t) -> *mut FILE;
     }
 
     #[cfg(libpcap_1_5_0)]
