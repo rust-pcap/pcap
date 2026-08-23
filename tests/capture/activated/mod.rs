@@ -141,6 +141,24 @@ fn capture_dead_savefile_file() {
 }
 
 #[test]
+fn capture_offline_snaplen() {
+    for (file_name, snaplen) in [
+        ("packet_snaplen_20.pcap", 20),
+        ("packet_snaplen_65535.pcap", 65535),
+    ] {
+        let capture = capture_from_test_file(file_name);
+        assert_eq!(capture.snaplen(), snaplen, "{file_name}");
+    }
+}
+
+#[test]
+fn capture_dead_snaplen() {
+    // `Capture::dead` opens the handle with a snaplen of 65535.
+    let cap = Capture::dead(Linktype(1)).unwrap();
+    assert_eq!(cap.snaplen(), 65535);
+}
+
+#[test]
 fn test_linktype() {
     let capture = capture_from_test_file("packet_snaplen_65535.pcap");
     let linktype = capture.get_datalink();
