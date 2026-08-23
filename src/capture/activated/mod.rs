@@ -18,6 +18,9 @@ use std::{
 #[cfg(not(windows))]
 use std::os::unix::io::RawFd;
 
+#[cfg(not(windows))]
+use libc::FILE;
+
 use crate::{
     Error,
     capture::{Activated, Capture, PcapHandle},
@@ -489,6 +492,20 @@ impl Savefile {
 
         Ok(offset as u64)
     }
+
+    /// Get the `FILE *` the savefile is being written to
+    ///
+    /// This is not available on Windows, where wpcap may be linked against a different C runtime
+    /// than its caller and the `FILE *` would belong to the wrong one.
+    ///
+    /// # Safety
+    ///
+    /// The caller must ensure that the `Savefile` outlives the returned `FILE *` since it is
+    /// closed when the `Savefile` is dropped.
+    #[cfg(not(windows))]
+    pub unsafe fn file(&self) -> *mut FILE {
+        unsafe { raw::pcap_dump_file(self.handle.as_ptr()) }
+    }
 }
 
 impl From<NonNull<raw::pcap_dumper_t>> for Savefile {
@@ -947,6 +964,19 @@ mod tests {
 
         let result = savefile.offset();
         assert!(result.is_err());
+
+        #[cfg(not(windows))]
+        {
+            let mut dummy: isize = 999;
+            let file = &mut dummy as *mut isize as *mut FILE;
+
+            let ctx = raw::pcap_dump_file_context();
+            ctx.expect()
+                .withf_st(move |arg1| *arg1 == pcap_dumper)
+                .return_once_st(move |_| file);
+
+            assert_eq!(unsafe { savefile.file() }, file);
+        }
     }
 
     #[test]

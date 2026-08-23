@@ -118,6 +118,29 @@ fn capture_dead_savefile_offset() {
 }
 
 #[test]
+#[cfg(not(windows))]
+fn capture_dead_savefile_file() {
+    let dir = TempDir::new().unwrap();
+    let tmpfile = dir.path().join("test.pcap");
+
+    let cap = Capture::dead(Linktype(1)).unwrap();
+    let mut save = cap.savefile(&tmpfile).unwrap();
+    save.flush().unwrap();
+
+    // SAFETY: the FILE * is not used past the end of this test, where `save` is still alive.
+    let fd = unsafe { libc::fileno(save.file()) };
+    assert!(fd >= 0);
+
+    // The stream the header was just flushed to is the one the savefile was opened on.
+    let mut stat = std::mem::MaybeUninit::<libc::stat>::uninit();
+    assert_eq!(unsafe { libc::fstat(fd, stat.as_mut_ptr()) }, 0);
+    assert_eq!(
+        unsafe { stat.assume_init() }.st_size as u64,
+        save.offset().unwrap()
+    );
+}
+
+#[test]
 fn test_linktype() {
     let capture = capture_from_test_file("packet_snaplen_65535.pcap");
     let linktype = capture.get_datalink();
