@@ -546,7 +546,7 @@ pub unsafe fn open_raw_fd(fd: RawFd, mode: u8) -> Result<*mut libc::FILE, Error>
 
 // GRCOV_EXCL_START
 #[cfg(test)]
-mod testmod {
+pub mod testmod {
     use super::*;
 
     pub static TS: libc::timeval = libc::timeval {
