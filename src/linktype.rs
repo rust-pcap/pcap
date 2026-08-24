@@ -186,6 +186,13 @@ mod tests {
 
         let linktype_name = Linktype::ARCNET_LINUX.get_name().unwrap();
         assert_eq!(&linktype_name, name);
+
+        let ctx = raw::pcap_datalink_val_to_name_context();
+        ctx.checkpoint();
+        ctx.expect().return_once(|_| std::ptr::null());
+
+        let err = Linktype::ARCNET_LINUX.get_name().unwrap_err();
+        assert_eq!(err, Error::InvalidLinktype);
     }
 
     #[test]

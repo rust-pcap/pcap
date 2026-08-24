@@ -135,10 +135,19 @@ pub enum Error {
 
 impl Error {
     unsafe fn new(ptr: *const libc::c_char) -> Error {
-        match unsafe { cstr_to_string(ptr) } {
-            Err(e) => e as Error,
-            Ok(string) => PcapError(string.unwrap_or_default()),
+        if ptr.is_null() {
+            return PcapError(String::new());
         }
+
+        // libpcap truncates its messages at PCAP_ERRBUF_SIZE without regard for character
+        // boundaries, so one quoting a long path can end in the middle of a UTF-8 sequence.
+        // Take such a message lossily rather than lose it. Strings that are not error messages
+        // still go through cstr_to_string, which rejects the malformed ones.
+        PcapError(
+            unsafe { CStr::from_ptr(ptr as _) }
+                .to_string_lossy()
+                .into_owned(),
+        )
     }
 
     fn with_errbuf<T, F>(func: F) -> Result<T, Error>
@@ -252,7 +261,8 @@ mod tests {
     fn test_error_invalid_utf8() {
         let bytes: [u8; 8] = [0x78, 0xfe, 0xe9, 0x89, 0x00, 0x00, 0xed, 0x4f];
         let error = unsafe { Error::new(&bytes as *const _ as _) };
-        assert!(matches!(error, Error::MalformedError(_)));
+        // The message is kept, with the bytes that are not valid UTF-8 replaced.
+        assert_eq!(error, Error::PcapError("x\u{fffd}\u{fffd}".to_string()));
     }
 
     #[test]
