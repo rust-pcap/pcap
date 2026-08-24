@@ -32,6 +32,43 @@ impl<T: Activated + ?Sized> AsRawFd for SelectableCapture<T> {
     }
 }
 
+// GRCOV_EXCL_START
+#[cfg(test)]
+pub mod testmod {
+    use super::*;
+
+    // A real file descriptor to stand in for the one libpcap would hand out. AsyncFd registers it
+    // for real, so the sink and the stream take the same path they would with a live capture.
+    pub struct FdPair(pub [RawFd; 2]);
+
+    impl FdPair {
+        pub fn new() -> Self {
+            let mut fds: [RawFd; 2] = [-1, -1];
+            let rc =
+                unsafe { libc::socketpair(libc::AF_UNIX, libc::SOCK_STREAM, 0, fds.as_mut_ptr()) };
+            assert_eq!(rc, 0, "Unable to create a socketpair");
+            Self(fds)
+        }
+
+        // The stream waits for the capture to be readable before it asks libpcap for a packet, so
+        // there has to be something to read.
+        pub fn make_readable(&self) {
+            let byte = 0u8;
+            let rc = unsafe { libc::write(self.0[1], &byte as *const u8 as _, 1) };
+            assert_eq!(rc, 1, "Unable to write to the socketpair");
+        }
+    }
+
+    impl Drop for FdPair {
+        fn drop(&mut self) {
+            for fd in self.0 {
+                unsafe { libc::close(fd) };
+            }
+        }
+    }
+}
+// GRCOV_EXCL_STOP
+
 #[cfg(test)]
 mod tests {
     use crate::{
