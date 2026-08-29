@@ -1,5 +1,8 @@
 use pcap::*;
 
+#[path = "helpers/link.rs"]
+mod link;
+
 fn main() {
     {
         // open capture from default device
