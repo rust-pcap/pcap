@@ -1276,7 +1276,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">        iterator::PacketIter, BpfInstruction, BpfProgram, BreakLoop, Direction, Savefile, Stat,</pre>
+                <pre class="has-background-white py-0 px-2">        BpfInstruction, BpfProgram, BreakLoop, Direction, Savefile, Stat, iterator::PacketIter,</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -2236,7 +2236,7 @@
             </div>
             <div class="column has-background-success-light p-0"
                  role="cell">
-                <pre class="has-background-success-light py-0 px-2">        match cstr_to_string(ptr) {</pre>
+                <pre class="has-background-success-light py-0 px-2">        match unsafe { cstr_to_string(ptr) } {</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -2540,7 +2540,7 @@
             </div>
             <div class="column has-background-success-light p-0"
                  role="cell">
-                <pre class="has-background-success-light py-0 px-2">        Some(CStr::from_ptr(ptr as _).to_str()?.to_owned())</pre>
+                <pre class="has-background-success-light py-0 px-2">        Some(unsafe { CStr::from_ptr(ptr as _) }.to_str()?.to_owned())</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4899,7 +4899,7 @@
         <footer class="footer">
             
                 <div class="content has-text-centered">
-                    <p class="heading">Date: 2026-08-22 06:33</p>
+                    <p class="heading">Date: 2026-08-30 18:30</p>
                 </div>
             
         </footer>
