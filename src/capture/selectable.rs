@@ -1,8 +1,9 @@
 use std::os::unix::io::{AsRawFd, RawFd};
 
 use crate::{
+    Error,
     capture::{Activated, Capture, State},
-    raw, Error,
+    raw,
 };
 
 /// Newtype [`Capture`] wrapper that exposes `pcap_get_selectable_fd()`.
@@ -34,8 +35,8 @@ impl<T: Activated + ?Sized> AsRawFd for SelectableCapture<T> {
 #[cfg(test)]
 mod tests {
     use crate::{
-        capture::{testmod::test_capture, Active},
-        raw::testmod::{as_pcap_t, RAWMTX},
+        capture::{Active, testmod::test_capture},
+        raw::testmod::{RAWMTX, as_pcap_t},
     };
 
     use super::*;

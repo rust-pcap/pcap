@@ -9,10 +9,10 @@ mod windowsonly {
     use bitflags::bitflags;
     use std::{
         sync::{
-            atomic::{AtomicU32, Ordering},
             Arc,
+            atomic::{AtomicU32, Ordering},
         },
-        thread::{sleep, spawn, JoinHandle},
+        thread::{JoinHandle, sleep, spawn},
         time::Duration,
     };
     use windows_sys::Win32::{Foundation::HANDLE, System::Threading::SetEvent};

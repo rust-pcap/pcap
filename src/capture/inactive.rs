@@ -1,9 +1,10 @@
 use std::mem;
 
 use crate::{
+    Error,
     capture::{Active, Capture, Inactive},
     device::Device,
-    raw, Error,
+    raw,
 };
 
 #[cfg(libpcap_1_5_0)]
@@ -185,7 +186,7 @@ pub enum TimestampType {
 mod tests {
     use crate::{
         capture::testmod::test_capture,
-        raw::testmod::{as_pcap_t, geterr_expect, RAWMTX},
+        raw::testmod::{RAWMTX, as_pcap_t, geterr_expect},
     };
 
     use super::*;
