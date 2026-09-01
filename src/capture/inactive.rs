@@ -53,10 +53,19 @@ impl Capture<Inactive> {
     }
 
     /// Set the time stamp type to be used by a capture device.
+    ///
+    /// # Errors
+    ///
+    /// If the capture device does not support the timestamp type, an error will be returned.
     #[cfg(libpcap_1_2_1)]
-    pub fn tstamp_type(self, tstamp_type: TimestampType) -> Capture<Inactive> {
-        unsafe { raw::pcap_set_tstamp_type(self.handle.as_ptr(), tstamp_type as _) };
-        self
+    pub fn tstamp_type(self, tstamp_type: TimestampType) -> Result<Capture<Inactive>, Error> {
+        // libpcap leaves the error buffer alone here. All it reports is whether the device
+        // claims to support the type, so there is no message to pass on.
+        if unsafe { raw::pcap_set_tstamp_type(self.handle.as_ptr(), tstamp_type as _) } != 0 {
+            return Err(Error::UnsupportedTimestampType);
+        }
+
+        Ok(self)
     }
 
     /// Set promiscuous mode on or off. By default, this is off.
@@ -143,7 +152,8 @@ impl Capture<Inactive> {
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 /// Timestamp types
 ///
-/// Not all systems and interfaces will necessarily support all of these.
+/// Not all systems and interfaces will necessarily support all of these. They are described in
+/// more detail in [pcap-tstamp(7)](https://www.tcpdump.org/manpages/pcap-tstamp.7.html).
 ///
 /// Note that time stamps synchronized with the system clock can go backwards, as the system clock
 /// can go backwards.  If a clock is not in sync with the system clock, that could be because the
@@ -162,15 +172,14 @@ pub enum TimestampType {
     /// A timestamp provided by the host machine that is low precision but relatively cheap to
     /// fetch.
     ///
-    /// This is normally done using the system clock, so it's normally synchronized with times
-    /// you'd fetch from system calls.
+    /// It is taken from the system clock, so it is synchronized with the times you would fetch
+    /// from system calls.
     HostLowPrec = 1,
     /// A timestamp provided by the host machine that is high precision. It might be more expensive
-    /// to fetch.
+    /// to fetch than [`TimestampType::HostLowPrec`].
     ///
-    /// The timestamp might or might not be synchronized with the system clock, and might have
-    /// problems with time stamps for packets received on different CPUs, depending on the
-    /// platform.
+    /// From libpcap 1.10.0 on it is synchronized with the system clock. Before that it might or
+    /// might not have been.
     HostHighPrec = 2,
     /// The timestamp is a high-precision time stamp supplied by the capture device.
     ///
@@ -180,6 +189,12 @@ pub enum TimestampType {
     ///
     /// The timestamp is not synchronized with the system clock.
     AdapterUnsynced = 4,
+    /// A timestamp provided by the host machine that is high precision. It might be more expensive
+    /// to fetch than [`TimestampType::HostLowPrec`].
+    ///
+    /// The timestamp is not synchronized with the system clock.
+    #[cfg(libpcap_1_10_0)]
+    HostHighPrecUnsynced = 5,
 }
 
 #[cfg(test)]
@@ -295,11 +310,27 @@ mod tests {
             .withf_st(move |arg1, _| *arg1 == pcap)
             .return_once(|_, _| 0);
 
-        let _capture = capture.tstamp_type(TimestampType::Host);
+        let capture = capture.tstamp_type(TimestampType::Host).unwrap();
+
+        let ctx = raw::pcap_set_tstamp_type_context();
+        ctx.checkpoint();
+        ctx.expect()
+            .withf_st(move |arg1, _| *arg1 == pcap)
+            .return_once(|_, _| raw::PCAP_WARNING_TSTAMP_TYPE_NOTSUP);
+
+        assert_eq!(
+            capture.tstamp_type(TimestampType::Adapter).err().unwrap(),
+            Error::UnsupportedTimestampType
+        );
 
         // For code coverage of the derive line.
         assert_ne!(TimestampType::Host, TimestampType::HostLowPrec);
         assert_ne!(TimestampType::Host, TimestampType::HostHighPrec);
+        #[cfg(libpcap_1_10_0)]
+        assert_ne!(
+            TimestampType::HostHighPrec,
+            TimestampType::HostHighPrecUnsynced
+        );
     }
 
     #[test]

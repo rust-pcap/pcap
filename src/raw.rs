@@ -17,6 +17,8 @@ pub const PCAP_IF_CONNECTION_STATUS_CONNECTED: u32 = 0x00000010;
 pub const PCAP_IF_CONNECTION_STATUS_DISCONNECTED: u32 = 0x00000020;
 pub const PCAP_IF_CONNECTION_STATUS_NOT_APPLICABLE: u32 = 0x00000030;
 
+pub const PCAP_WARNING_TSTAMP_TYPE_NOTSUP: c_int = 3;
+
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct bpf_program {
