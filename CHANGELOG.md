@@ -11,6 +11,10 @@
   `LOOPBACK | UP`.
 - `errno` updated from 0.2 to 0.3. `Error::ErrnoError` carries an `errno::Errno`, so crates that
   construct or match on it have to move to 0.3 as well.
+- Error messages coming from libpcap are decoded lossily. libpcap truncates them at
+  `PCAP_ERRBUF_SIZE` without regard for character boundaries, so one quoting a long non-ASCII
+  path used to arrive as `Error::MalformedError` with the message thrown away. It now arrives as
+  `Error::PcapError`. Device and link-layer type names are still rejected when malformed.
 - `windows-sys` updated from 0.36 to 0.61. `HANDLE` is a raw pointer there rather than an `isize`,
   which changes the signature of `Capture::get_event` on Windows. A raw pointer is not `Send`, so
   a type of your own that stores the returned `HANDLE` no longer derives `Send` and can no longer
