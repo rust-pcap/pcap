@@ -1,17 +1,18 @@
 //! Support for asynchronous packet transmission.
 //!
 //! See [`Capture::sink`](super::Capture::sink).
+use std::io;
 use std::marker::Unpin;
 use std::pin::Pin;
 use std::task::{self, Poll};
 
-use futures::Sink;
+use futures::{Sink, ready};
 
 #[cfg(target_os = "linux")]
-use {
-    crate::capture::selectable::SelectableCapture, futures::ready, std::io,
-    tokio::io::unix::AsyncFd,
-};
+use {crate::capture::selectable::SelectableCapture, tokio::io::unix::AsyncFd};
+
+#[cfg(not(target_os = "linux"))]
+use tokio::task::coop;
 
 use crate::{
     Error,
@@ -51,7 +52,8 @@ impl Capture<Active> {
 /// than retried, as libpcap does not tell us how much of it made it onto the wire.
 ///
 /// Closing the sink flushes it but does not close the capture, which happens when the
-/// [`PacketSink`] is dropped.
+/// [`PacketSink`] is dropped. Once closed, the sink takes no more packets and reports
+/// `Error::IoError` with a kind of `BrokenPipe` instead.
 ///
 /// # Warning
 ///
@@ -63,7 +65,10 @@ pub struct PacketSink<C> {
     inner: AsyncFd<SelectableCapture<Active>>,
     #[cfg(not(target_os = "linux"))]
     capture: Capture<Active>,
+    #[cfg(not(target_os = "linux"))]
+    sent_since_yield: u32,
     packet: Option<C>,
+    closed: bool,
 }
 
 #[cfg(target_os = "linux")]
@@ -73,6 +78,7 @@ impl<C> PacketSink<C> {
         Ok(PacketSink {
             inner: AsyncFd::with_interest(capture, tokio::io::Interest::WRITABLE)?,
             packet: None,
+            closed: false,
         })
     }
 
@@ -87,7 +93,7 @@ impl<C> PacketSink<C> {
     where
         C: AsRef<[u8]>,
     {
-        let Self { inner, packet } = self;
+        let Self { inner, packet, .. } = self;
 
         loop {
             let buf = match &*packet {
@@ -124,7 +130,9 @@ impl<C> PacketSink<C> {
     pub(crate) fn new(capture: Capture<Active>) -> Result<Self, Error> {
         Ok(PacketSink {
             capture,
+            sent_since_yield: 0,
             packet: None,
+            closed: false,
         })
     }
 
@@ -135,14 +143,33 @@ impl<C> PacketSink<C> {
         &mut self.capture
     }
 
-    fn poll_send(&mut self, _cx: &mut task::Context<'_>) -> Poll<Result<(), Error>>
+    fn poll_send(&mut self, cx: &mut task::Context<'_>) -> Poll<Result<(), Error>>
     where
         C: AsRef<[u8]>,
     {
-        match self.packet.take() {
-            Some(packet) => Poll::Ready(self.capture.sendpacket(packet.as_ref())),
-            None => Poll::Ready(Ok(())),
+        let buf = match &self.packet {
+            Some(packet) => packet.as_ref(),
+            None => return Poll::Ready(Ok(())),
+        };
+
+        // Sending here never waits for the interface, so a sink that is kept fed would never
+        // return Pending and the task it runs in would never let the executor poll anything
+        // else. Two things stop that. The count applies whoever is driving the sink, which off
+        // Linux can be any executor, as it holds nothing of tokio's; 128 is what tokio allows
+        // a task between yields. Spending the task's budget as well holds a task that also
+        // does tokio I/O to one budget between yields rather than one for each source.
+        if self.sent_since_yield == 128 {
+            self.sent_since_yield = 0;
+            cx.waker().wake_by_ref();
+            return Poll::Pending;
         }
+        let coop = ready!(coop::poll_proceed(cx));
+        self.sent_since_yield += 1;
+
+        let result = self.capture.sendpacket(buf);
+        coop.made_progress();
+        self.packet = None;
+        Poll::Ready(result)
     }
 }
 
@@ -152,15 +179,24 @@ impl<C: AsRef<[u8]>> Sink<C> for PacketSink<C> {
     type Error = Error;
 
     fn poll_ready(self: Pin<&mut Self>, cx: &mut task::Context<'_>) -> Poll<Result<(), Error>> {
-        Pin::into_inner(self).poll_send(cx)
+        let sink = Pin::into_inner(self);
+        if sink.closed {
+            return Poll::Ready(Err(Error::IoError(io::ErrorKind::BrokenPipe)));
+        }
+        sink.poll_send(cx)
     }
 
     fn start_send(self: Pin<&mut Self>, item: C) -> Result<(), Error> {
         let sink = Pin::into_inner(self);
-        debug_assert!(
-            sink.packet.is_none(),
-            "Packet queued before the last one was sent"
-        );
+        if sink.closed {
+            return Err(Error::IoError(io::ErrorKind::BrokenPipe));
+        }
+        if sink.packet.is_some() {
+            // poll_ready did not report the sink ready, so the packet it was given last is
+            // still waiting. Keep it: dropping it here would lose a packet the caller has
+            // already been told the sink took.
+            return Err(Error::IoError(io::ErrorKind::WouldBlock));
+        }
         sink.packet = Some(item);
         Ok(())
     }
@@ -170,7 +206,10 @@ impl<C: AsRef<[u8]>> Sink<C> for PacketSink<C> {
     }
 
     fn poll_close(self: Pin<&mut Self>, cx: &mut task::Context<'_>) -> Poll<Result<(), Error>> {
-        Pin::into_inner(self).poll_send(cx)
+        let sink = Pin::into_inner(self);
+        ready!(sink.poll_send(cx))?;
+        sink.closed = true;
+        Poll::Ready(Ok(()))
     }
 }
 
@@ -347,6 +386,57 @@ mod tests {
             assert!(poll.is_pending());
             assert_eq!(sink.packet, Some(vec![1, 2, 3]));
         }
+
+        #[tokio::test]
+        async fn test_sink_closed() {
+            let _m = RAWMTX.lock();
+
+            let mut dummy: isize = 777;
+            let pcap = as_pcap_t(&mut dummy);
+            let fds = FdPair::new();
+
+            let test_capture = test_capture::<Active>(pcap);
+            let mut sink = test_sink(pcap, test_capture.capture, fds.0[0]);
+
+            sink.close().await.unwrap();
+
+            // There is no pcap_sendpacket expectation, so a send here would fail the test.
+            assert_eq!(
+                sink.send(vec![1, 2, 3, 4]).await,
+                Err(Error::IoError(io::ErrorKind::BrokenPipe))
+            );
+            assert!(sink.packet.is_none());
+        }
+
+        #[tokio::test]
+        async fn test_sink_start_send_twice() {
+            let _m = RAWMTX.lock();
+
+            let mut dummy: isize = 777;
+            let pcap = as_pcap_t(&mut dummy);
+            let fds = FdPair::new();
+
+            let test_capture = test_capture::<Active>(pcap);
+            let mut sink = test_sink(pcap, test_capture.capture, fds.0[0]);
+
+            Pin::new(&mut sink).start_send(vec![1, 2, 3, 4]).unwrap();
+
+            // Nothing has sent the first packet yet, so the second one is refused rather than
+            // put in its place.
+            assert_eq!(
+                Pin::new(&mut sink).start_send(vec![5, 6, 7]),
+                Err(Error::IoError(io::ErrorKind::WouldBlock))
+            );
+            assert_eq!(sink.packet, Some(vec![1, 2, 3, 4]));
+
+            let ctx = pcap_sendpacket_context();
+            ctx.expect()
+                .withf_st(move |arg1, _, arg3| (*arg1 == pcap) && (*arg3 == 4))
+                .return_once(|_, _, _| 0);
+
+            sink.flush().await.unwrap();
+            assert!(sink.packet.is_none());
+        }
     }
 
     #[cfg(not(target_os = "linux"))]
@@ -403,5 +493,135 @@ mod tests {
         let result = sink.send(vec![1, 2, 3, 4]).await;
         assert!(matches!(result, Err(Error::PcapError(_))));
         assert!(sink.packet.is_none());
+    }
+
+    #[cfg(not(target_os = "linux"))]
+    #[tokio::test]
+    async fn test_sink_closed() {
+        let _m = RAWMTX.lock();
+
+        let mut dummy: isize = 777;
+        let pcap = as_pcap_t(&mut dummy);
+
+        let test_capture = test_capture::<Active>(pcap);
+        let mut sink = PacketSink::new(test_capture.capture).unwrap();
+
+        sink.close().await.unwrap();
+
+        // There is no pcap_sendpacket expectation, so a send here would fail the test.
+        assert_eq!(
+            sink.send(vec![1, 2, 3, 4]).await,
+            Err(Error::IoError(io::ErrorKind::BrokenPipe))
+        );
+        assert!(sink.packet.is_none());
+    }
+
+    #[cfg(not(target_os = "linux"))]
+    #[tokio::test]
+    async fn test_sink_start_send_twice() {
+        let _m = RAWMTX.lock();
+
+        let mut dummy: isize = 777;
+        let pcap = as_pcap_t(&mut dummy);
+
+        let test_capture = test_capture::<Active>(pcap);
+        let mut sink = PacketSink::new(test_capture.capture).unwrap();
+
+        Pin::new(&mut sink).start_send(vec![1, 2, 3, 4]).unwrap();
+
+        // Nothing has sent the first packet yet, so the second one is refused rather than put
+        // in its place.
+        assert_eq!(
+            Pin::new(&mut sink).start_send(vec![5, 6, 7]),
+            Err(Error::IoError(io::ErrorKind::WouldBlock))
+        );
+        assert_eq!(sink.packet, Some(vec![1, 2, 3, 4]));
+
+        let ctx = pcap_sendpacket_context();
+        ctx.expect()
+            .withf_st(move |arg1, _, arg3| (*arg1 == pcap) && (*arg3 == 4))
+            .return_once(|_, _, _| 0);
+
+        sink.flush().await.unwrap();
+        assert!(sink.packet.is_none());
+    }
+
+    // Deliberately not a tokio test. The sink is a futures::Sink and off Linux it holds nothing
+    // of tokio's, so it has to give up its turn whatever executor is driving it.
+    #[cfg(not(target_os = "linux"))]
+    #[test]
+    fn test_sink_yields() {
+        let _m = RAWMTX.lock();
+
+        let mut dummy: isize = 777;
+        let pcap = as_pcap_t(&mut dummy);
+
+        let test_capture = test_capture::<Active>(pcap);
+        let mut sink = PacketSink::new(test_capture.capture).unwrap();
+
+        let ctx = pcap_sendpacket_context();
+        ctx.expect()
+            .withf_st(move |arg1, _, _| *arg1 == pcap)
+            .returning(|_, _, _| 0);
+
+        let waker = futures::task::noop_waker();
+        let mut cx = task::Context::from_waker(&waker);
+
+        // Keep the sink fed and poll it until it asks to be polled again later. One that never
+        // does keeps the thread to itself for as long as there are packets to send.
+        let mut sends = 0;
+        loop {
+            sink.packet = Some(vec![1, 2, 3, 4]);
+            if sink.poll_send(&mut cx).is_pending() {
+                break;
+            }
+            sends += 1;
+            assert!(sends < 10_000, "the sink never gave up its turn");
+        }
+        assert_eq!(sends, 128);
+
+        // The packet the sink yielded on is still there for the poll after it.
+        assert_eq!(sink.packet, Some(vec![1, 2, 3, 4]));
+    }
+
+    // Under tokio the sink spends the task's budget too, so a task that has already spent some
+    // of it elsewhere gets its turn back sooner than the count alone would give it.
+    #[cfg(not(target_os = "linux"))]
+    #[tokio::test]
+    async fn test_sink_yields_on_task_budget() {
+        let _m = RAWMTX.lock();
+
+        let mut dummy: isize = 777;
+        let pcap = as_pcap_t(&mut dummy);
+
+        let test_capture = test_capture::<Active>(pcap);
+        let mut sink = PacketSink::new(test_capture.capture).unwrap();
+
+        let ctx = pcap_sendpacket_context();
+        ctx.expect()
+            .withf_st(move |arg1, _, _| *arg1 == pcap)
+            .returning(|_, _, _| 0);
+
+        // Spend half the budget on something that is not the sink.
+        for _ in 0..64 {
+            coop::consume_budget().await;
+        }
+
+        let mut sends = 0;
+        loop {
+            sink.packet = Some(vec![1, 2, 3, 4]);
+            if futures::future::poll_fn(|cx| Poll::Ready(sink.poll_send(cx)))
+                .await
+                .is_pending()
+            {
+                break;
+            }
+            sends += 1;
+            assert!(sends < 10_000, "the sink never gave up its turn");
+        }
+        assert!(
+            sends < 128,
+            "the sink sent {sends} before yielding, so it kept a budget of its own"
+        );
     }
 }

@@ -6,7 +6,8 @@
 
 - `PacketSink`, a `futures::Sink` for sending packets from an active capture, can be created with
   the `sink` call on `Capture<Active>`. On Linux the sink waits for the interface when it cannot
-  keep up.
+  keep up. A closed sink, or one asked to take a packet while it is still holding the last one,
+  reports `Error::IoError` rather than sending.
 
 ### Changed
 
