@@ -294,6 +294,9 @@ pub enum CharEncoding {
 ///
 /// This is optional, but it has to come before any other libpcap call, and a second call asking
 /// for a different encoding fails. Without it strings are in the local character encoding.
+///
+/// On Windows this is what makes a path outside ASCII work, since the local code page is
+/// usually not UTF-8.
 #[cfg(libpcap_1_10_0)]
 pub fn init(encoding: CharEncoding) -> Result<(), Error> {
     Error::with_errbuf(|err| {

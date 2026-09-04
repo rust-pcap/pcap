@@ -108,6 +108,10 @@ impl<T: Activated + ?Sized> Capture<T> {
 
     /// Create a `Savefile` context for recording captured packets using this `Capture`'s
     /// configurations.
+    ///
+    /// On Windows a path outside ASCII needs `init(CharEncoding::Utf8)` first. The path always
+    /// reaches libpcap as UTF-8, but until that call libpcap reads it in the local code page,
+    /// which on most systems is not UTF-8: the name gets mangled and the file lands elsewhere.
     pub fn savefile<P: AsRef<Path>>(&self, path: P) -> Result<Savefile, Error> {
         let name = path_to_cstring(path.as_ref())?;
         let handle_opt = NonNull::<raw::pcap_dumper_t>::new(unsafe {
@@ -145,6 +149,10 @@ impl<T: Activated + ?Sized> Capture<T> {
     /// byte order as the host opening the file, and has the same time stamp precision,
     /// link-layer header type,  and  snapshot length as p, it will write new packets
     /// at the end of the file.
+    ///
+    /// On Windows a path outside ASCII needs `init(CharEncoding::Utf8)` first. The path always
+    /// reaches libpcap as UTF-8, but until that call libpcap reads it in the local code page,
+    /// which on most systems is not UTF-8: the name gets mangled and the file lands elsewhere.
     #[cfg(libpcap_1_7_2)]
     pub fn savefile_append<P: AsRef<Path>>(&self, path: P) -> Result<Savefile, Error> {
         let name = path_to_cstring(path.as_ref())?;
