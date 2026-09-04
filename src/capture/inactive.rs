@@ -52,7 +52,7 @@ impl Capture<Inactive> {
         self
     }
 
-    /// Set the time stamp type to be used by a capture device.
+    /// Set the timestamp type to be used by a capture device.
     ///
     /// # Errors
     ///
@@ -131,7 +131,7 @@ impl Capture<Inactive> {
         self
     }
 
-    /// Set the time stamp precision returned in captures.
+    /// Set the timestamp precision returned in captures.
     #[cfg(libpcap_1_5_0)]
     pub fn precision(self, precision: Precision) -> Capture<Inactive> {
         unsafe { raw::pcap_set_tstamp_precision(self.handle.as_ptr(), precision as _) };
@@ -155,12 +155,12 @@ impl Capture<Inactive> {
 /// Not all systems and interfaces will necessarily support all of these. They are described in
 /// more detail in [pcap-tstamp(7)](https://www.tcpdump.org/manpages/pcap-tstamp.7.html).
 ///
-/// Note that time stamps synchronized with the system clock can go backwards, as the system clock
+/// Note that timestamps synchronized with the system clock can go backwards, as the system clock
 /// can go backwards.  If a clock is not in sync with the system clock, that could be because the
 /// system clock isn't keeping accurate time, because the other clock isn't keeping accurate time,
 /// or both.
 ///
-/// Note that host-provided time stamps generally correspond to the time when the time-stamping
+/// Note that host-provided timestamps generally correspond to the time when the timestamping
 /// code sees the packet; this could be some unknown amount of time after the first or last bit of
 /// the packet is received by the network adapter, due to batching of interrupts for packet
 /// arrival, queueing delays, etc..
@@ -181,11 +181,11 @@ pub enum TimestampType {
     /// From libpcap 1.10.0 on it is synchronized with the system clock. Before that it might or
     /// might not have been.
     HostHighPrec = 2,
-    /// The timestamp is a high-precision time stamp supplied by the capture device.
+    /// A high-precision timestamp supplied by the capture device.
     ///
     /// The timestamp is synchronized with the system clock.
     Adapter = 3,
-    /// The timestamp is a high-precision time stamp supplied by the capture device.
+    /// A high-precision timestamp supplied by the capture device.
     ///
     /// The timestamp is not synchronized with the system clock.
     AdapterUnsynced = 4,

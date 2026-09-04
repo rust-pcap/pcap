@@ -24,7 +24,7 @@ impl Capture<Offline> {
     }
 
     /// Opens an offline capture handle from a pcap dump file, given a path.
-    /// Takes an additional precision argument specifying the time stamp precision desired.
+    /// Takes an additional precision argument specifying the timestamp precision desired.
     #[cfg(libpcap_1_5_0)]
     pub fn from_file_with_precision<P: AsRef<Path>>(
         path: P,
@@ -48,7 +48,7 @@ impl Capture<Offline> {
     }
 
     /// Opens an offline capture handle from a pcap dump file, given a file descriptor. Takes an
-    /// additional precision argument specifying the time stamp precision desired.
+    /// additional precision argument specifying the timestamp precision desired.
     ///
     /// # Safety
     ///
