@@ -36,6 +36,33 @@ fn capture_dead_savefile() {
     packets.verify(&mut cap);
 }
 
+// APFS validates file names as UTF-8 and rejects the rest with EILSEQ, so a name that is not
+// valid UTF-8 only round trips where a file name is an opaque byte string.
+#[test]
+#[cfg(not(any(windows, target_os = "macos")))]
+fn capture_dead_savefile_non_utf8_name() {
+    use std::ffi::OsStr;
+    use std::os::unix::ffi::OsStrExt;
+
+    let mut packets = Packets::new();
+    packets.push(1460408319, 1234, 1, 1, &[1]);
+    packets.push(1460408320, 4321, 1, 1, &[2]);
+
+    let dir = TempDir::new().unwrap();
+    // A UN*X path is a byte string, it does not have to be valid UTF-8.
+    let tmpfile = dir.path().join(OsStr::from_bytes(b"\xe9capture.pcap"));
+
+    let cap = Capture::dead(Linktype(1)).unwrap();
+    let mut save = cap.savefile(&tmpfile).unwrap();
+    packets.foreach(|p| save.write(p));
+    drop(save);
+
+    assert!(tmpfile.exists());
+
+    let mut cap = Capture::from_file(&tmpfile).unwrap();
+    packets.verify(&mut cap);
+}
+
 #[test]
 #[cfg(libpcap_1_7_2)]
 fn capture_dead_savefile_append() {
@@ -62,6 +89,73 @@ fn capture_dead_savefile_append() {
 
     let mut cap = Capture::from_file(&tmpfile).unwrap();
     packets.verify(&mut cap);
+}
+
+#[test]
+fn capture_dead_savefile_offset() {
+    let mut packets = Packets::new();
+    packets.push(1460408319, 1234, 1, 1, &[1]);
+    packets.push(1460408320, 4321, 1, 1, &[2]);
+
+    let dir = TempDir::new().unwrap();
+    let tmpfile = dir.path().join("test.pcap");
+
+    let cap = Capture::dead(Linktype(1)).unwrap();
+    let mut save = cap.savefile(&tmpfile).unwrap();
+
+    // The file header has been written, the packets have not.
+    let header_only = save.offset().unwrap();
+    assert!(header_only > 0);
+
+    packets.foreach(|p| save.write(p));
+    let with_packets = save.offset().unwrap();
+    assert!(with_packets > header_only);
+
+    drop(save);
+
+    let written = std::fs::metadata(&tmpfile).unwrap().len();
+    assert_eq!(with_packets, written);
+}
+
+#[test]
+#[cfg(not(windows))]
+fn capture_dead_savefile_file() {
+    let dir = TempDir::new().unwrap();
+    let tmpfile = dir.path().join("test.pcap");
+
+    let cap = Capture::dead(Linktype(1)).unwrap();
+    let mut save = cap.savefile(&tmpfile).unwrap();
+    save.flush().unwrap();
+
+    // SAFETY: the FILE * is not used past the end of this test, where `save` is still alive.
+    let fd = unsafe { libc::fileno(save.file()) };
+    assert!(fd >= 0);
+
+    // The stream the header was just flushed to is the one the savefile was opened on.
+    let mut stat = std::mem::MaybeUninit::<libc::stat>::uninit();
+    assert_eq!(unsafe { libc::fstat(fd, stat.as_mut_ptr()) }, 0);
+    assert_eq!(
+        unsafe { stat.assume_init() }.st_size as u64,
+        save.offset().unwrap()
+    );
+}
+
+#[test]
+fn capture_offline_snaplen() {
+    for (file_name, snaplen) in [
+        ("packet_snaplen_20.pcap", 20),
+        ("packet_snaplen_65535.pcap", 65535),
+    ] {
+        let capture = capture_from_test_file(file_name);
+        assert_eq!(capture.snaplen(), snaplen, "{file_name}");
+    }
+}
+
+#[test]
+fn capture_dead_snaplen() {
+    // `Capture::dead` opens the handle with a snaplen of 65535.
+    let cap = Capture::dead(Linktype(1)).unwrap();
+    assert_eq!(cap.snaplen(), 65535);
 }
 
 #[test]

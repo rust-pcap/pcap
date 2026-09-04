@@ -1,3 +1,4 @@
+use std::ffi::CString;
 use std::mem;
 
 use crate::{
@@ -33,7 +34,8 @@ impl Capture<Inactive> {
     /// ```
     pub fn from_device<D: Into<Device>>(device: D) -> Result<Capture<Inactive>, Error> {
         let device: Device = device.into();
-        Capture::new_raw(Some(&device.name), |name, err| unsafe {
+        let name = CString::new(device.name)?;
+        Capture::new_raw(Some(name), |name, err| unsafe {
             raw::pcap_create(name, err)
         })
     }

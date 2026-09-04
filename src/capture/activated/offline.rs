@@ -6,7 +6,7 @@ use std::os::unix::io::RawFd;
 use crate::{
     Error,
     capture::{Capture, Offline},
-    raw,
+    path_to_cstring, raw,
 };
 
 #[cfg(libpcap_1_5_0)]
@@ -17,20 +17,30 @@ use crate::capture::activated::open_raw_fd;
 
 impl Capture<Offline> {
     /// Opens an offline capture handle from a pcap dump file, given a path.
+    ///
+    /// On Windows a path outside ASCII needs `init(CharEncoding::Utf8)` first. The path always
+    /// reaches libpcap as UTF-8, but until that call libpcap reads it in the local code page,
+    /// which on most systems is not UTF-8: the name gets mangled and the file is not found.
     pub fn from_file<P: AsRef<Path>>(path: P) -> Result<Capture<Offline>, Error> {
-        Capture::new_raw(path.as_ref().to_str(), |path, err| unsafe {
+        let path = path_to_cstring(path.as_ref())?;
+        Capture::new_raw(Some(path), |path, err| unsafe {
             raw::pcap_open_offline(path, err)
         })
     }
 
     /// Opens an offline capture handle from a pcap dump file, given a path.
     /// Takes an additional precision argument specifying the time stamp precision desired.
+    ///
+    /// On Windows a path outside ASCII needs `init(CharEncoding::Utf8)` first. The path always
+    /// reaches libpcap as UTF-8, but until that call libpcap reads it in the local code page,
+    /// which on most systems is not UTF-8: the name gets mangled and the file is not found.
     #[cfg(libpcap_1_5_0)]
     pub fn from_file_with_precision<P: AsRef<Path>>(
         path: P,
         precision: Precision,
     ) -> Result<Capture<Offline>, Error> {
-        Capture::new_raw(path.as_ref().to_str(), |path, err| unsafe {
+        let path = path_to_cstring(path.as_ref())?;
+        Capture::new_raw(Some(path), |path, err| unsafe {
             raw::pcap_open_offline_with_tstamp_precision(path, precision as _, err)
         })
     }

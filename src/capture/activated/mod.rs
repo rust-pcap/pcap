@@ -18,13 +18,16 @@ use std::{
 #[cfg(not(windows))]
 use std::os::unix::io::RawFd;
 
+#[cfg(not(windows))]
+use libc::FILE;
+
 use crate::{
     Error,
     capture::{Activated, Capture, PcapHandle},
     codec::PacketCodec,
     linktype::Linktype,
     packet::{Packet, PacketHeader},
-    raw,
+    path_to_cstring, raw,
 };
 
 use iterator::PacketIter;
@@ -94,10 +97,23 @@ impl<T: Activated + ?Sized> Capture<T> {
         unsafe { Linktype(raw::pcap_datalink(self.handle.as_ptr())) }
     }
 
+    /// Get the snapshot length, that is the maximum number of bytes captured from each packet.
+    ///
+    /// For a `Capture<Offline>` this is the length the savefile was recorded with, except that a
+    /// header claiming zero, or a length too large for an `i32`, is replaced with the largest
+    /// length the link-layer type can produce.
+    pub fn snaplen(&self) -> i32 {
+        unsafe { raw::pcap_snapshot(self.handle.as_ptr()) }
+    }
+
     /// Create a `Savefile` context for recording captured packets using this `Capture`'s
     /// configurations.
+    ///
+    /// On Windows a path outside ASCII needs `init(CharEncoding::Utf8)` first. The path always
+    /// reaches libpcap as UTF-8, but until that call libpcap reads it in the local code page,
+    /// which on most systems is not UTF-8: the name gets mangled and the file lands elsewhere.
     pub fn savefile<P: AsRef<Path>>(&self, path: P) -> Result<Savefile, Error> {
-        let name = CString::new(path.as_ref().to_str().unwrap())?;
+        let name = path_to_cstring(path.as_ref())?;
         let handle_opt = NonNull::<raw::pcap_dumper_t>::new(unsafe {
             raw::pcap_dump_open(self.handle.as_ptr(), name.as_ptr())
         });
@@ -133,9 +149,13 @@ impl<T: Activated + ?Sized> Capture<T> {
     /// byte order as the host opening the file, and has the same time stamp precision,
     /// link-layer header type,  and  snapshot length as p, it will write new packets
     /// at the end of the file.
+    ///
+    /// On Windows a path outside ASCII needs `init(CharEncoding::Utf8)` first. The path always
+    /// reaches libpcap as UTF-8, but until that call libpcap reads it in the local code page,
+    /// which on most systems is not UTF-8: the name gets mangled and the file lands elsewhere.
     #[cfg(libpcap_1_7_2)]
     pub fn savefile_append<P: AsRef<Path>>(&self, path: P) -> Result<Savefile, Error> {
-        let name = CString::new(path.as_ref().to_str().unwrap())?;
+        let name = path_to_cstring(path.as_ref())?;
         let handle_opt = NonNull::<raw::pcap_dumper_t>::new(unsafe {
             raw::pcap_dump_open_append(self.handle.as_ptr(), name.as_ptr())
         });
@@ -470,6 +490,39 @@ impl Savefile {
 
         Ok(())
     }
+
+    /// Get the current offset of the savefile, that is the number of bytes written so far,
+    /// including any that are still buffered
+    pub fn offset(&self) -> Result<u64, Error> {
+        // Prior to 1.9.0 when `pcap_dump_ftell64` was introduced, the offset was only reported as
+        // a `long`. Where that is a 32-bit type, as it is on Windows, the call fails once the
+        // savefile has grown past 2 GB.
+        #[cfg(libpcap_1_9_0)]
+        let offset = unsafe { raw::pcap_dump_ftell64(self.handle.as_ptr()) };
+
+        #[cfg(not(libpcap_1_9_0))]
+        let offset = unsafe { raw::pcap_dump_ftell(self.handle.as_ptr()) };
+
+        if offset < 0 {
+            return Err(Error::ErrnoError(errno::errno()));
+        }
+
+        Ok(offset as u64)
+    }
+
+    /// Get the `FILE *` the savefile is being written to
+    ///
+    /// This is not available on Windows, where wpcap may be linked against a different C runtime
+    /// than its caller and the `FILE *` would belong to the wrong one.
+    ///
+    /// # Safety
+    ///
+    /// The caller must ensure that the `Savefile` outlives the returned `FILE *` since it is
+    /// closed when the `Savefile` is dropped.
+    #[cfg(not(windows))]
+    pub unsafe fn file(&self) -> *mut FILE {
+        unsafe { raw::pcap_dump_file(self.handle.as_ptr()) }
+    }
 }
 
 impl From<NonNull<raw::pcap_dumper_t>> for Savefile {
@@ -706,6 +759,24 @@ mod tests {
     }
 
     #[test]
+    fn test_snaplen() {
+        let _m = RAWMTX.lock();
+
+        let mut value: isize = 777;
+        let pcap = as_pcap_t(&mut value);
+
+        let test_capture = test_capture::<Active>(pcap);
+        let capture: Capture<dyn Activated> = test_capture.capture.into();
+
+        let ctx = raw::pcap_snapshot_context();
+        ctx.expect()
+            .withf_st(move |arg1| *arg1 == pcap)
+            .return_once(|_| 65535);
+
+        assert_eq!(capture.snaplen(), 65535);
+    }
+
+    #[test]
     fn unify_activated() {
         #![allow(dead_code)]
         fn test1() -> Capture<Active> {
@@ -849,6 +920,36 @@ mod tests {
         assert!(result.is_err());
     }
 
+    #[cfg(libpcap_1_9_0)]
+    struct DumpFtellExpect(raw::__pcap_dump_ftell64::Context);
+
+    #[cfg(not(libpcap_1_9_0))]
+    struct DumpFtellExpect(raw::__pcap_dump_ftell::Context);
+
+    fn dump_ftell_expect(pcap_dumper: *mut raw::pcap_dumper_t, offset: i64) -> DumpFtellExpect {
+        // Lock must be acquired by caller.
+        assert!(RAWMTX.try_lock().is_err());
+
+        #[cfg(libpcap_1_9_0)]
+        {
+            let ctx = raw::pcap_dump_ftell64_context();
+            ctx.checkpoint();
+            ctx.expect()
+                .withf_st(move |arg1| *arg1 == pcap_dumper)
+                .return_once(move |_| offset);
+            DumpFtellExpect(ctx)
+        }
+        #[cfg(not(libpcap_1_9_0))]
+        {
+            let ctx = raw::pcap_dump_ftell_context();
+            ctx.checkpoint();
+            ctx.expect()
+                .withf_st(move |arg1| *arg1 == pcap_dumper)
+                .return_once(move |_| offset as _);
+            DumpFtellExpect(ctx)
+        }
+    }
+
     #[test]
     fn test_savefile_ops() {
         let _m = RAWMTX.lock();
@@ -888,6 +989,29 @@ mod tests {
 
         let result = savefile.flush();
         assert!(result.is_err());
+
+        let _ctx = dump_ftell_expect(pcap_dumper, 6144);
+
+        let result = savefile.offset();
+        assert_eq!(result.unwrap(), 6144);
+
+        let _ctx = dump_ftell_expect(pcap_dumper, -1);
+
+        let result = savefile.offset();
+        assert!(result.is_err());
+
+        #[cfg(not(windows))]
+        {
+            let mut dummy: isize = 999;
+            let file = &mut dummy as *mut isize as *mut FILE;
+
+            let ctx = raw::pcap_dump_file_context();
+            ctx.expect()
+                .withf_st(move |arg1| *arg1 == pcap_dumper)
+                .return_once_st(move |_| file);
+
+            assert_eq!(unsafe { savefile.file() }, file);
+        }
     }
 
     #[test]

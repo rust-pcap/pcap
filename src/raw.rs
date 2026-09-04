@@ -2,7 +2,7 @@
 #![allow(dead_code)]
 #![allow(non_camel_case_types)]
 
-use libc::{c_char, c_int, c_uchar, c_uint, c_ushort, sockaddr, timeval};
+use libc::{c_char, c_int, c_long, c_uchar, c_uint, c_ushort, sockaddr, timeval};
 
 #[cfg(test)]
 use mockall::automock;
@@ -16,6 +16,9 @@ pub const PCAP_IF_CONNECTION_STATUS_UNKNOWN: u32 = 0x00000000;
 pub const PCAP_IF_CONNECTION_STATUS_CONNECTED: u32 = 0x00000010;
 pub const PCAP_IF_CONNECTION_STATUS_DISCONNECTED: u32 = 0x00000020;
 pub const PCAP_IF_CONNECTION_STATUS_NOT_APPLICABLE: u32 = 0x00000030;
+
+pub const PCAP_CHAR_ENC_LOCAL: u32 = 0x00000000;
+pub const PCAP_CHAR_ENC_UTF_8: u32 = 0x00000001;
 
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -177,15 +180,14 @@ pub mod ffi {
         pub fn pcap_datalink_name_to_val(arg1: *const c_char) -> c_int;
         pub fn pcap_datalink_val_to_name(arg1: c_int) -> *const c_char;
         pub fn pcap_datalink_val_to_description(arg1: c_int) -> *const c_char;
-        // pub fn pcap_snapshot(arg1: *mut pcap_t) -> c_int;
+        pub fn pcap_snapshot(arg1: *mut pcap_t) -> c_int;
         // pub fn pcap_is_swapped(arg1: *mut pcap_t) -> c_int;
         pub fn pcap_major_version(arg1: *mut pcap_t) -> c_int;
         pub fn pcap_minor_version(arg1: *mut pcap_t) -> c_int;
         // pub fn pcap_file(arg1: *mut pcap_t) -> *mut FILE;
         pub fn pcap_fileno(arg1: *mut pcap_t) -> c_int;
         pub fn pcap_dump_open(arg1: *mut pcap_t, arg2: *const c_char) -> *mut pcap_dumper_t;
-        // pub fn pcap_dump_file(arg1: *mut pcap_dumper_t) -> *mut FILE;
-        // pub fn pcap_dump_ftell(arg1: *mut pcap_dumper_t) -> c_long;
+        pub fn pcap_dump_ftell(arg1: *mut pcap_dumper_t) -> c_long;
         pub fn pcap_dump_flush(arg1: *mut pcap_dumper_t) -> c_int;
         pub fn pcap_dump_close(arg1: *mut pcap_dumper_t);
         pub fn pcap_dump(arg1: *mut c_uchar, arg2: *const pcap_pkthdr, arg3: *const c_uchar);
@@ -232,7 +234,7 @@ pub mod ffi {
     unsafe extern "C" {
         // pcap_bufsize
         // pcap_createsrcstr
-        // pcap_dump_ftell64
+        pub fn pcap_dump_ftell64(arg1: *mut pcap_dumper_t) -> i64;
         // pcap_findalldevs_ex
         // pcap_get_required_select_timeout
         // pcap_open
@@ -252,7 +254,7 @@ pub mod ffi {
 
     #[cfg(libpcap_1_10_0)]
     unsafe extern "C" {
-        // pcap_init
+        pub fn pcap_init(arg1: c_uint, arg2: *mut c_char) -> c_int;
         // pcap_remoteact_accept_ex
     }
 }
@@ -274,6 +276,10 @@ pub mod ffi_unix {
         // the OS handle out of the FILE * and call pcap_hopen_offline()/pcap_dump_hopen().
         pub fn pcap_fopen_offline(arg1: *mut FILE, arg2: *mut c_char) -> *mut pcap_t;
         pub fn pcap_dump_fopen(arg1: *mut pcap_t, fp: *mut FILE) -> *mut pcap_dumper_t;
+        // wpcap does export this one, but the FILE * it hands back belongs to the C runtime
+        // wpcap was linked against, which is not necessarily the caller's, so it is no more
+        // usable on Windows than the entry points above.
+        pub fn pcap_dump_file(arg1: *mut pcap_dumper_t) -> *mut FILE;
     }
 
     #[cfg(libpcap_1_5_0)]

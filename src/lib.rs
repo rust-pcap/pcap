@@ -60,8 +60,9 @@
 
 #![cfg_attr(docsrs, feature(doc_cfg))]
 
-use std::ffi::{self, CStr};
+use std::ffi::{self, CStr, CString};
 use std::fmt;
+use std::path::Path;
 
 use self::Error::*;
 
@@ -127,6 +128,9 @@ pub enum Error {
     #[cfg(not(windows))]
     /// An invalid raw file descriptor was provided
     InvalidRawFd,
+    #[cfg(windows)]
+    /// A path that libpcap cannot be given because it is not valid UTF-8
+    InvalidPath,
     /// Errno error
     ErrnoError(errno::Errno),
     /// Buffer size overflows capacity
@@ -168,6 +172,25 @@ unsafe fn cstr_to_string(ptr: *const libc::c_char) -> Result<Option<String>, Err
     Ok(string)
 }
 
+fn path_to_cstring(path: &Path) -> Result<CString, Error> {
+    #[cfg(not(windows))]
+    let bytes = {
+        use std::os::unix::ffi::OsStrExt;
+        path.as_os_str().as_bytes()
+    };
+    // libpcap has no entry points taking wide strings. It reads the path in the local code page,
+    // or in UTF-8 once pcap_init has been asked for that, so give it the UTF-8 form. A path that
+    // is not valid UTF-8 holds an unpaired surrogate, which has no form libpcap would accept.
+    #[cfg(windows)]
+    let bytes = path
+        .as_os_str()
+        .to_str()
+        .ok_or(Error::InvalidPath)?
+        .as_bytes();
+
+    Ok(CString::new(bytes)?)
+}
+
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match *self {
@@ -183,6 +206,8 @@ impl fmt::Display for Error {
             IoError(ref e) => write!(f, "io error occurred: {e:?}"),
             #[cfg(not(windows))]
             InvalidRawFd => write!(f, "invalid raw file descriptor provided"),
+            #[cfg(windows)]
+            InvalidPath => write!(f, "invalid path (not valid UTF-8)"),
             ErrnoError(ref e) => write!(f, "libpcap os errno: {e}"),
             BufferOverflow => write!(f, "buffer size too large"),
         }
@@ -205,6 +230,8 @@ impl std::error::Error for Error {
             IoError(..) => "io error occurred",
             #[cfg(not(windows))]
             InvalidRawFd => "invalid raw file descriptor provided",
+            #[cfg(windows)]
+            InvalidPath => "invalid path (not valid UTF-8)",
             ErrnoError(..) => "internal error, providing errno",
             BufferOverflow => "buffer size too large",
         }
@@ -250,10 +277,43 @@ pub const fn packet_header_size() -> usize {
     std::mem::size_of::<raw::pcap_pkthdr>()
 }
 
+#[cfg(libpcap_1_10_0)]
+#[repr(u32)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+/// The character encoding libpcap uses for strings. Use with `init`.
+pub enum CharEncoding {
+    /// Strings are in the local character encoding. On UN*X that is taken to be UTF-8, on Windows
+    /// it is the local ANSI code page. This is the default.
+    Local = raw::PCAP_CHAR_ENC_LOCAL,
+    /// Strings are in UTF-8.
+    Utf8 = raw::PCAP_CHAR_ENC_UTF_8,
+}
+
+/// Initialize the library, choosing the character encoding it uses for the strings it is given
+/// and the strings it returns.
+///
+/// This is optional, but it has to come before any other libpcap call, and a second call asking
+/// for a different encoding fails. Without it strings are in the local character encoding.
+///
+/// On Windows this is what makes a path outside ASCII work, since the local code page is
+/// usually not UTF-8.
+#[cfg(libpcap_1_10_0)]
+pub fn init(encoding: CharEncoding) -> Result<(), Error> {
+    Error::with_errbuf(|err| {
+        if unsafe { raw::pcap_init(encoding as _, err) } != 0 {
+            return Err(unsafe { Error::new(err) });
+        }
+        Ok(())
+    })
+}
+
 #[cfg(test)]
 mod tests {
     use std::error::Error as StdError;
     use std::{ffi::CString, io};
+
+    #[cfg(libpcap_1_10_0)]
+    use crate::raw::testmod::RAWMTX;
 
     use super::*;
 
@@ -291,6 +351,8 @@ mod tests {
         errors.push(io::Error::new(io::ErrorKind::Interrupted, "error").into());
         #[cfg(not(windows))]
         errors.push(Error::InvalidRawFd);
+        #[cfg(windows)]
+        errors.push(Error::InvalidPath);
         errors.push(Error::ErrnoError(errno::Errno(125)));
         errors.push(Error::BufferOverflow);
 
@@ -310,5 +372,40 @@ mod tests {
             packet_header_size(),
             std::mem::size_of::<raw::pcap_pkthdr>()
         );
+    }
+
+    #[test]
+    #[cfg(windows)]
+    fn test_path_to_cstring_not_utf8() {
+        use std::ffi::OsString;
+        use std::os::windows::ffi::OsStringExt;
+
+        // An unpaired surrogate, which a Windows path may hold and UTF-8 cannot express.
+        let name = OsString::from_wide(&[0xd800]);
+        let result = path_to_cstring(Path::new(&name));
+        assert_eq!(result.unwrap_err(), Error::InvalidPath);
+    }
+
+    #[test]
+    #[cfg(libpcap_1_10_0)]
+    fn test_init() {
+        let _m = RAWMTX.lock();
+
+        let ctx = raw::pcap_init_context();
+        ctx.expect()
+            .withf_st(|arg1, _| *arg1 == raw::PCAP_CHAR_ENC_UTF_8)
+            .return_once(|_, _| 0);
+
+        let result = init(CharEncoding::Utf8);
+        assert!(result.is_ok());
+
+        let ctx = raw::pcap_init_context();
+        ctx.checkpoint();
+        ctx.expect()
+            .withf_st(|arg1, _| *arg1 == raw::PCAP_CHAR_ENC_LOCAL)
+            .return_once(|_, _| -1);
+
+        let result = init(CharEncoding::Local);
+        assert!(result.is_err());
     }
 }

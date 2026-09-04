@@ -2,6 +2,23 @@
 
 ## [Unreleased]
 
+### Added
+
+- Bindings for `pcap_dump_ftell64` and `pcap_dump_ftell` added. They can be accessed via the
+  `offset` call on `Savefile`, which reports how many bytes have been written to the file so far.
+  `pcap_dump_ftell64` is used where it is available, that is from libpcap 1.9.0 on; before that
+  the offset comes back as a `long` and the call fails once the file has grown past 2 GB on the
+  platforms where that is a 32-bit type.
+- Binding for `pcap_dump_file` added. It can be accessed via the `file` call on `Savefile` and
+  returns the `FILE *` the savefile is being written to. Not available on Windows, where wpcap
+  may be linked against a different C runtime than its caller.
+- Binding for `pcap_snapshot` added. It can be accessed via the `snaplen` call on activated
+  captures and reports the snapshot length in effect, which the `snaplen` call on
+  `Capture<Inactive>` could previously only set. For a `Capture<Offline>` this reports the length
+  the savefile was recorded with.
+- Binding for `pcap_init` added. It can be accessed via the `init` call and selects the character
+  encoding libpcap uses for strings. Requires libpcap 1.10.0.
+
 ### Changed
 
 - Rust Edition is now `2024`.
@@ -15,6 +32,7 @@
   `PCAP_ERRBUF_SIZE` without regard for character boundaries, so one quoting a long non-ASCII
   path used to arrive as `Error::MalformedError` with the message thrown away. It now arrives as
   `Error::PcapError`. Device and link-layer type names are still rejected when malformed.
+- `Error` has a new `InvalidPath` variant on Windows, which exhaustive matches have to cover.
 - `windows-sys` updated from 0.36 to 0.61. `HANDLE` is a raw pointer there rather than an `isize`,
   which changes the signature of `Capture::get_event` on Windows. A raw pointer is not `Send`, so
   a type of your own that stores the returned `HANDLE` no longer derives `Send` and can no longer
@@ -24,6 +42,14 @@
 
 - `IfFlags::from_bits_unchecked`, which `bitflags` 1 generated. `bitflags` 2 provides
   `IfFlags::from_bits_retain` instead.
+
+### Fixed
+
+- `Capture::from_file`, `Capture::from_file_with_precision`, `Capture::savefile` and
+  `Capture::savefile_append` no longer convert the path with `Path::to_str`. On UN*X the path is
+  handed to libpcap as bytes, so file names that are not valid UTF-8 now work. On Windows such a
+  path returns the new `Error::InvalidPath`, where `savefile` used to panic and `from_file` used
+  to report that a null pointer had been supplied as the file name.
 
 ## [2.5.0] - 2026-08-15
 
