@@ -96,6 +96,12 @@ mod raw;
 pub mod sendqueue;
 
 #[cfg(feature = "capture-stream")]
+mod sink;
+#[cfg(feature = "capture-stream")]
+#[cfg_attr(docsrs, doc(cfg(feature = "capture-stream")))]
+pub use sink::PacketSink;
+
+#[cfg(feature = "capture-stream")]
 mod stream;
 #[cfg(feature = "capture-stream")]
 #[cfg_attr(docsrs, doc(cfg(feature = "capture-stream")))]
