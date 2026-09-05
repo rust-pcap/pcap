@@ -42,7 +42,16 @@ impl Capture<Inactive> {
     pub fn open(self) -> Result<Capture<Active>, Error> {
         unsafe {
             self.check_err(raw::pcap_activate(self.handle.as_ptr()) == 0)?;
-            Ok(mem::transmute::<Capture<Inactive>, Capture<Active>>(self))
+            let capture = mem::transmute::<Capture<Inactive>, Capture<Active>>(self);
+
+            // Now that the handle is active, `pcap_setmintocopy` will accept the value that
+            // `immediate_mode` left behind.
+            #[cfg(all(windows, not(libpcap_1_5_0)))]
+            if let Some(size) = capture.min_to_copy {
+                capture.check_err(raw::pcap_setmintocopy(capture.handle.as_ptr(), size) == 0)?;
+            }
+
+            Ok(capture)
         }
     }
 
@@ -79,24 +88,25 @@ impl Capture<Inactive> {
         // https://www.tcpdump.org/manpages/pcap_set_immediate_mode.3pcap.html. Since we do not
         // expect pre-1.5.0 version on unix systems in the wild, we simply ignore those cases.
         #[cfg(libpcap_1_5_0)]
-        unsafe {
-            raw::pcap_set_immediate_mode(self.handle.as_ptr(), to as _)
+        let capture = {
+            unsafe { raw::pcap_set_immediate_mode(self.handle.as_ptr(), to as _) };
+            self
         };
 
         // In WinPcap we use `pcap_setmintocopy` as it does not have `pcap_set_immediate_mode`.
+        // pcap only accepts a mintocopy value on an active capture, so the value waits for `open`.
         #[cfg(all(windows, not(libpcap_1_5_0)))]
-        unsafe {
-            raw::pcap_setmintocopy(
-                self.handle.as_ptr(),
-                if to {
-                    0
-                } else {
-                    raw::WINPCAP_MINTOCOPY_DEFAULT
-                },
-            )
+        let capture = {
+            let mut capture = self;
+            capture.min_to_copy = Some(if to {
+                0
+            } else {
+                raw::WINPCAP_MINTOCOPY_DEFAULT
+            });
+            capture
         };
 
-        self
+        capture
     }
 
     /// Set want_pktap to true or false. The default is maintained by libpcap.
@@ -184,6 +194,8 @@ pub enum TimestampType {
 
 #[cfg(test)]
 mod tests {
+    use libc::c_int;
+
     use crate::{
         capture::testmod::test_capture,
         raw::testmod::{RAWMTX, as_pcap_t, geterr_expect},
@@ -221,6 +233,15 @@ mod tests {
         assert!(result.is_err());
     }
 
+    fn activate_expect(pcap: *mut raw::pcap_t, ret: c_int) -> raw::__pcap_activate::Context {
+        let ctx = raw::pcap_activate_context();
+        ctx.checkpoint();
+        ctx.expect()
+            .withf_st(move |arg1| *arg1 == pcap)
+            .return_once(move |_| ret);
+        ctx
+    }
+
     #[test]
     fn test_open() {
         let _m = RAWMTX.lock();
@@ -231,10 +252,7 @@ mod tests {
         let test_capture = test_capture::<Inactive>(pcap);
         let capture = test_capture.capture;
 
-        let ctx = raw::pcap_activate_context();
-        ctx.expect()
-            .withf_st(move |arg1| *arg1 == pcap)
-            .return_once(|_| 0);
+        let _ctx = activate_expect(pcap, 0);
 
         let result = capture.open();
         assert!(result.is_ok());
@@ -250,11 +268,7 @@ mod tests {
         let test_capture = test_capture::<Inactive>(pcap);
         let capture = test_capture.capture;
 
-        let ctx = raw::pcap_activate_context();
-        ctx.expect()
-            .withf_st(move |arg1| *arg1 == pcap)
-            .return_once(|_| -1);
-
+        let _ctx = activate_expect(pcap, -1);
         let _err = geterr_expect(pcap);
 
         let result = capture.open();
@@ -321,35 +335,17 @@ mod tests {
     }
 
     #[cfg(libpcap_1_5_0)]
-    struct ImmediateModeExpect(raw::__pcap_set_immediate_mode::Context);
-
-    #[cfg(all(windows, not(libpcap_1_5_0)))]
-    struct ImmediateModeExpect(raw::__pcap_setmintocopy::Context);
-
-    #[cfg(any(libpcap_1_5_0, windows))]
-    fn immediate_mode_expect(pcap: *mut raw::pcap_t) -> ImmediateModeExpect {
-        #[cfg(libpcap_1_5_0)]
-        {
-            let ctx = raw::pcap_set_immediate_mode_context();
-            ctx.checkpoint();
-            ctx.expect()
-                .withf_st(move |arg1, _| *arg1 == pcap)
-                .return_once(|_, _| 0);
-            ImmediateModeExpect(ctx)
-        }
-        #[cfg(all(windows, not(libpcap_1_5_0)))]
-        {
-            let ctx = raw::pcap_setmintocopy_context();
-            ctx.checkpoint();
-            ctx.expect()
-                .withf_st(move |arg1, _| *arg1 == pcap)
-                .return_once(|_, _| 0);
-            ImmediateModeExpect(ctx)
-        }
+    fn immediate_mode_expect(pcap: *mut raw::pcap_t) -> raw::__pcap_set_immediate_mode::Context {
+        let ctx = raw::pcap_set_immediate_mode_context();
+        ctx.checkpoint();
+        ctx.expect()
+            .withf_st(move |arg1, _| *arg1 == pcap)
+            .return_once(|_, _| 0);
+        ctx
     }
 
     #[test]
-    #[cfg(any(libpcap_1_5_0, windows))]
+    #[cfg(libpcap_1_5_0)]
     fn test_immediate_mode() {
         let _m = RAWMTX.lock();
 
@@ -364,6 +360,76 @@ mod tests {
 
         let _ctx = immediate_mode_expect(pcap);
         let _capture = capture.immediate_mode(false);
+    }
+
+    // pcap only takes a mintocopy value once the handle is active, so `immediate_mode` has to
+    // leave the call to `open`.
+    #[test]
+    #[cfg(all(windows, not(libpcap_1_5_0)))]
+    fn test_immediate_mode() {
+        let _m = RAWMTX.lock();
+
+        let mut dummy: isize = 777;
+        let pcap = as_pcap_t(&mut dummy);
+
+        let test_capture = test_capture::<Inactive>(pcap);
+        let capture = test_capture.capture;
+
+        let _activate_ctx = activate_expect(pcap, 0);
+
+        let ctx = raw::pcap_setmintocopy_context();
+        ctx.expect()
+            .withf_st(move |arg1, arg2| *arg1 == pcap && *arg2 == 0)
+            .return_once(|_, _| 0);
+
+        let result = capture.immediate_mode(true).open();
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    #[cfg(all(windows, not(libpcap_1_5_0)))]
+    fn test_immediate_mode_off() {
+        let _m = RAWMTX.lock();
+
+        let mut dummy: isize = 777;
+        let pcap = as_pcap_t(&mut dummy);
+
+        let test_capture = test_capture::<Inactive>(pcap);
+        let capture = test_capture.capture;
+
+        let _activate_ctx = activate_expect(pcap, 0);
+
+        let ctx = raw::pcap_setmintocopy_context();
+        ctx.expect()
+            .withf_st(move |arg1, arg2| *arg1 == pcap && *arg2 == raw::WINPCAP_MINTOCOPY_DEFAULT)
+            .return_once(|_, _| 0);
+
+        let result = capture.immediate_mode(false).open();
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    #[cfg(all(windows, not(libpcap_1_5_0)))]
+    fn test_immediate_mode_error() {
+        let _m = RAWMTX.lock();
+
+        let mut dummy: isize = 777;
+        let pcap = as_pcap_t(&mut dummy);
+
+        let test_capture = test_capture::<Inactive>(pcap);
+        let capture = test_capture.capture;
+
+        let _activate_ctx = activate_expect(pcap, 0);
+
+        let ctx = raw::pcap_setmintocopy_context();
+        ctx.expect()
+            .withf_st(move |arg1, _| *arg1 == pcap)
+            .return_once(|_, _| -1);
+
+        let _err = geterr_expect(pcap);
+
+        let result = capture.immediate_mode(true).open();
+        assert!(result.is_err());
     }
 
     #[test]

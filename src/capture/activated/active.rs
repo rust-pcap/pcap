@@ -18,6 +18,16 @@ impl Capture<Active> {
         })
     }
 
+    /// Set the minimum amount of data received by the kernel in a single call.
+    ///
+    /// Immediate mode amounts to a value of 0, so a capture given anything else here is no
+    /// longer in immediate mode.
+    #[cfg(windows)]
+    pub fn min_to_copy(self, to: i32) -> Result<Capture<Active>, Error> {
+        self.check_err(unsafe { raw::pcap_setmintocopy(self.handle.as_ptr(), to as _) == 0 })?;
+        Ok(self)
+    }
+
     /// Set the capture to be non-blocking. When this is set, [`Self::next_packet()`] may return an
     /// error indicating that there is no packet available to be read.
     pub fn setnonblock(mut self) -> Result<Capture<Active>, Error> {
@@ -97,6 +107,35 @@ mod tests {
 
         let result = capture.sendpacket(buffer);
         assert!(result.is_err());
+    }
+
+    #[test]
+    #[cfg(windows)]
+    fn test_min_to_copy() {
+        let _m = RAWMTX.lock();
+
+        let mut dummy: isize = 777;
+        let pcap = as_pcap_t(&mut dummy);
+
+        let test_capture = test_capture::<Active>(pcap);
+        let capture = test_capture.capture;
+
+        let ctx = raw::pcap_setmintocopy_context();
+        ctx.expect()
+            .withf_st(move |arg1, arg2| (*arg1 == pcap) && (*arg2 == 5))
+            .return_once(|_, _| 0);
+
+        let capture = capture.min_to_copy(5).unwrap();
+
+        let ctx = raw::pcap_setmintocopy_context();
+        ctx.checkpoint();
+        ctx.expect()
+            .withf_st(move |arg1, _| *arg1 == pcap)
+            .return_once(|_, _| -1);
+
+        let _err = geterr_expect(pcap);
+
+        assert!(capture.min_to_copy(5).is_err());
     }
 
     #[test]

@@ -91,6 +91,10 @@ impl State for Dead {}
 /// ```
 pub struct Capture<T: State + ?Sized> {
     nonblock: bool,
+    // pcap will not take a mintocopy value until the handle has been activated, so
+    // `immediate_mode` parks it here and `open` passes it on.
+    #[cfg(all(windows, not(libpcap_1_5_0)))]
+    min_to_copy: Option<i32>,
     handle: Arc<PcapHandle>,
     _marker: PhantomData<T>,
 }
@@ -125,6 +129,8 @@ impl<T: State + ?Sized> From<NonNull<raw::pcap_t>> for Capture<T> {
     fn from(handle: NonNull<raw::pcap_t>) -> Self {
         Capture {
             nonblock: false,
+            #[cfg(all(windows, not(libpcap_1_5_0)))]
+            min_to_copy: None,
             handle: Arc::new(PcapHandle { handle }),
             _marker: PhantomData,
         }
@@ -156,18 +162,6 @@ impl<T: State + ?Sized> Capture<T> {
 
     pub fn as_ptr(&self) -> *mut raw::pcap_t {
         self.handle.as_ptr()
-    }
-
-    /// Set the minumum amount of data received by the kernel in a single call.
-    ///
-    /// Note that this value is set to 0 when the capture is set to immediate mode. You should not
-    /// call `min_to_copy` on captures in immediate mode if you want them to stay in immediate mode.
-    #[cfg(windows)]
-    pub fn min_to_copy(self, to: i32) -> Capture<T> {
-        unsafe {
-            raw::pcap_setmintocopy(self.handle.as_ptr(), to as _);
-        }
-        self
     }
 
     /// Get handle to the Capture context's internal Win32 event semaphore.
@@ -260,25 +254,6 @@ mod tests {
 
         assert!(!capture.is_nonblock());
         assert_eq!(capture.as_ptr(), capture.handle.as_ptr());
-    }
-
-    #[test]
-    #[cfg(windows)]
-    fn test_min_to_copy() {
-        let _m = RAWMTX.lock();
-
-        let mut dummy: isize = 777;
-        let pcap = as_pcap_t(&mut dummy);
-
-        let test_capture = test_capture::<Active>(pcap);
-        let capture = test_capture.capture;
-
-        let ctx = raw::pcap_setmintocopy_context();
-        ctx.expect()
-            .withf_st(move |arg1, _| *arg1 == pcap)
-            .return_once(|_, _| 0);
-
-        let _capture = capture.min_to_copy(5);
     }
 
     #[test]

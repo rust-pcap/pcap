@@ -105,8 +105,24 @@ fn get_libpcap_version(libdirpath: Option<PathBuf>) -> Result<Version, Box<dyn s
     // routines could have arbitrary behavior. This is sound as long as the shared library is
     // "well-behaved." See https://github.com/nagisa/rust_libloading/issues/86 and
     // https://github.com/nagisa/rust_libloading/blob/0.8.3/src/changelog.rs#L96-L151 for details.
-    let Ok(lib) = (unsafe { libloading::Library::new(libfile) }) else {
-        return Ok(Version::max());
+    let lib = unsafe { libloading::Library::new(libfile) };
+
+    // On Windows LIBPCAP_LIBDIR names the directory holding wpcap.lib, and the Npcap SDK does not
+    // ship wpcap.dll beside it, so not finding the library there says nothing about the version in
+    // use. Ask the loader for it by name, the way the crate being built will get at it.
+    #[cfg(windows)]
+    let lib = lib.or_else(|_| unsafe { libloading::Library::new("wpcap.dll") });
+
+    let Ok(lib) = lib else {
+        // Falling back compiles out every version gated binding, which from the outside looks
+        // like the crate not having them rather than like a library that could not be found.
+        let version = Version::max();
+        println!(
+            "cargo:warning=no pcap library was found to read a version from, so the bindings \
+             added after {}.{}.{} are being compiled out",
+            version.major, version.minor, version.micro
+        );
+        return Ok(version);
     };
 
     type PcapLibVersion = unsafe extern "C" fn() -> *mut c_char;
