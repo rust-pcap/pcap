@@ -132,10 +132,19 @@ impl Capture<Inactive> {
     }
 
     /// Set the timestamp precision returned in captures.
+    ///
+    /// # Errors
+    ///
+    /// If the capture device does not support the timestamp precision, an error will be returned.
     #[cfg(libpcap_1_5_0)]
-    pub fn precision(self, precision: Precision) -> Capture<Inactive> {
-        unsafe { raw::pcap_set_tstamp_precision(self.handle.as_ptr(), precision as _) };
-        self
+    pub fn precision(self, precision: Precision) -> Result<Capture<Inactive>, Error> {
+        // libpcap leaves the error buffer alone here. All it reports is whether the device
+        // claims to support the precision, so there is no message to pass on.
+        if unsafe { raw::pcap_set_tstamp_precision(self.handle.as_ptr(), precision as _) } != 0 {
+            return Err(Error::UnsupportedTimestampPrecision);
+        }
+
+        Ok(self)
     }
 
     /// Set the snaplen size (the maximum length of a packet captured into the buffer).
@@ -468,7 +477,18 @@ mod tests {
             .withf_st(move |arg1, _| *arg1 == pcap)
             .return_once(|_, _| 0);
 
-        let _capture = capture.precision(Precision::Nano);
+        let capture = capture.precision(Precision::Nano).unwrap();
+
+        let ctx = raw::pcap_set_tstamp_precision_context();
+        ctx.checkpoint();
+        ctx.expect()
+            .withf_st(move |arg1, _| *arg1 == pcap)
+            .return_once(|_, _| raw::PCAP_ERROR_TSTAMP_PRECISION_NOTSUP);
+
+        assert_eq!(
+            capture.precision(Precision::Nano).err().unwrap(),
+            Error::UnsupportedTimestampPrecision
+        );
     }
 
     #[test]

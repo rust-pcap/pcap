@@ -10,9 +10,11 @@
 
 ### Changed
 
-- `Capture::tstamp_type` returns a `Result`. `pcap_set_tstamp_type` reports whether the capture
-  device supports the type, which used to be discarded, so a type the device did not support was
-  silently ignored. An unsupported type now gives the new `Error::UnsupportedTimestampType`.
+- `Capture::tstamp_type` and `Capture::precision` return a `Result`. libpcap reports whether the
+  device supports the timestamp type or precision being set, which both used to discard, so an
+  unsupported type was silently ignored and a capture asked for nanosecond timestamps could go on
+  to hand back microsecond ones with nothing said. The two now give the new
+  `Error::UnsupportedTimestampType` and `Error::UnsupportedTimestampPrecision`.
 - `TimestampType::HostHighPrec` is documented as synchronized with the system clock from libpcap
   1.10.0 on. Its meaning changed in that release; before it the type made no such promise.
 - Rust Edition is now `2024`.

@@ -114,6 +114,8 @@ pub enum Error {
     InvalidLinktype,
     /// The capture device does not support the timestamp type
     UnsupportedTimestampType,
+    /// The capture device does not support the timestamp precision
+    UnsupportedTimestampPrecision,
     /// The timeout expired while reading from a live capture
     TimeoutExpired,
     /// No more packets to read from the file
@@ -178,6 +180,7 @@ impl fmt::Display for Error {
             PcapError(ref e) => write!(f, "libpcap error: {e}"),
             InvalidLinktype => write!(f, "invalid or unknown linktype"),
             UnsupportedTimestampType => write!(f, "unsupported timestamp type"),
+            UnsupportedTimestampPrecision => write!(f, "unsupported timestamp precision"),
             TimeoutExpired => write!(f, "timeout expired while reading from a live capture"),
             NonNonBlock => write!(f, "must be in non-blocking mode to function"),
             NoMorePackets => write!(f, "no more packets to read from the file"),
@@ -201,6 +204,7 @@ impl std::error::Error for Error {
             InvalidString => "libpcap returned a null string",
             InvalidLinktype => "invalid or unknown linktype",
             UnsupportedTimestampType => "unsupported timestamp type",
+            UnsupportedTimestampPrecision => "unsupported timestamp precision",
             TimeoutExpired => "timeout expired while reading from a live capture",
             NonNonBlock => "must be in non-blocking mode to function",
             NoMorePackets => "no more packets to read from the file",
@@ -288,6 +292,7 @@ mod tests {
         errors.push(Error::PcapError("git rekt".to_string()));
         errors.push(Error::InvalidLinktype);
         errors.push(Error::UnsupportedTimestampType);
+        errors.push(Error::UnsupportedTimestampPrecision);
         errors.push(Error::TimeoutExpired);
         errors.push(Error::NoMorePackets);
         errors.push(Error::NonNonBlock);
