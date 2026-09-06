@@ -15,7 +15,7 @@
         <div>
             <p class="heading">Lines</p>
             <p class="title has-text-success">
-                <abbr title="74 / 74">100 %</abbr></p>
+                <abbr title="78 / 78">100 %</abbr></p>
         </div>
     </div>
 
@@ -1868,7 +1868,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">    &#x2F;&#x2F;&#x2F; The timeout expired while reading from a live capture</pre>
+                <pre class="has-background-white py-0 px-2">    &#x2F;&#x2F;&#x2F; The capture device does not support the timestamp type</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -1884,7 +1884,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">    TimeoutExpired,</pre>
+                <pre class="has-background-white py-0 px-2">    UnsupportedTimestampType,</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -1900,7 +1900,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">    &#x2F;&#x2F;&#x2F; No more packets to read from the file</pre>
+                <pre class="has-background-white py-0 px-2">    &#x2F;&#x2F;&#x2F; The capture device does not support the timestamp precision</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -1916,7 +1916,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">    NoMorePackets,</pre>
+                <pre class="has-background-white py-0 px-2">    UnsupportedTimestampPrecision,</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -1932,7 +1932,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">    &#x2F;&#x2F;&#x2F; Must be in non-blocking mode to function</pre>
+                <pre class="has-background-white py-0 px-2">    &#x2F;&#x2F;&#x2F; The timeout expired while reading from a live capture</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -1948,7 +1948,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">    NonNonBlock,</pre>
+                <pre class="has-background-white py-0 px-2">    TimeoutExpired,</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -1964,7 +1964,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">    &#x2F;&#x2F;&#x2F; There is not sufficent memory to create a dead capture</pre>
+                <pre class="has-background-white py-0 px-2">    &#x2F;&#x2F;&#x2F; No more packets to read from the file</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -1980,7 +1980,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">    InsufficientMemory,</pre>
+                <pre class="has-background-white py-0 px-2">    NoMorePackets,</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -1996,7 +1996,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">    &#x2F;&#x2F;&#x2F; An invalid input string (internal null)</pre>
+                <pre class="has-background-white py-0 px-2">    &#x2F;&#x2F;&#x2F; Must be in non-blocking mode to function</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -2012,7 +2012,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">    InvalidInputString,</pre>
+                <pre class="has-background-white py-0 px-2">    NonNonBlock,</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -2028,7 +2028,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">    &#x2F;&#x2F;&#x2F; An IO error occurred</pre>
+                <pre class="has-background-white py-0 px-2">    &#x2F;&#x2F;&#x2F; There is not sufficent memory to create a dead capture</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -2044,7 +2044,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">    IoError(std::io::ErrorKind),</pre>
+                <pre class="has-background-white py-0 px-2">    InsufficientMemory,</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -2060,7 +2060,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">    #[cfg(not(windows))]</pre>
+                <pre class="has-background-white py-0 px-2">    &#x2F;&#x2F;&#x2F; An invalid input string (internal null)</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -2076,7 +2076,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">    &#x2F;&#x2F;&#x2F; An invalid raw file descriptor was provided</pre>
+                <pre class="has-background-white py-0 px-2">    InvalidInputString,</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -2092,7 +2092,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">    InvalidRawFd,</pre>
+                <pre class="has-background-white py-0 px-2">    &#x2F;&#x2F;&#x2F; An IO error occurred</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -2108,7 +2108,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">    &#x2F;&#x2F;&#x2F; Errno error</pre>
+                <pre class="has-background-white py-0 px-2">    IoError(std::io::ErrorKind),</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -2124,7 +2124,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">    ErrnoError(errno::Errno),</pre>
+                <pre class="has-background-white py-0 px-2">    #[cfg(not(windows))]</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -2140,7 +2140,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">    &#x2F;&#x2F;&#x2F; Buffer size overflows capacity</pre>
+                <pre class="has-background-white py-0 px-2">    &#x2F;&#x2F;&#x2F; An invalid raw file descriptor was provided</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -2156,7 +2156,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">    BufferOverflow,</pre>
+                <pre class="has-background-white py-0 px-2">    InvalidRawFd,</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -2172,7 +2172,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">}</pre>
+                <pre class="has-background-white py-0 px-2">    &#x2F;&#x2F;&#x2F; Errno error</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -2188,7 +2188,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2"></pre>
+                <pre class="has-background-white py-0 px-2">    ErrnoError(errno::Errno),</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -2204,7 +2204,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">impl Error {</pre>
+                <pre class="has-background-white py-0 px-2">    &#x2F;&#x2F;&#x2F; Buffer size overflows capacity</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -2214,13 +2214,13 @@
                 <a href="#137">137</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success"
-                role="cell" aria-label="49">
-                49
+                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white"
+                role="cell" aria-label="no coverage">
+                
             </div>
-            <div class="column has-background-success-light p-0"
+            <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-success-light py-0 px-2">    unsafe fn new(ptr: *const libc::c_char) -&gt; Error {</pre>
+                <pre class="has-background-white py-0 px-2">    BufferOverflow,</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -2230,13 +2230,13 @@
                 <a href="#138">138</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success"
-                role="cell" aria-label="49">
-                49
+                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white"
+                role="cell" aria-label="no coverage">
+                
             </div>
-            <div class="column has-background-success-light p-0"
+            <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-success-light py-0 px-2">        if ptr.is_null() {</pre>
+                <pre class="has-background-white py-0 px-2">}</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -2244,38 +2244,6 @@
                 id="139"
                 role="cell">
                 <a href="#139">139</a>
-            </div>
-            <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success"
-                role="cell" aria-label="2">
-                2
-            </div>
-            <div class="column has-background-success-light p-0"
-                 role="cell">
-                <pre class="has-background-success-light py-0 px-2">            return PcapError(String::new());</pre>
-            </div>
-        </div><div class="columns p-0 m-0" role="row">
-            <div
-                class="column is-1 is-narrow p-0 has-text-centered"
-                id="140"
-                role="cell">
-                <a href="#140">140</a>
-            </div>
-            <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success"
-                role="cell" aria-label="47">
-                47
-            </div>
-            <div class="column has-background-success-light p-0"
-                 role="cell">
-                <pre class="has-background-success-light py-0 px-2">        }</pre>
-            </div>
-        </div><div class="columns p-0 m-0" role="row">
-            <div
-                class="column is-1 is-narrow p-0 has-text-centered"
-                id="141"
-                role="cell">
-                <a href="#141">141</a>
             </div>
             <div
                 class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white"
@@ -2289,9 +2257,9 @@
         </div><div class="columns p-0 m-0" role="row">
             <div
                 class="column is-1 is-narrow p-0 has-text-centered"
-                id="142"
+                id="140"
                 role="cell">
-                <a href="#142">142</a>
+                <a href="#140">140</a>
             </div>
             <div
                 class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white"
@@ -2300,7 +2268,39 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">        &#x2F;&#x2F; libpcap truncates its messages at PCAP_ERRBUF_SIZE without regard for character</pre>
+                <pre class="has-background-white py-0 px-2">impl Error {</pre>
+            </div>
+        </div><div class="columns p-0 m-0" role="row">
+            <div
+                class="column is-1 is-narrow p-0 has-text-centered"
+                id="141"
+                role="cell">
+                <a href="#141">141</a>
+            </div>
+            <div
+                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success"
+                role="cell" aria-label="49">
+                49
+            </div>
+            <div class="column has-background-success-light p-0"
+                 role="cell">
+                <pre class="has-background-success-light py-0 px-2">    unsafe fn new(ptr: *const libc::c_char) -&gt; Error {</pre>
+            </div>
+        </div><div class="columns p-0 m-0" role="row">
+            <div
+                class="column is-1 is-narrow p-0 has-text-centered"
+                id="142"
+                role="cell">
+                <a href="#142">142</a>
+            </div>
+            <div
+                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success"
+                role="cell" aria-label="49">
+                49
+            </div>
+            <div class="column has-background-success-light p-0"
+                 role="cell">
+                <pre class="has-background-success-light py-0 px-2">        if ptr.is_null() {</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -2310,13 +2310,13 @@
                 <a href="#143">143</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white"
-                role="cell" aria-label="no coverage">
-                
+                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success"
+                role="cell" aria-label="2">
+                2
             </div>
-            <div class="column has-background-white p-0"
+            <div class="column has-background-success-light p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">        &#x2F;&#x2F; boundaries, so one quoting a long path can end in the middle of a UTF-8 sequence.</pre>
+                <pre class="has-background-success-light py-0 px-2">            return PcapError(String::new());</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -2326,13 +2326,13 @@
                 <a href="#144">144</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white"
-                role="cell" aria-label="no coverage">
-                
+                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success"
+                role="cell" aria-label="47">
+                47
             </div>
-            <div class="column has-background-white p-0"
+            <div class="column has-background-success-light p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">        &#x2F;&#x2F; Take such a message lossily rather than lose it. Strings that are not error messages</pre>
+                <pre class="has-background-success-light py-0 px-2">        }</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -2348,7 +2348,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">        &#x2F;&#x2F; still go through cstr_to_string, which rejects the malformed ones.</pre>
+                <pre class="has-background-white py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -2358,13 +2358,13 @@
                 <a href="#146">146</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success"
-                role="cell" aria-label="47">
-                47
+                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white"
+                role="cell" aria-label="no coverage">
+                
             </div>
-            <div class="column has-background-success-light p-0"
+            <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-success-light py-0 px-2">        PcapError(</pre>
+                <pre class="has-background-white py-0 px-2">        &#x2F;&#x2F; libpcap truncates its messages at PCAP_ERRBUF_SIZE without regard for character</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -2374,13 +2374,13 @@
                 <a href="#147">147</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success"
-                role="cell" aria-label="47">
-                47
+                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white"
+                role="cell" aria-label="no coverage">
+                
             </div>
-            <div class="column has-background-success-light p-0"
+            <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-success-light py-0 px-2">            unsafe { CStr::from_ptr(ptr as _) }</pre>
+                <pre class="has-background-white py-0 px-2">        &#x2F;&#x2F; boundaries, so one quoting a long path can end in the middle of a UTF-8 sequence.</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -2390,13 +2390,13 @@
                 <a href="#148">148</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success"
-                role="cell" aria-label="47">
-                47
+                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white"
+                role="cell" aria-label="no coverage">
+                
             </div>
-            <div class="column has-background-success-light p-0"
+            <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-success-light py-0 px-2">                .to_string_lossy()</pre>
+                <pre class="has-background-white py-0 px-2">        &#x2F;&#x2F; Take such a message lossily rather than lose it. Strings that are not error messages</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -2406,13 +2406,13 @@
                 <a href="#149">149</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success"
-                role="cell" aria-label="47">
-                47
+                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white"
+                role="cell" aria-label="no coverage">
+                
             </div>
-            <div class="column has-background-success-light p-0"
+            <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-success-light py-0 px-2">                .into_owned(),</pre>
+                <pre class="has-background-white py-0 px-2">        &#x2F;&#x2F; still go through cstr_to_string, which rejects the malformed ones.</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -2428,7 +2428,7 @@
             </div>
             <div class="column has-background-success-light p-0"
                  role="cell">
-                <pre class="has-background-success-light py-0 px-2">        )</pre>
+                <pre class="has-background-success-light py-0 px-2">        PcapError(</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -2439,12 +2439,12 @@
             </div>
             <div
                 class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success"
-                role="cell" aria-label="49">
-                49
+                role="cell" aria-label="47">
+                47
             </div>
             <div class="column has-background-success-light p-0"
                  role="cell">
-                <pre class="has-background-success-light py-0 px-2">    }</pre>
+                <pre class="has-background-success-light py-0 px-2">            unsafe { CStr::from_ptr(ptr as _) }</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -2454,13 +2454,13 @@
                 <a href="#152">152</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white"
-                role="cell" aria-label="no coverage">
-                
+                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success"
+                role="cell" aria-label="47">
+                47
             </div>
-            <div class="column has-background-white p-0"
+            <div class="column has-background-success-light p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2"></pre>
+                <pre class="has-background-success-light py-0 px-2">                .to_string_lossy()</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -2471,12 +2471,12 @@
             </div>
             <div
                 class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success"
-                role="cell" aria-label="54">
-                54
+                role="cell" aria-label="47">
+                47
             </div>
             <div class="column has-background-success-light p-0"
                  role="cell">
-                <pre class="has-background-success-light py-0 px-2">    fn with_errbuf&lt;T, F&gt;(func: F) -&gt; Result&lt;T, Error&gt;</pre>
+                <pre class="has-background-success-light py-0 px-2">                .into_owned(),</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -2487,12 +2487,12 @@
             </div>
             <div
                 class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success"
-                role="cell" aria-label="54">
-                54
+                role="cell" aria-label="47">
+                47
             </div>
             <div class="column has-background-success-light p-0"
                  role="cell">
-                <pre class="has-background-success-light py-0 px-2">    where</pre>
+                <pre class="has-background-success-light py-0 px-2">        )</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -2503,12 +2503,12 @@
             </div>
             <div
                 class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success"
-                role="cell" aria-label="54">
-                54
+                role="cell" aria-label="49">
+                49
             </div>
             <div class="column has-background-success-light p-0"
                  role="cell">
-                <pre class="has-background-success-light py-0 px-2">        F: FnOnce(*mut libc::c_char) -&gt; Result&lt;T, Error&gt;,</pre>
+                <pre class="has-background-success-light py-0 px-2">    }</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -2524,7 +2524,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">    {</pre>
+                <pre class="has-background-white py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -2540,7 +2540,7 @@
             </div>
             <div class="column has-background-success-light p-0"
                  role="cell">
-                <pre class="has-background-success-light py-0 px-2">        let mut errbuf = [0i8; 256];</pre>
+                <pre class="has-background-success-light py-0 px-2">    fn with_errbuf&lt;T, F&gt;(func: F) -&gt; Result&lt;T, Error&gt;</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -2556,7 +2556,7 @@
             </div>
             <div class="column has-background-success-light p-0"
                  role="cell">
-                <pre class="has-background-success-light py-0 px-2">        func(errbuf.as_mut_ptr() as _)</pre>
+                <pre class="has-background-success-light py-0 px-2">    where</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -2572,7 +2572,7 @@
             </div>
             <div class="column has-background-success-light p-0"
                  role="cell">
-                <pre class="has-background-success-light py-0 px-2">    }</pre>
+                <pre class="has-background-success-light py-0 px-2">        F: FnOnce(*mut libc::c_char) -&gt; Result&lt;T, Error&gt;,</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -2588,7 +2588,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">}</pre>
+                <pre class="has-background-white py-0 px-2">    {</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -2598,13 +2598,13 @@
                 <a href="#161">161</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white"
-                role="cell" aria-label="no coverage">
-                
+                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success"
+                role="cell" aria-label="54">
+                54
             </div>
-            <div class="column has-background-white p-0"
+            <div class="column has-background-success-light p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2"></pre>
+                <pre class="has-background-success-light py-0 px-2">        let mut errbuf = [0i8; 256];</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -2615,12 +2615,12 @@
             </div>
             <div
                 class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success"
-                role="cell" aria-label="27">
-                27
+                role="cell" aria-label="54">
+                54
             </div>
             <div class="column has-background-success-light p-0"
                  role="cell">
-                <pre class="has-background-success-light py-0 px-2">unsafe fn cstr_to_string(ptr: *const libc::c_char) -&gt; Result&lt;Option&lt;String&gt;, Error&gt; {</pre>
+                <pre class="has-background-success-light py-0 px-2">        func(errbuf.as_mut_ptr() as _)</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -2631,12 +2631,12 @@
             </div>
             <div
                 class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success"
-                role="cell" aria-label="27">
-                27
+                role="cell" aria-label="54">
+                54
             </div>
             <div class="column has-background-success-light p-0"
                  role="cell">
-                <pre class="has-background-success-light py-0 px-2">    let string = if ptr.is_null() {</pre>
+                <pre class="has-background-success-light py-0 px-2">    }</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -2646,13 +2646,13 @@
                 <a href="#164">164</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success"
-                role="cell" aria-label="2">
-                2
+                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white"
+                role="cell" aria-label="no coverage">
+                
             </div>
-            <div class="column has-background-success-light p-0"
+            <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-success-light py-0 px-2">        None</pre>
+                <pre class="has-background-white py-0 px-2">}</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -2668,7 +2668,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">    } else {</pre>
+                <pre class="has-background-white py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -2679,12 +2679,12 @@
             </div>
             <div
                 class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success"
-                role="cell" aria-label="25">
-                25
+                role="cell" aria-label="27">
+                27
             </div>
             <div class="column has-background-success-light p-0"
                  role="cell">
-                <pre class="has-background-success-light py-0 px-2">        Some(unsafe { CStr::from_ptr(ptr as _) }.to_str()?.to_owned())</pre>
+                <pre class="has-background-success-light py-0 px-2">unsafe fn cstr_to_string(ptr: *const libc::c_char) -&gt; Result&lt;Option&lt;String&gt;, Error&gt; {</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -2694,13 +2694,13 @@
                 <a href="#167">167</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white"
-                role="cell" aria-label="no coverage">
-                
+                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success"
+                role="cell" aria-label="27">
+                27
             </div>
-            <div class="column has-background-white p-0"
+            <div class="column has-background-success-light p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">    };</pre>
+                <pre class="has-background-success-light py-0 px-2">    let string = if ptr.is_null() {</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -2711,12 +2711,12 @@
             </div>
             <div
                 class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success"
-                role="cell" aria-label="27">
-                27
+                role="cell" aria-label="2">
+                2
             </div>
             <div class="column has-background-success-light p-0"
                  role="cell">
-                <pre class="has-background-success-light py-0 px-2">    Ok(string)</pre>
+                <pre class="has-background-success-light py-0 px-2">        None</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -2726,13 +2726,13 @@
                 <a href="#169">169</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success"
-                role="cell" aria-label="27">
-                27
+                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white"
+                role="cell" aria-label="no coverage">
+                
             </div>
-            <div class="column has-background-success-light p-0"
+            <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-success-light py-0 px-2">}</pre>
+                <pre class="has-background-white py-0 px-2">    } else {</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -2742,13 +2742,13 @@
                 <a href="#170">170</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white"
-                role="cell" aria-label="no coverage">
-                
+                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success"
+                role="cell" aria-label="25">
+                25
             </div>
-            <div class="column has-background-white p-0"
+            <div class="column has-background-success-light p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2"></pre>
+                <pre class="has-background-success-light py-0 px-2">        Some(unsafe { CStr::from_ptr(ptr as _) }.to_str()?.to_owned())</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -2764,7 +2764,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">impl fmt::Display for Error {</pre>
+                <pre class="has-background-white py-0 px-2">    };</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -2775,12 +2775,12 @@
             </div>
             <div
                 class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success"
-                role="cell" aria-label="26">
-                26
+                role="cell" aria-label="27">
+                27
             </div>
             <div class="column has-background-success-light p-0"
                  role="cell">
-                <pre class="has-background-success-light py-0 px-2">    fn fmt(&amp;self, f: &amp;mut fmt::Formatter&lt;&#x27;_&gt;) -&gt; fmt::Result {</pre>
+                <pre class="has-background-success-light py-0 px-2">    Ok(string)</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -2791,12 +2791,12 @@
             </div>
             <div
                 class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success"
-                role="cell" aria-label="26">
-                26
+                role="cell" aria-label="27">
+                27
             </div>
             <div class="column has-background-success-light p-0"
                  role="cell">
-                <pre class="has-background-success-light py-0 px-2">        match *self {</pre>
+                <pre class="has-background-success-light py-0 px-2">}</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -2806,13 +2806,13 @@
                 <a href="#174">174</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success"
-                role="cell" aria-label="2">
-                2
+                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white"
+                role="cell" aria-label="no coverage">
+                
             </div>
-            <div class="column has-background-success-light p-0"
+            <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-success-light py-0 px-2">            MalformedError(ref e) =&gt; write!(f, &quot;libpcap returned invalid UTF-8: {e}&quot;),</pre>
+                <pre class="has-background-white py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -2822,13 +2822,13 @@
                 <a href="#175">175</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success"
-                role="cell" aria-label="2">
-                2
+                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white"
+                role="cell" aria-label="no coverage">
+                
             </div>
-            <div class="column has-background-success-light p-0"
+            <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-success-light py-0 px-2">            InvalidString =&gt; write!(f, &quot;libpcap returned a null string&quot;),</pre>
+                <pre class="has-background-white py-0 px-2">impl fmt::Display for Error {</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -2839,12 +2839,12 @@
             </div>
             <div
                 class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success"
-                role="cell" aria-label="2">
-                2
+                role="cell" aria-label="30">
+                30
             </div>
             <div class="column has-background-success-light p-0"
                  role="cell">
-                <pre class="has-background-success-light py-0 px-2">            PcapError(ref e) =&gt; write!(f, &quot;libpcap error: {e}&quot;),</pre>
+                <pre class="has-background-success-light py-0 px-2">    fn fmt(&amp;self, f: &amp;mut fmt::Formatter&lt;&#x27;_&gt;) -&gt; fmt::Result {</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -2855,12 +2855,12 @@
             </div>
             <div
                 class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success"
-                role="cell" aria-label="2">
-                2
+                role="cell" aria-label="30">
+                30
             </div>
             <div class="column has-background-success-light p-0"
                  role="cell">
-                <pre class="has-background-success-light py-0 px-2">            InvalidLinktype =&gt; write!(f, &quot;invalid or unknown linktype&quot;),</pre>
+                <pre class="has-background-success-light py-0 px-2">        match *self {</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -2876,7 +2876,7 @@
             </div>
             <div class="column has-background-success-light p-0"
                  role="cell">
-                <pre class="has-background-success-light py-0 px-2">            TimeoutExpired =&gt; write!(f, &quot;timeout expired while reading from a live capture&quot;),</pre>
+                <pre class="has-background-success-light py-0 px-2">            MalformedError(ref e) =&gt; write!(f, &quot;libpcap returned invalid UTF-8: {e}&quot;),</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -2892,7 +2892,7 @@
             </div>
             <div class="column has-background-success-light p-0"
                  role="cell">
-                <pre class="has-background-success-light py-0 px-2">            NonNonBlock =&gt; write!(f, &quot;must be in non-blocking mode to function&quot;),</pre>
+                <pre class="has-background-success-light py-0 px-2">            InvalidString =&gt; write!(f, &quot;libpcap returned a null string&quot;),</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -2908,7 +2908,7 @@
             </div>
             <div class="column has-background-success-light p-0"
                  role="cell">
-                <pre class="has-background-success-light py-0 px-2">            NoMorePackets =&gt; write!(f, &quot;no more packets to read from the file&quot;),</pre>
+                <pre class="has-background-success-light py-0 px-2">            PcapError(ref e) =&gt; write!(f, &quot;libpcap error: {e}&quot;),</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -2924,7 +2924,7 @@
             </div>
             <div class="column has-background-success-light p-0"
                  role="cell">
-                <pre class="has-background-success-light py-0 px-2">            InsufficientMemory =&gt; write!(f, &quot;insufficient memory&quot;),</pre>
+                <pre class="has-background-success-light py-0 px-2">            InvalidLinktype =&gt; write!(f, &quot;invalid or unknown linktype&quot;),</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -2940,7 +2940,7 @@
             </div>
             <div class="column has-background-success-light p-0"
                  role="cell">
-                <pre class="has-background-success-light py-0 px-2">            InvalidInputString =&gt; write!(f, &quot;invalid input string (internal null)&quot;),</pre>
+                <pre class="has-background-success-light py-0 px-2">            UnsupportedTimestampType =&gt; write!(f, &quot;unsupported timestamp type&quot;),</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -2956,7 +2956,7 @@
             </div>
             <div class="column has-background-success-light p-0"
                  role="cell">
-                <pre class="has-background-success-light py-0 px-2">            IoError(ref e) =&gt; write!(f, &quot;io error occurred: {e:?}&quot;),</pre>
+                <pre class="has-background-success-light py-0 px-2">            UnsupportedTimestampPrecision =&gt; write!(f, &quot;unsupported timestamp precision&quot;),</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -2966,13 +2966,13 @@
                 <a href="#184">184</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white"
-                role="cell" aria-label="no coverage">
-                
+                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success"
+                role="cell" aria-label="2">
+                2
             </div>
-            <div class="column has-background-white p-0"
+            <div class="column has-background-success-light p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">            #[cfg(not(windows))]</pre>
+                <pre class="has-background-success-light py-0 px-2">            TimeoutExpired =&gt; write!(f, &quot;timeout expired while reading from a live capture&quot;),</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -2988,7 +2988,7 @@
             </div>
             <div class="column has-background-success-light p-0"
                  role="cell">
-                <pre class="has-background-success-light py-0 px-2">            InvalidRawFd =&gt; write!(f, &quot;invalid raw file descriptor provided&quot;),</pre>
+                <pre class="has-background-success-light py-0 px-2">            NonNonBlock =&gt; write!(f, &quot;must be in non-blocking mode to function&quot;),</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -3004,7 +3004,7 @@
             </div>
             <div class="column has-background-success-light p-0"
                  role="cell">
-                <pre class="has-background-success-light py-0 px-2">            ErrnoError(ref e) =&gt; write!(f, &quot;libpcap os errno: {e}&quot;),</pre>
+                <pre class="has-background-success-light py-0 px-2">            NoMorePackets =&gt; write!(f, &quot;no more packets to read from the file&quot;),</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -3020,7 +3020,7 @@
             </div>
             <div class="column has-background-success-light p-0"
                  role="cell">
-                <pre class="has-background-success-light py-0 px-2">            BufferOverflow =&gt; write!(f, &quot;buffer size too large&quot;),</pre>
+                <pre class="has-background-success-light py-0 px-2">            InsufficientMemory =&gt; write!(f, &quot;insufficient memory&quot;),</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -3030,13 +3030,13 @@
                 <a href="#188">188</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white"
-                role="cell" aria-label="no coverage">
-                
+                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success"
+                role="cell" aria-label="2">
+                2
             </div>
-            <div class="column has-background-white p-0"
+            <div class="column has-background-success-light p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">        }</pre>
+                <pre class="has-background-success-light py-0 px-2">            InvalidInputString =&gt; write!(f, &quot;invalid input string (internal null)&quot;),</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -3047,12 +3047,12 @@
             </div>
             <div
                 class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success"
-                role="cell" aria-label="26">
-                26
+                role="cell" aria-label="2">
+                2
             </div>
             <div class="column has-background-success-light p-0"
                  role="cell">
-                <pre class="has-background-success-light py-0 px-2">    }</pre>
+                <pre class="has-background-success-light py-0 px-2">            IoError(ref e) =&gt; write!(f, &quot;io error occurred: {e:?}&quot;),</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -3068,7 +3068,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">}</pre>
+                <pre class="has-background-white py-0 px-2">            #[cfg(not(windows))]</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -3076,6 +3076,102 @@
                 id="191"
                 role="cell">
                 <a href="#191">191</a>
+            </div>
+            <div
+                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success"
+                role="cell" aria-label="2">
+                2
+            </div>
+            <div class="column has-background-success-light p-0"
+                 role="cell">
+                <pre class="has-background-success-light py-0 px-2">            InvalidRawFd =&gt; write!(f, &quot;invalid raw file descriptor provided&quot;),</pre>
+            </div>
+        </div><div class="columns p-0 m-0" role="row">
+            <div
+                class="column is-1 is-narrow p-0 has-text-centered"
+                id="192"
+                role="cell">
+                <a href="#192">192</a>
+            </div>
+            <div
+                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success"
+                role="cell" aria-label="2">
+                2
+            </div>
+            <div class="column has-background-success-light p-0"
+                 role="cell">
+                <pre class="has-background-success-light py-0 px-2">            ErrnoError(ref e) =&gt; write!(f, &quot;libpcap os errno: {e}&quot;),</pre>
+            </div>
+        </div><div class="columns p-0 m-0" role="row">
+            <div
+                class="column is-1 is-narrow p-0 has-text-centered"
+                id="193"
+                role="cell">
+                <a href="#193">193</a>
+            </div>
+            <div
+                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success"
+                role="cell" aria-label="2">
+                2
+            </div>
+            <div class="column has-background-success-light p-0"
+                 role="cell">
+                <pre class="has-background-success-light py-0 px-2">            BufferOverflow =&gt; write!(f, &quot;buffer size too large&quot;),</pre>
+            </div>
+        </div><div class="columns p-0 m-0" role="row">
+            <div
+                class="column is-1 is-narrow p-0 has-text-centered"
+                id="194"
+                role="cell">
+                <a href="#194">194</a>
+            </div>
+            <div
+                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white"
+                role="cell" aria-label="no coverage">
+                
+            </div>
+            <div class="column has-background-white p-0"
+                 role="cell">
+                <pre class="has-background-white py-0 px-2">        }</pre>
+            </div>
+        </div><div class="columns p-0 m-0" role="row">
+            <div
+                class="column is-1 is-narrow p-0 has-text-centered"
+                id="195"
+                role="cell">
+                <a href="#195">195</a>
+            </div>
+            <div
+                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success"
+                role="cell" aria-label="30">
+                30
+            </div>
+            <div class="column has-background-success-light p-0"
+                 role="cell">
+                <pre class="has-background-success-light py-0 px-2">    }</pre>
+            </div>
+        </div><div class="columns p-0 m-0" role="row">
+            <div
+                class="column is-1 is-narrow p-0 has-text-centered"
+                id="196"
+                role="cell">
+                <a href="#196">196</a>
+            </div>
+            <div
+                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white"
+                role="cell" aria-label="no coverage">
+                
+            </div>
+            <div class="column has-background-white p-0"
+                 role="cell">
+                <pre class="has-background-white py-0 px-2">}</pre>
+            </div>
+        </div><div class="columns p-0 m-0" role="row">
+            <div
+                class="column is-1 is-narrow p-0 has-text-centered"
+                id="197"
+                role="cell">
+                <a href="#197">197</a>
             </div>
             <div
                 class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white"
@@ -3089,9 +3185,9 @@
         </div><div class="columns p-0 m-0" role="row">
             <div
                 class="column is-1 is-narrow p-0 has-text-centered"
-                id="192"
+                id="198"
                 role="cell">
-                <a href="#192">192</a>
+                <a href="#198">198</a>
             </div>
             <div
                 class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white"
@@ -3105,9 +3201,9 @@
         </div><div class="columns p-0 m-0" role="row">
             <div
                 class="column is-1 is-narrow p-0 has-text-centered"
-                id="193"
+                id="199"
                 role="cell">
-                <a href="#193">193</a>
+                <a href="#199">199</a>
             </div>
             <div
                 class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white"
@@ -3121,114 +3217,18 @@
         </div><div class="columns p-0 m-0" role="row">
             <div
                 class="column is-1 is-narrow p-0 has-text-centered"
-                id="194"
-                role="cell">
-                <a href="#194">194</a>
-            </div>
-            <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success"
-                role="cell" aria-label="26">
-                26
-            </div>
-            <div class="column has-background-success-light p-0"
-                 role="cell">
-                <pre class="has-background-success-light py-0 px-2">    fn description(&amp;self) -&gt; &amp;str {</pre>
-            </div>
-        </div><div class="columns p-0 m-0" role="row">
-            <div
-                class="column is-1 is-narrow p-0 has-text-centered"
-                id="195"
-                role="cell">
-                <a href="#195">195</a>
-            </div>
-            <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success"
-                role="cell" aria-label="26">
-                26
-            </div>
-            <div class="column has-background-success-light p-0"
-                 role="cell">
-                <pre class="has-background-success-light py-0 px-2">        match *self {</pre>
-            </div>
-        </div><div class="columns p-0 m-0" role="row">
-            <div
-                class="column is-1 is-narrow p-0 has-text-centered"
-                id="196"
-                role="cell">
-                <a href="#196">196</a>
-            </div>
-            <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success"
-                role="cell" aria-label="2">
-                2
-            </div>
-            <div class="column has-background-success-light p-0"
-                 role="cell">
-                <pre class="has-background-success-light py-0 px-2">            MalformedError(..) =&gt; &quot;libpcap returned invalid UTF-8&quot;,</pre>
-            </div>
-        </div><div class="columns p-0 m-0" role="row">
-            <div
-                class="column is-1 is-narrow p-0 has-text-centered"
-                id="197"
-                role="cell">
-                <a href="#197">197</a>
-            </div>
-            <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success"
-                role="cell" aria-label="2">
-                2
-            </div>
-            <div class="column has-background-success-light p-0"
-                 role="cell">
-                <pre class="has-background-success-light py-0 px-2">            PcapError(..) =&gt; &quot;libpcap FFI error&quot;,</pre>
-            </div>
-        </div><div class="columns p-0 m-0" role="row">
-            <div
-                class="column is-1 is-narrow p-0 has-text-centered"
-                id="198"
-                role="cell">
-                <a href="#198">198</a>
-            </div>
-            <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success"
-                role="cell" aria-label="2">
-                2
-            </div>
-            <div class="column has-background-success-light p-0"
-                 role="cell">
-                <pre class="has-background-success-light py-0 px-2">            InvalidString =&gt; &quot;libpcap returned a null string&quot;,</pre>
-            </div>
-        </div><div class="columns p-0 m-0" role="row">
-            <div
-                class="column is-1 is-narrow p-0 has-text-centered"
-                id="199"
-                role="cell">
-                <a href="#199">199</a>
-            </div>
-            <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success"
-                role="cell" aria-label="2">
-                2
-            </div>
-            <div class="column has-background-success-light p-0"
-                 role="cell">
-                <pre class="has-background-success-light py-0 px-2">            InvalidLinktype =&gt; &quot;invalid or unknown linktype&quot;,</pre>
-            </div>
-        </div><div class="columns p-0 m-0" role="row">
-            <div
-                class="column is-1 is-narrow p-0 has-text-centered"
                 id="200"
                 role="cell">
                 <a href="#200">200</a>
             </div>
             <div
                 class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success"
-                role="cell" aria-label="2">
-                2
+                role="cell" aria-label="30">
+                30
             </div>
             <div class="column has-background-success-light p-0"
                  role="cell">
-                <pre class="has-background-success-light py-0 px-2">            TimeoutExpired =&gt; &quot;timeout expired while reading from a live capture&quot;,</pre>
+                <pre class="has-background-success-light py-0 px-2">    fn description(&amp;self) -&gt; &amp;str {</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -3239,12 +3239,12 @@
             </div>
             <div
                 class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success"
-                role="cell" aria-label="2">
-                2
+                role="cell" aria-label="30">
+                30
             </div>
             <div class="column has-background-success-light p-0"
                  role="cell">
-                <pre class="has-background-success-light py-0 px-2">            NonNonBlock =&gt; &quot;must be in non-blocking mode to function&quot;,</pre>
+                <pre class="has-background-success-light py-0 px-2">        match *self {</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -3260,7 +3260,7 @@
             </div>
             <div class="column has-background-success-light p-0"
                  role="cell">
-                <pre class="has-background-success-light py-0 px-2">            NoMorePackets =&gt; &quot;no more packets to read from the file&quot;,</pre>
+                <pre class="has-background-success-light py-0 px-2">            MalformedError(..) =&gt; &quot;libpcap returned invalid UTF-8&quot;,</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -3276,7 +3276,7 @@
             </div>
             <div class="column has-background-success-light p-0"
                  role="cell">
-                <pre class="has-background-success-light py-0 px-2">            InsufficientMemory =&gt; &quot;insufficient memory&quot;,</pre>
+                <pre class="has-background-success-light py-0 px-2">            PcapError(..) =&gt; &quot;libpcap FFI error&quot;,</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -3292,7 +3292,7 @@
             </div>
             <div class="column has-background-success-light p-0"
                  role="cell">
-                <pre class="has-background-success-light py-0 px-2">            InvalidInputString =&gt; &quot;invalid input string (internal null)&quot;,</pre>
+                <pre class="has-background-success-light py-0 px-2">            InvalidString =&gt; &quot;libpcap returned a null string&quot;,</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -3308,7 +3308,7 @@
             </div>
             <div class="column has-background-success-light p-0"
                  role="cell">
-                <pre class="has-background-success-light py-0 px-2">            IoError(..) =&gt; &quot;io error occurred&quot;,</pre>
+                <pre class="has-background-success-light py-0 px-2">            InvalidLinktype =&gt; &quot;invalid or unknown linktype&quot;,</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -3318,13 +3318,13 @@
                 <a href="#206">206</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white"
-                role="cell" aria-label="no coverage">
-                
+                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success"
+                role="cell" aria-label="2">
+                2
             </div>
-            <div class="column has-background-white p-0"
+            <div class="column has-background-success-light p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">            #[cfg(not(windows))]</pre>
+                <pre class="has-background-success-light py-0 px-2">            UnsupportedTimestampType =&gt; &quot;unsupported timestamp type&quot;,</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -3340,7 +3340,7 @@
             </div>
             <div class="column has-background-success-light p-0"
                  role="cell">
-                <pre class="has-background-success-light py-0 px-2">            InvalidRawFd =&gt; &quot;invalid raw file descriptor provided&quot;,</pre>
+                <pre class="has-background-success-light py-0 px-2">            UnsupportedTimestampPrecision =&gt; &quot;unsupported timestamp precision&quot;,</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -3356,7 +3356,7 @@
             </div>
             <div class="column has-background-success-light p-0"
                  role="cell">
-                <pre class="has-background-success-light py-0 px-2">            ErrnoError(..) =&gt; &quot;internal error, providing errno&quot;,</pre>
+                <pre class="has-background-success-light py-0 px-2">            TimeoutExpired =&gt; &quot;timeout expired while reading from a live capture&quot;,</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -3372,7 +3372,7 @@
             </div>
             <div class="column has-background-success-light p-0"
                  role="cell">
-                <pre class="has-background-success-light py-0 px-2">            BufferOverflow =&gt; &quot;buffer size too large&quot;,</pre>
+                <pre class="has-background-success-light py-0 px-2">            NonNonBlock =&gt; &quot;must be in non-blocking mode to function&quot;,</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -3382,13 +3382,13 @@
                 <a href="#210">210</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white"
-                role="cell" aria-label="no coverage">
-                
+                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success"
+                role="cell" aria-label="2">
+                2
             </div>
-            <div class="column has-background-white p-0"
+            <div class="column has-background-success-light p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">        }</pre>
+                <pre class="has-background-success-light py-0 px-2">            NoMorePackets =&gt; &quot;no more packets to read from the file&quot;,</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -3399,12 +3399,12 @@
             </div>
             <div
                 class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success"
-                role="cell" aria-label="26">
-                26
+                role="cell" aria-label="2">
+                2
             </div>
             <div class="column has-background-success-light p-0"
                  role="cell">
-                <pre class="has-background-success-light py-0 px-2">    }</pre>
+                <pre class="has-background-success-light py-0 px-2">            InsufficientMemory =&gt; &quot;insufficient memory&quot;,</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -3414,13 +3414,13 @@
                 <a href="#212">212</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white"
-                role="cell" aria-label="no coverage">
-                
+                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success"
+                role="cell" aria-label="2">
+                2
             </div>
-            <div class="column has-background-white p-0"
+            <div class="column has-background-success-light p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2"></pre>
+                <pre class="has-background-success-light py-0 px-2">            InvalidInputString =&gt; &quot;invalid input string (internal null)&quot;,</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -3431,12 +3431,12 @@
             </div>
             <div
                 class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success"
-                role="cell" aria-label="26">
-                26
+                role="cell" aria-label="2">
+                2
             </div>
             <div class="column has-background-success-light p-0"
                  role="cell">
-                <pre class="has-background-success-light py-0 px-2">    fn cause(&amp;self) -&gt; Option&lt;&amp;dyn std::error::Error&gt; {</pre>
+                <pre class="has-background-success-light py-0 px-2">            IoError(..) =&gt; &quot;io error occurred&quot;,</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -3446,13 +3446,13 @@
                 <a href="#214">214</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success"
-                role="cell" aria-label="26">
-                26
+                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white"
+                role="cell" aria-label="no coverage">
+                
             </div>
-            <div class="column has-background-success-light p-0"
+            <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-success-light py-0 px-2">        match *self {</pre>
+                <pre class="has-background-white py-0 px-2">            #[cfg(not(windows))]</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -3468,7 +3468,7 @@
             </div>
             <div class="column has-background-success-light p-0"
                  role="cell">
-                <pre class="has-background-success-light py-0 px-2">            MalformedError(ref e) =&gt; Some(e),</pre>
+                <pre class="has-background-success-light py-0 px-2">            InvalidRawFd =&gt; &quot;invalid raw file descriptor provided&quot;,</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -3479,12 +3479,12 @@
             </div>
             <div
                 class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success"
-                role="cell" aria-label="24">
-                24
+                role="cell" aria-label="2">
+                2
             </div>
             <div class="column has-background-success-light p-0"
                  role="cell">
-                <pre class="has-background-success-light py-0 px-2">            _ =&gt; None,</pre>
+                <pre class="has-background-success-light py-0 px-2">            ErrnoError(..) =&gt; &quot;internal error, providing errno&quot;,</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -3492,6 +3492,22 @@
                 id="217"
                 role="cell">
                 <a href="#217">217</a>
+            </div>
+            <div
+                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success"
+                role="cell" aria-label="2">
+                2
+            </div>
+            <div class="column has-background-success-light p-0"
+                 role="cell">
+                <pre class="has-background-success-light py-0 px-2">            BufferOverflow =&gt; &quot;buffer size too large&quot;,</pre>
+            </div>
+        </div><div class="columns p-0 m-0" role="row">
+            <div
+                class="column is-1 is-narrow p-0 has-text-centered"
+                id="218"
+                role="cell">
+                <a href="#218">218</a>
             </div>
             <div
                 class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white"
@@ -3505,34 +3521,18 @@
         </div><div class="columns p-0 m-0" role="row">
             <div
                 class="column is-1 is-narrow p-0 has-text-centered"
-                id="218"
-                role="cell">
-                <a href="#218">218</a>
-            </div>
-            <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success"
-                role="cell" aria-label="26">
-                26
-            </div>
-            <div class="column has-background-success-light p-0"
-                 role="cell">
-                <pre class="has-background-success-light py-0 px-2">    }</pre>
-            </div>
-        </div><div class="columns p-0 m-0" role="row">
-            <div
-                class="column is-1 is-narrow p-0 has-text-centered"
                 id="219"
                 role="cell">
                 <a href="#219">219</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white"
-                role="cell" aria-label="no coverage">
-                
+                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success"
+                role="cell" aria-label="30">
+                30
             </div>
-            <div class="column has-background-white p-0"
+            <div class="column has-background-success-light p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">}</pre>
+                <pre class="has-background-success-light py-0 px-2">    }</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -3558,13 +3558,13 @@
                 <a href="#221">221</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white"
-                role="cell" aria-label="no coverage">
-                
+                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success"
+                role="cell" aria-label="30">
+                30
             </div>
-            <div class="column has-background-white p-0"
+            <div class="column has-background-success-light p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">impl From&lt;ffi::NulError&gt; for Error {</pre>
+                <pre class="has-background-success-light py-0 px-2">    fn cause(&amp;self) -&gt; Option&lt;&amp;dyn std::error::Error&gt; {</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -3575,12 +3575,12 @@
             </div>
             <div
                 class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success"
-                role="cell" aria-label="2">
-                2
+                role="cell" aria-label="30">
+                30
             </div>
             <div class="column has-background-success-light p-0"
                  role="cell">
-                <pre class="has-background-success-light py-0 px-2">    fn from(_: ffi::NulError) -&gt; Error {</pre>
+                <pre class="has-background-success-light py-0 px-2">        match *self {</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -3596,7 +3596,7 @@
             </div>
             <div class="column has-background-success-light p-0"
                  role="cell">
-                <pre class="has-background-success-light py-0 px-2">        InvalidInputString</pre>
+                <pre class="has-background-success-light py-0 px-2">            MalformedError(ref e) =&gt; Some(e),</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -3607,12 +3607,12 @@
             </div>
             <div
                 class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success"
-                role="cell" aria-label="2">
-                2
+                role="cell" aria-label="28">
+                28
             </div>
             <div class="column has-background-success-light p-0"
                  role="cell">
-                <pre class="has-background-success-light py-0 px-2">    }</pre>
+                <pre class="has-background-success-light py-0 px-2">            _ =&gt; None,</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -3628,7 +3628,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">}</pre>
+                <pre class="has-background-white py-0 px-2">        }</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -3638,13 +3638,13 @@
                 <a href="#226">226</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white"
-                role="cell" aria-label="no coverage">
-                
+                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success"
+                role="cell" aria-label="30">
+                30
             </div>
-            <div class="column has-background-white p-0"
+            <div class="column has-background-success-light p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2"></pre>
+                <pre class="has-background-success-light py-0 px-2">    }</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -3660,7 +3660,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">impl From&lt;std::str::Utf8Error&gt; for Error {</pre>
+                <pre class="has-background-white py-0 px-2">}</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -3670,13 +3670,13 @@
                 <a href="#228">228</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success"
-                role="cell" aria-label="2">
-                2
+                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white"
+                role="cell" aria-label="no coverage">
+                
             </div>
-            <div class="column has-background-success-light p-0"
+            <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-success-light py-0 px-2">    fn from(obj: std::str::Utf8Error) -&gt; Error {</pre>
+                <pre class="has-background-white py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -3686,13 +3686,13 @@
                 <a href="#229">229</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success"
-                role="cell" aria-label="2">
-                2
+                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white"
+                role="cell" aria-label="no coverage">
+                
             </div>
-            <div class="column has-background-success-light p-0"
+            <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-success-light py-0 px-2">        MalformedError(obj)</pre>
+                <pre class="has-background-white py-0 px-2">impl From&lt;ffi::NulError&gt; for Error {</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -3708,7 +3708,7 @@
             </div>
             <div class="column has-background-success-light p-0"
                  role="cell">
-                <pre class="has-background-success-light py-0 px-2">    }</pre>
+                <pre class="has-background-success-light py-0 px-2">    fn from(_: ffi::NulError) -&gt; Error {</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -3718,13 +3718,13 @@
                 <a href="#231">231</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white"
-                role="cell" aria-label="no coverage">
-                
+                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success"
+                role="cell" aria-label="2">
+                2
             </div>
-            <div class="column has-background-white p-0"
+            <div class="column has-background-success-light p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">}</pre>
+                <pre class="has-background-success-light py-0 px-2">        InvalidInputString</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -3734,13 +3734,13 @@
                 <a href="#232">232</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white"
-                role="cell" aria-label="no coverage">
-                
+                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success"
+                role="cell" aria-label="2">
+                2
             </div>
-            <div class="column has-background-white p-0"
+            <div class="column has-background-success-light p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2"></pre>
+                <pre class="has-background-success-light py-0 px-2">    }</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -3756,7 +3756,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">impl From&lt;std::io::Error&gt; for Error {</pre>
+                <pre class="has-background-white py-0 px-2">}</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -3766,13 +3766,13 @@
                 <a href="#234">234</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success"
-                role="cell" aria-label="2">
-                2
+                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white"
+                role="cell" aria-label="no coverage">
+                
             </div>
-            <div class="column has-background-success-light p-0"
+            <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-success-light py-0 px-2">    fn from(obj: std::io::Error) -&gt; Error {</pre>
+                <pre class="has-background-white py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -3782,13 +3782,13 @@
                 <a href="#235">235</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success"
-                role="cell" aria-label="2">
-                2
+                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white"
+                role="cell" aria-label="no coverage">
+                
             </div>
-            <div class="column has-background-success-light p-0"
+            <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-success-light py-0 px-2">        obj.kind().into()</pre>
+                <pre class="has-background-white py-0 px-2">impl From&lt;std::str::Utf8Error&gt; for Error {</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -3804,7 +3804,7 @@
             </div>
             <div class="column has-background-success-light p-0"
                  role="cell">
-                <pre class="has-background-success-light py-0 px-2">    }</pre>
+                <pre class="has-background-success-light py-0 px-2">    fn from(obj: std::str::Utf8Error) -&gt; Error {</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -3814,13 +3814,13 @@
                 <a href="#237">237</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white"
-                role="cell" aria-label="no coverage">
-                
+                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success"
+                role="cell" aria-label="2">
+                2
             </div>
-            <div class="column has-background-white p-0"
+            <div class="column has-background-success-light p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">}</pre>
+                <pre class="has-background-success-light py-0 px-2">        MalformedError(obj)</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -3830,13 +3830,13 @@
                 <a href="#238">238</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white"
-                role="cell" aria-label="no coverage">
-                
+                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success"
+                role="cell" aria-label="2">
+                2
             </div>
-            <div class="column has-background-white p-0"
+            <div class="column has-background-success-light p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2"></pre>
+                <pre class="has-background-success-light py-0 px-2">    }</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -3852,7 +3852,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">impl From&lt;std::io::ErrorKind&gt; for Error {</pre>
+                <pre class="has-background-white py-0 px-2">}</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -3862,13 +3862,13 @@
                 <a href="#240">240</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success"
-                role="cell" aria-label="2">
-                2
+                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white"
+                role="cell" aria-label="no coverage">
+                
             </div>
-            <div class="column has-background-success-light p-0"
+            <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-success-light py-0 px-2">    fn from(obj: std::io::ErrorKind) -&gt; Error {</pre>
+                <pre class="has-background-white py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -3878,13 +3878,13 @@
                 <a href="#241">241</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success"
-                role="cell" aria-label="2">
-                2
+                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white"
+                role="cell" aria-label="no coverage">
+                
             </div>
-            <div class="column has-background-success-light p-0"
+            <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-success-light py-0 px-2">        IoError(obj)</pre>
+                <pre class="has-background-white py-0 px-2">impl From&lt;std::io::Error&gt; for Error {</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -3900,7 +3900,7 @@
             </div>
             <div class="column has-background-success-light p-0"
                  role="cell">
-                <pre class="has-background-success-light py-0 px-2">    }</pre>
+                <pre class="has-background-success-light py-0 px-2">    fn from(obj: std::io::Error) -&gt; Error {</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -3910,13 +3910,13 @@
                 <a href="#243">243</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white"
-                role="cell" aria-label="no coverage">
-                
+                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success"
+                role="cell" aria-label="2">
+                2
             </div>
-            <div class="column has-background-white p-0"
+            <div class="column has-background-success-light p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">}</pre>
+                <pre class="has-background-success-light py-0 px-2">        obj.kind().into()</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -3926,13 +3926,13 @@
                 <a href="#244">244</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white"
-                role="cell" aria-label="no coverage">
-                
+                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success"
+                role="cell" aria-label="2">
+                2
             </div>
-            <div class="column has-background-white p-0"
+            <div class="column has-background-success-light p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2"></pre>
+                <pre class="has-background-success-light py-0 px-2">    }</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -3948,7 +3948,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F;&#x2F; Return size of a commonly used packet header.</pre>
+                <pre class="has-background-white py-0 px-2">}</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -3964,7 +3964,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F;&#x2F;</pre>
+                <pre class="has-background-white py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -3980,7 +3980,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F;&#x2F; On Windows this packet header is implicitly added to send queues, so this size must be known</pre>
+                <pre class="has-background-white py-0 px-2">impl From&lt;std::io::ErrorKind&gt; for Error {</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -3990,13 +3990,13 @@
                 <a href="#248">248</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white"
-                role="cell" aria-label="no coverage">
-                
+                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success"
+                role="cell" aria-label="2">
+                2
             </div>
-            <div class="column has-background-white p-0"
+            <div class="column has-background-success-light p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F;&#x2F; if an application needs to precalculate the exact send queue buffer size.</pre>
+                <pre class="has-background-success-light py-0 px-2">    fn from(obj: std::io::ErrorKind) -&gt; Error {</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4012,7 +4012,7 @@
             </div>
             <div class="column has-background-success-light p-0"
                  role="cell">
-                <pre class="has-background-success-light py-0 px-2">pub const fn packet_header_size() -&gt; usize {</pre>
+                <pre class="has-background-success-light py-0 px-2">        IoError(obj)</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4028,7 +4028,7 @@
             </div>
             <div class="column has-background-success-light p-0"
                  role="cell">
-                <pre class="has-background-success-light py-0 px-2">    std::mem::size_of::&lt;raw::pcap_pkthdr&gt;()</pre>
+                <pre class="has-background-success-light py-0 px-2">    }</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4038,13 +4038,13 @@
                 <a href="#251">251</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success"
-                role="cell" aria-label="2">
-                2
+                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white"
+                role="cell" aria-label="no coverage">
+                
             </div>
-            <div class="column has-background-success-light p-0"
+            <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-success-light py-0 px-2">}</pre>
+                <pre class="has-background-white py-0 px-2">}</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4076,7 +4076,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">#[cfg(test)]</pre>
+                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F;&#x2F; Return size of a commonly used packet header.</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4092,7 +4092,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">mod tests {</pre>
+                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F;&#x2F;</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4108,7 +4108,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">    use std::error::Error as StdError;</pre>
+                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F;&#x2F; On Windows this packet header is implicitly added to send queues, so this size must be known</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4124,7 +4124,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">    use std::{ffi::CString, io};</pre>
+                <pre class="has-background-white py-0 px-2">&#x2F;&#x2F;&#x2F; if an application needs to precalculate the exact send queue buffer size.</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4134,13 +4134,13 @@
                 <a href="#257">257</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white"
-                role="cell" aria-label="no coverage">
-                
+                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success"
+                role="cell" aria-label="2">
+                2
             </div>
-            <div class="column has-background-white p-0"
+            <div class="column has-background-success-light p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2"></pre>
+                <pre class="has-background-success-light py-0 px-2">pub const fn packet_header_size() -&gt; usize {</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4150,13 +4150,13 @@
                 <a href="#258">258</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white"
-                role="cell" aria-label="no coverage">
-                
+                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success"
+                role="cell" aria-label="2">
+                2
             </div>
-            <div class="column has-background-white p-0"
+            <div class="column has-background-success-light p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">    use super::*;</pre>
+                <pre class="has-background-success-light py-0 px-2">    std::mem::size_of::&lt;raw::pcap_pkthdr&gt;()</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4166,13 +4166,13 @@
                 <a href="#259">259</a>
             </div>
             <div
-                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white"
-                role="cell" aria-label="no coverage">
-                
+                class="column is-1 is-narrow p-0 has-text-centered has-text-success-light has-background-success"
+                role="cell" aria-label="2">
+                2
             </div>
-            <div class="column has-background-white p-0"
+            <div class="column has-background-success-light p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2"></pre>
+                <pre class="has-background-success-light py-0 px-2">}</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4188,7 +4188,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">    #[test]</pre>
+                <pre class="has-background-white py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4204,7 +4204,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">    fn test_error_invalid_utf8() {</pre>
+                <pre class="has-background-white py-0 px-2">#[cfg(test)]</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4220,7 +4220,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">        let bytes: [u8; 8] = [0x78, 0xfe, 0xe9, 0x89, 0x00, 0x00, 0xed, 0x4f];</pre>
+                <pre class="has-background-white py-0 px-2">mod tests {</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4236,7 +4236,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">        let error = unsafe { Error::new(&amp;bytes as *const _ as _) };</pre>
+                <pre class="has-background-white py-0 px-2">    use std::error::Error as StdError;</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4252,7 +4252,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">        &#x2F;&#x2F; The message is kept, with the bytes that are not valid UTF-8 replaced.</pre>
+                <pre class="has-background-white py-0 px-2">    use std::{ffi::CString, io};</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4268,7 +4268,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">        assert_eq!(error, Error::PcapError(&quot;x\u{fffd}\u{fffd}&quot;.to_string()));</pre>
+                <pre class="has-background-white py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4284,7 +4284,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">    }</pre>
+                <pre class="has-background-white py-0 px-2">    use super::*;</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4332,7 +4332,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">    fn test_error_null() {</pre>
+                <pre class="has-background-white py-0 px-2">    fn test_error_invalid_utf8() {</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4348,7 +4348,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">        let error = unsafe { Error::new(std::ptr::null()) };</pre>
+                <pre class="has-background-white py-0 px-2">        let bytes: [u8; 8] = [0x78, 0xfe, 0xe9, 0x89, 0x00, 0x00, 0xed, 0x4f];</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4364,7 +4364,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">        assert_eq!(error, Error::PcapError(&quot;&quot;.to_string()));</pre>
+                <pre class="has-background-white py-0 px-2">        let error = unsafe { Error::new(&amp;bytes as *const _ as _) };</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4380,7 +4380,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">    }</pre>
+                <pre class="has-background-white py-0 px-2">        &#x2F;&#x2F; The message is kept, with the bytes that are not valid UTF-8 replaced.</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4396,7 +4396,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2"></pre>
+                <pre class="has-background-white py-0 px-2">        assert_eq!(error, Error::PcapError(&quot;x\u{fffd}\u{fffd}&quot;.to_string()));</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4412,7 +4412,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">    #[test]</pre>
+                <pre class="has-background-white py-0 px-2">    }</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4428,7 +4428,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">    #[allow(deprecated)]</pre>
+                <pre class="has-background-white py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4444,7 +4444,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">    fn test_errors() {</pre>
+                <pre class="has-background-white py-0 px-2">    #[test]</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4460,7 +4460,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">        let mut errors: Vec&lt;Error&gt; = vec![];</pre>
+                <pre class="has-background-white py-0 px-2">    fn test_error_null() {</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4476,7 +4476,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2"></pre>
+                <pre class="has-background-white py-0 px-2">        let error = unsafe { Error::new(std::ptr::null()) };</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4492,7 +4492,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">        let bytes: [u8; 8] = [0x78, 0xfe, 0xe9, 0x89, 0x00, 0x00, 0xed, 0x4f];</pre>
+                <pre class="has-background-white py-0 px-2">        assert_eq!(error, Error::PcapError(&quot;&quot;.to_string()));</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4508,7 +4508,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">        let cstr = unsafe { CStr::from_ptr(&amp;bytes as *const _ as _) };</pre>
+                <pre class="has-background-white py-0 px-2">    }</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4540,7 +4540,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">        errors.push(cstr.to_str().unwrap_err().into());</pre>
+                <pre class="has-background-white py-0 px-2">    #[test]</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4556,7 +4556,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">        errors.push(Error::InvalidString);</pre>
+                <pre class="has-background-white py-0 px-2">    #[allow(deprecated)]</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4572,7 +4572,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">        errors.push(Error::PcapError(&quot;git rekt&quot;.to_string()));</pre>
+                <pre class="has-background-white py-0 px-2">    fn test_errors() {</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4588,7 +4588,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">        errors.push(Error::InvalidLinktype);</pre>
+                <pre class="has-background-white py-0 px-2">        let mut errors: Vec&lt;Error&gt; = vec![];</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4604,7 +4604,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">        errors.push(Error::TimeoutExpired);</pre>
+                <pre class="has-background-white py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4620,7 +4620,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">        errors.push(Error::NoMorePackets);</pre>
+                <pre class="has-background-white py-0 px-2">        let bytes: [u8; 8] = [0x78, 0xfe, 0xe9, 0x89, 0x00, 0x00, 0xed, 0x4f];</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4636,7 +4636,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">        errors.push(Error::NonNonBlock);</pre>
+                <pre class="has-background-white py-0 px-2">        let cstr = unsafe { CStr::from_ptr(&amp;bytes as *const _ as _) };</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4652,7 +4652,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">        errors.push(Error::InsufficientMemory);</pre>
+                <pre class="has-background-white py-0 px-2"></pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4668,7 +4668,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">        errors.push(CString::new(b&quot;f\0oo&quot;.to_vec()).unwrap_err().into());</pre>
+                <pre class="has-background-white py-0 px-2">        errors.push(cstr.to_str().unwrap_err().into());</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4684,7 +4684,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">        errors.push(io::Error::new(io::ErrorKind::Interrupted, &quot;error&quot;).into());</pre>
+                <pre class="has-background-white py-0 px-2">        errors.push(Error::InvalidString);</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4700,7 +4700,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">        #[cfg(not(windows))]</pre>
+                <pre class="has-background-white py-0 px-2">        errors.push(Error::PcapError(&quot;git rekt&quot;.to_string()));</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4716,7 +4716,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">        errors.push(Error::InvalidRawFd);</pre>
+                <pre class="has-background-white py-0 px-2">        errors.push(Error::InvalidLinktype);</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4732,7 +4732,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">        errors.push(Error::ErrnoError(errno::Errno(125)));</pre>
+                <pre class="has-background-white py-0 px-2">        errors.push(Error::UnsupportedTimestampType);</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4748,7 +4748,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">        errors.push(Error::BufferOverflow);</pre>
+                <pre class="has-background-white py-0 px-2">        errors.push(Error::UnsupportedTimestampPrecision);</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4764,7 +4764,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2"></pre>
+                <pre class="has-background-white py-0 px-2">        errors.push(Error::TimeoutExpired);</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4780,7 +4780,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">        for error in errors.iter() {</pre>
+                <pre class="has-background-white py-0 px-2">        errors.push(Error::NoMorePackets);</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4796,7 +4796,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">            assert!(!error.to_string().is_empty());</pre>
+                <pre class="has-background-white py-0 px-2">        errors.push(Error::NonNonBlock);</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4812,7 +4812,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">            assert!(!error.description().is_empty());</pre>
+                <pre class="has-background-white py-0 px-2">        errors.push(Error::InsufficientMemory);</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4828,7 +4828,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">            match error {</pre>
+                <pre class="has-background-white py-0 px-2">        errors.push(CString::new(b&quot;f\0oo&quot;.to_vec()).unwrap_err().into());</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4844,7 +4844,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">                Error::MalformedError(_) =&gt; assert!(error.cause().is_some()),</pre>
+                <pre class="has-background-white py-0 px-2">        errors.push(io::Error::new(io::ErrorKind::Interrupted, &quot;error&quot;).into());</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4860,7 +4860,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">                _ =&gt; assert!(error.cause().is_none()),</pre>
+                <pre class="has-background-white py-0 px-2">        #[cfg(not(windows))]</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4876,7 +4876,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">            }</pre>
+                <pre class="has-background-white py-0 px-2">        errors.push(Error::InvalidRawFd);</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4892,7 +4892,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">        }</pre>
+                <pre class="has-background-white py-0 px-2">        errors.push(Error::ErrnoError(errno::Errno(125)));</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4908,7 +4908,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">    }</pre>
+                <pre class="has-background-white py-0 px-2">        errors.push(Error::BufferOverflow);</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4940,7 +4940,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">    #[test]</pre>
+                <pre class="has-background-white py-0 px-2">        for error in errors.iter() {</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4956,7 +4956,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">    fn test_packet_size() {</pre>
+                <pre class="has-background-white py-0 px-2">            assert!(!error.to_string().is_empty());</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4972,7 +4972,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">        assert_eq!(</pre>
+                <pre class="has-background-white py-0 px-2">            assert!(!error.description().is_empty());</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -4988,7 +4988,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">            packet_header_size(),</pre>
+                <pre class="has-background-white py-0 px-2">            match error {</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -5004,7 +5004,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">            std::mem::size_of::&lt;raw::pcap_pkthdr&gt;()</pre>
+                <pre class="has-background-white py-0 px-2">                Error::MalformedError(_) =&gt; assert!(error.cause().is_some()),</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -5020,7 +5020,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">        );</pre>
+                <pre class="has-background-white py-0 px-2">                _ =&gt; assert!(error.cause().is_none()),</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -5036,7 +5036,7 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
-                <pre class="has-background-white py-0 px-2">    }</pre>
+                <pre class="has-background-white py-0 px-2">            }</pre>
             </div>
         </div><div class="columns p-0 m-0" role="row">
             <div
@@ -5052,6 +5052,166 @@
             </div>
             <div class="column has-background-white p-0"
                  role="cell">
+                <pre class="has-background-white py-0 px-2">        }</pre>
+            </div>
+        </div><div class="columns p-0 m-0" role="row">
+            <div
+                class="column is-1 is-narrow p-0 has-text-centered"
+                id="315"
+                role="cell">
+                <a href="#315">315</a>
+            </div>
+            <div
+                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white"
+                role="cell" aria-label="no coverage">
+                
+            </div>
+            <div class="column has-background-white p-0"
+                 role="cell">
+                <pre class="has-background-white py-0 px-2">    }</pre>
+            </div>
+        </div><div class="columns p-0 m-0" role="row">
+            <div
+                class="column is-1 is-narrow p-0 has-text-centered"
+                id="316"
+                role="cell">
+                <a href="#316">316</a>
+            </div>
+            <div
+                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white"
+                role="cell" aria-label="no coverage">
+                
+            </div>
+            <div class="column has-background-white p-0"
+                 role="cell">
+                <pre class="has-background-white py-0 px-2"></pre>
+            </div>
+        </div><div class="columns p-0 m-0" role="row">
+            <div
+                class="column is-1 is-narrow p-0 has-text-centered"
+                id="317"
+                role="cell">
+                <a href="#317">317</a>
+            </div>
+            <div
+                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white"
+                role="cell" aria-label="no coverage">
+                
+            </div>
+            <div class="column has-background-white p-0"
+                 role="cell">
+                <pre class="has-background-white py-0 px-2">    #[test]</pre>
+            </div>
+        </div><div class="columns p-0 m-0" role="row">
+            <div
+                class="column is-1 is-narrow p-0 has-text-centered"
+                id="318"
+                role="cell">
+                <a href="#318">318</a>
+            </div>
+            <div
+                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white"
+                role="cell" aria-label="no coverage">
+                
+            </div>
+            <div class="column has-background-white p-0"
+                 role="cell">
+                <pre class="has-background-white py-0 px-2">    fn test_packet_size() {</pre>
+            </div>
+        </div><div class="columns p-0 m-0" role="row">
+            <div
+                class="column is-1 is-narrow p-0 has-text-centered"
+                id="319"
+                role="cell">
+                <a href="#319">319</a>
+            </div>
+            <div
+                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white"
+                role="cell" aria-label="no coverage">
+                
+            </div>
+            <div class="column has-background-white p-0"
+                 role="cell">
+                <pre class="has-background-white py-0 px-2">        assert_eq!(</pre>
+            </div>
+        </div><div class="columns p-0 m-0" role="row">
+            <div
+                class="column is-1 is-narrow p-0 has-text-centered"
+                id="320"
+                role="cell">
+                <a href="#320">320</a>
+            </div>
+            <div
+                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white"
+                role="cell" aria-label="no coverage">
+                
+            </div>
+            <div class="column has-background-white p-0"
+                 role="cell">
+                <pre class="has-background-white py-0 px-2">            packet_header_size(),</pre>
+            </div>
+        </div><div class="columns p-0 m-0" role="row">
+            <div
+                class="column is-1 is-narrow p-0 has-text-centered"
+                id="321"
+                role="cell">
+                <a href="#321">321</a>
+            </div>
+            <div
+                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white"
+                role="cell" aria-label="no coverage">
+                
+            </div>
+            <div class="column has-background-white p-0"
+                 role="cell">
+                <pre class="has-background-white py-0 px-2">            std::mem::size_of::&lt;raw::pcap_pkthdr&gt;()</pre>
+            </div>
+        </div><div class="columns p-0 m-0" role="row">
+            <div
+                class="column is-1 is-narrow p-0 has-text-centered"
+                id="322"
+                role="cell">
+                <a href="#322">322</a>
+            </div>
+            <div
+                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white"
+                role="cell" aria-label="no coverage">
+                
+            </div>
+            <div class="column has-background-white p-0"
+                 role="cell">
+                <pre class="has-background-white py-0 px-2">        );</pre>
+            </div>
+        </div><div class="columns p-0 m-0" role="row">
+            <div
+                class="column is-1 is-narrow p-0 has-text-centered"
+                id="323"
+                role="cell">
+                <a href="#323">323</a>
+            </div>
+            <div
+                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white"
+                role="cell" aria-label="no coverage">
+                
+            </div>
+            <div class="column has-background-white p-0"
+                 role="cell">
+                <pre class="has-background-white py-0 px-2">    }</pre>
+            </div>
+        </div><div class="columns p-0 m-0" role="row">
+            <div
+                class="column is-1 is-narrow p-0 has-text-centered"
+                id="324"
+                role="cell">
+                <a href="#324">324</a>
+            </div>
+            <div
+                class="column is-1 is-narrow p-0 has-text-centered has-text-white has-background-white"
+                role="cell" aria-label="no coverage">
+                
+            </div>
+            <div class="column has-background-white p-0"
+                 role="cell">
                 <pre class="has-background-white py-0 px-2">}</pre>
             </div>
         </div></div>
@@ -5059,7 +5219,7 @@
         <footer class="footer">
             
                 <div class="content has-text-centered">
-                    <p class="heading">Date: 2026-09-02 16:26</p>
+                    <p class="heading">Date: 2026-09-06 08:10</p>
                 </div>
             
         </footer>
