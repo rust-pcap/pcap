@@ -53,7 +53,8 @@
 - Error messages coming from libpcap are decoded lossily. libpcap truncates them at
   `PCAP_ERRBUF_SIZE` without regard for character boundaries, so one quoting a long non-ASCII
   path used to arrive as `Error::MalformedError` with the message thrown away. It now arrives as
-  `Error::PcapError`. Device and link-layer type names are still rejected when malformed.
+  `Error::PcapError`. Device and link-layer type names are still rejected when malformed, though
+  a rejected device name no longer takes the rest of the list with it.
 - `Error` has a new `InvalidPath` variant on Windows, which exhaustive matches have to cover.
 - `windows-sys` updated from 0.36 to 0.61. `HANDLE` is a raw pointer there rather than an `isize`,
   which changes the signature of `Capture::get_event` on Windows. A raw pointer is not `Send`, so
@@ -73,6 +74,9 @@
   path returns the new `Error::InvalidPath`, where `savefile` used to panic and `from_file` used
   to report that a null pointer had been supplied as the file name.
 - `Savefile::write` no longer reads past the end of the packet data.
+- `Device::list` and `Device::lookup` leave out an interface whose name is not valid UTF-8
+  instead of failing the whole enumeration with `Error::MalformedError`, and keep a description
+  that is not valid UTF-8 lossily rather than rejecting it.
 
 ## [2.5.0] - 2026-08-15
 
