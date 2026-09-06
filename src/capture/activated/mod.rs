@@ -130,7 +130,7 @@ impl<T: Activated + ?Sized> Capture<T> {
     /// Reopen a `Savefile` context for recording captured packets using this `Capture`'s
     /// configurations. This is similar to `savefile()` but does not create the file if it
     /// does  not exist and, if it does already exist, and is a pcap file with the same
-    /// byte order as the host opening the file, and has the same time stamp precision,
+    /// byte order as the host opening the file, and has the same timestamp precision,
     /// link-layer header type,  and  snapshot length as p, it will write new packets
     /// at the end of the file.
     #[cfg(libpcap_1_7_2)]
