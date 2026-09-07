@@ -125,11 +125,13 @@ impl<C> PacketSink<C> {
     }
 }
 
-/// How many packets the sink sends before giving up its turn of its own accord.
+/// How many packets the sink sends before it yields to the executor.
 ///
-/// This is tokio's own allowance for a task between yields. Tokio keeps it as a private
-/// `Budget::initial` rather than anything a crate can read, so it is matched by hand here;
-/// should the two ever disagree, the smaller of the pair is what a sink on tokio ends up with.
+/// This count and tokio's task budget are redundant rather than complementary: either alone is
+/// enough to make the sink yield, and whichever runs out first is the one that does. The value
+/// is the budget tokio gives a task, so a sink driven on tokio yields at much the same points
+/// it otherwise would, but correctness does not depend on the two agreeing. Tokio keeps its own
+/// number private and is free to change it; the smaller of the two then takes effect.
 #[cfg(not(target_os = "linux"))]
 const SENDS_BETWEEN_YIELDS: u32 = 128;
 
@@ -162,7 +164,7 @@ impl<C> PacketSink<C> {
 
         // Sending here never waits for the interface, so a sink that is kept fed would never
         // return Pending and the task it runs in would never let the executor poll anything
-        // else. Two things stop that. The count applies whoever is driving the sink, which off
+        // else. Two things stop that. The count applies to whoever is driving the sink, which off
         // Linux can be any executor, as it holds nothing of tokio's. Spending the task's budget
         // as well holds a task that also does tokio I/O to one budget between yields rather
         // than one for each source.
