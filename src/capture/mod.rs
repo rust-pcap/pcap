@@ -132,17 +132,14 @@ impl<T: State + ?Sized> From<NonNull<raw::pcap_t>> for Capture<T> {
 }
 
 impl<T: State + ?Sized> Capture<T> {
-    fn new_raw<F>(path: Option<&str>, func: F) -> Result<Capture<T>, Error>
+    fn new_raw<F>(path: Option<CString>, func: F) -> Result<Capture<T>, Error>
     where
         F: FnOnce(*const libc::c_char, *mut libc::c_char) -> *mut raw::pcap_t,
     {
         Error::with_errbuf(|err| {
             let handle = match path {
                 None => func(ptr::null(), err),
-                Some(path) => {
-                    let path = CString::new(path)?;
-                    func(path.as_ptr(), err)
-                }
+                Some(path) => func(path.as_ptr(), err),
             };
             Ok(Capture::from(
                 NonNull::<raw::pcap_t>::new(handle).ok_or_else(|| unsafe { Error::new(err) })?,
