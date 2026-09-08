@@ -5,11 +5,19 @@ use std::os::unix::io::{AsFd, AsRawFd, BorrowedFd, RawFd};
 
 use crate::{
     Error,
-    capture::{Active, Capture},
+    capture::{Active, Capture, Warning},
     raw,
 };
 
 impl Capture<Active> {
+    /// The warning libpcap raised when the capture was activated, if there was one.
+    ///
+    /// A warning means the capture works but a requested option could not be applied, such
+    /// as promiscuous mode on a device without it.
+    pub fn warning(&self) -> Option<&Warning> {
+        self.warning.as_ref()
+    }
+
     /// Sends a packet over this capture handle's interface.
     pub fn sendpacket<B: Borrow<[u8]>>(&mut self, buf: B) -> Result<(), Error> {
         let buf = buf.borrow();

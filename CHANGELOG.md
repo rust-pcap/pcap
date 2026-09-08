@@ -26,6 +26,8 @@
   keep up. A closed sink, or one asked to take a packet while it is still holding the last one,
   reports `Error::IoError` rather than sending.
 - `Error::InterfaceDisappeared`, returned when the interface being captured from goes away.
+- `Capture::warning`, which reports what libpcap warned about while activating the capture, as a
+  `Warning` carrying a `WarningCode` and the message that came with it.
 - `Error::PcapErrorCode`, carrying the `ErrorCode` libpcap failed with and the message it left
   behind.
 

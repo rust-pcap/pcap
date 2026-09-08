@@ -79,7 +79,7 @@ pub use capture::{
         BpfInstruction, BpfProgram, BreakLoop, Direction, Savefile, Stat, iterator::PacketIter,
     },
     inactive::TimestampType,
-    {Activated, Active, Capture, Dead, Inactive, Offline, Precision, State},
+    {Activated, Active, Capture, Dead, Inactive, Offline, Precision, State, Warning, WarningCode},
 };
 pub use codec::PacketCodec;
 pub use device::{Address, ConnectionStatus, Device, DeviceFlags, IfFlags};

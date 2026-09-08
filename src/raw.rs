@@ -9,6 +9,8 @@ use mockall::automock;
 
 // The values have never changed; libpcap has only ever appended to them, so a version that
 // predates one of these never returns it.
+pub const PCAP_WARNING: c_int = 1;
+pub const PCAP_WARNING_PROMISC_NOTSUP: c_int = 2;
 pub const PCAP_WARNING_TSTAMP_TYPE_NOTSUP: c_int = 3;
 
 pub const PCAP_ERROR: c_int = -1;

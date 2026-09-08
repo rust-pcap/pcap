@@ -6,6 +6,7 @@ pub mod selectable;
 
 use std::{
     ffi::CString,
+    fmt,
     marker::PhantomData,
     ptr::{self, NonNull},
     sync::Arc,
@@ -91,6 +92,7 @@ impl State for Dead {}
 /// ```
 pub struct Capture<T: State + ?Sized> {
     nonblock: bool,
+    warning: Option<Warning>,
     handle: Arc<PcapHandle>,
     _marker: PhantomData<T>,
 }
@@ -125,6 +127,7 @@ impl<T: State + ?Sized> From<NonNull<raw::pcap_t>> for Capture<T> {
     fn from(handle: NonNull<raw::pcap_t>) -> Self {
         Capture {
             nonblock: false,
+            warning: None,
             handle: Arc::new(PcapHandle { handle }),
             _marker: PhantomData,
         }
@@ -216,6 +219,70 @@ pub enum Precision {
     Nano = 1,
 }
 
+/// What libpcap warned about while activating a capture.
+///
+/// A warning is not a failure. The capture works, but a requested option could not be applied.
+/// [`Capture::warning`] reports the one an activation raised.
+#[derive(Debug, PartialEq, Eq, Clone)]
+pub struct Warning {
+    /// The condition libpcap has a code of its own for
+    pub code: WarningCode,
+    /// The message libpcap left with it, empty if it left none
+    pub message: String,
+}
+
+impl Warning {
+    /// Read one of the warnings libpcap activates with, along with the message it left behind.
+    unsafe fn from_status(status: libc::c_int, ptr: *const libc::c_char) -> Warning {
+        let code = match status {
+            raw::PCAP_WARNING_PROMISC_NOTSUP => WarningCode::PromiscuousModeNotSupported,
+            raw::PCAP_WARNING_TSTAMP_TYPE_NOTSUP => WarningCode::TimestampTypeNotSupported,
+            _ => WarningCode::Unspecified,
+        };
+
+        Warning {
+            code,
+            message: unsafe { Error::message(ptr) },
+        }
+    }
+}
+
+impl fmt::Display for Warning {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        if self.message.is_empty() {
+            write!(f, "libpcap warning: {}", self.code)
+        } else {
+            write!(f, "libpcap warning: {}", self.message)
+        }
+    }
+}
+
+/// A list of libpcap's own warning codes.
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+#[non_exhaustive]
+pub enum WarningCode {
+    /// Promiscuous mode was asked for but the device does not have it
+    PromiscuousModeNotSupported,
+    /// The device does not support the timestamp type that was set
+    TimestampTypeNotSupported,
+    /// Something libpcap has no code of its own for
+    Unspecified,
+}
+
+impl fmt::Display for WarningCode {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(match self {
+            WarningCode::PromiscuousModeNotSupported => {
+                "the device does not support promiscuous mode"
+            }
+            WarningCode::TimestampTypeNotSupported => {
+                "the device does not support the timestamp type"
+            }
+            WarningCode::Unspecified => "the capture was activated with a warning",
+        })
+    }
+}
+
 // GRCOV_EXCL_START
 #[cfg(test)]
 pub mod testmod {
@@ -254,6 +321,35 @@ mod tests {
     };
 
     use super::*;
+
+    #[test]
+    fn test_warning_from_status() {
+        let message = CString::new("not quite").unwrap();
+        let cases = [
+            (
+                raw::PCAP_WARNING_PROMISC_NOTSUP,
+                WarningCode::PromiscuousModeNotSupported,
+            ),
+            (
+                raw::PCAP_WARNING_TSTAMP_TYPE_NOTSUP,
+                WarningCode::TimestampTypeNotSupported,
+            ),
+            (raw::PCAP_WARNING, WarningCode::Unspecified),
+            // A code libpcap has yet to define still warns.
+            (99, WarningCode::Unspecified),
+        ];
+
+        for (status, code) in cases {
+            let warning = unsafe { Warning::from_status(status, message.as_ptr()) };
+            assert_eq!(warning.code, code);
+            assert_eq!(warning.to_string(), "libpcap warning: not quite");
+
+            // With no message left behind, the code has to describe itself.
+            let warning = unsafe { Warning::from_status(status, ptr::null()) };
+            assert!(warning.message.is_empty());
+            assert_eq!(warning.to_string(), format!("libpcap warning: {code}"));
+        }
+    }
 
     #[test]
     fn test_capture_getters() {
