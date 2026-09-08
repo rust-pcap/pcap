@@ -83,7 +83,7 @@ mod tests {
         codec::testmod::Codec,
         raw::{
             self,
-            testmod::{RAWMTX, as_pcap_t, geterr_expect},
+            testmod::{RAWMTX, as_file, as_pcap_t, geterr_expect},
         },
     };
 
@@ -188,6 +188,14 @@ mod tests {
             .withf_st(move |arg1, _, _| *arg1 == pcap)
             .return_once_st(move |_, _, _| -2);
 
+        let mut value: isize = 888;
+        let file = as_file(&mut value);
+
+        let ctx = raw::pcap_file_context();
+        ctx.expect()
+            .withf_st(move |arg1| *arg1 == pcap)
+            .return_once_st(move |_| file);
+
         let next = packet_iter.next();
         assert!(next.is_none());
     }
@@ -272,6 +280,14 @@ mod tests {
         ctx.expect()
             .withf_st(move |arg1, _, _| *arg1 == pcap)
             .return_once_st(move |_, _, _| -2);
+
+        let mut value: isize = 888;
+        let file = as_file(&mut value);
+
+        let ctx = raw::pcap_file_context();
+        ctx.expect()
+            .withf_st(move |arg1| *arg1 == pcap)
+            .return_once_st(move |_| file);
 
         let next = packet_iter.next();
         assert!(next.is_none());

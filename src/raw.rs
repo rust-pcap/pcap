@@ -7,6 +7,24 @@ use libc::{c_char, c_int, c_long, c_uchar, c_uint, c_ushort, sockaddr, timeval};
 #[cfg(test)]
 use mockall::automock;
 
+// The values have never changed; libpcap has only ever appended to them, so a version that
+// predates one of these never returns it.
+pub const PCAP_WARNING_TSTAMP_TYPE_NOTSUP: c_int = 3;
+
+pub const PCAP_ERROR: c_int = -1;
+pub const PCAP_ERROR_BREAK: c_int = -2;
+pub const PCAP_ERROR_NOT_ACTIVATED: c_int = -3;
+pub const PCAP_ERROR_ACTIVATED: c_int = -4;
+pub const PCAP_ERROR_NO_SUCH_DEVICE: c_int = -5;
+pub const PCAP_ERROR_RFMON_NOTSUP: c_int = -6;
+pub const PCAP_ERROR_NOT_RFMON: c_int = -7;
+pub const PCAP_ERROR_PERM_DENIED: c_int = -8;
+pub const PCAP_ERROR_IFACE_NOT_UP: c_int = -9;
+pub const PCAP_ERROR_CANTSET_TSTAMP_TYPE: c_int = -10;
+pub const PCAP_ERROR_PROMISC_PERM_DENIED: c_int = -11;
+pub const PCAP_ERROR_TSTAMP_PRECISION_NOTSUP: c_int = -12;
+pub const PCAP_ERROR_CAPTURE_NOTSUP: c_int = -13;
+
 pub const PCAP_IF_LOOPBACK: u32 = 0x00000001;
 pub const PCAP_IF_UP: u32 = 0x00000002;
 pub const PCAP_IF_RUNNING: u32 = 0x00000004;
@@ -19,9 +37,6 @@ pub const PCAP_IF_CONNECTION_STATUS_NOT_APPLICABLE: u32 = 0x00000030;
 
 pub const PCAP_CHAR_ENC_LOCAL: u32 = 0x00000000;
 pub const PCAP_CHAR_ENC_UTF_8: u32 = 0x00000001;
-
-pub const PCAP_WARNING_TSTAMP_TYPE_NOTSUP: c_int = 3;
-pub const PCAP_ERROR_TSTAMP_PRECISION_NOTSUP: c_int = -12;
 
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -113,6 +128,8 @@ pub type pcap_handler =
 
 #[cfg_attr(test, automock)]
 pub mod ffi {
+    use libc::FILE;
+
     use super::*;
 
     unsafe extern "C" {
@@ -187,7 +204,9 @@ pub mod ffi {
         // pub fn pcap_is_swapped(arg1: *mut pcap_t) -> c_int;
         pub fn pcap_major_version(arg1: *mut pcap_t) -> c_int;
         pub fn pcap_minor_version(arg1: *mut pcap_t) -> c_int;
-        // pub fn pcap_file(arg1: *mut pcap_t) -> *mut FILE;
+        // The one FILE * entry point that is not a macro on Windows. What it points at belongs
+        // to whichever C runtime libpcap was linked against, so only ever compare it to null.
+        pub fn pcap_file(arg1: *mut pcap_t) -> *mut FILE;
         pub fn pcap_fileno(arg1: *mut pcap_t) -> c_int;
         pub fn pcap_dump_open(arg1: *mut pcap_t, arg2: *const c_char) -> *mut pcap_dumper_t;
         pub fn pcap_dump_ftell(arg1: *mut pcap_dumper_t) -> c_long;
@@ -387,6 +406,10 @@ pub mod testmod {
 
     pub fn as_pcap_dumper_t<T: ?Sized>(value: &mut T) -> *mut pcap_dumper_t {
         value as *mut T as *mut pcap_dumper_t
+    }
+
+    pub fn as_file<T: ?Sized>(value: &mut T) -> *mut libc::FILE {
+        value as *mut T as *mut libc::FILE
     }
 
     pub fn geterr_expect(pcap: *mut pcap_t) -> GeterrContext {

@@ -41,11 +41,17 @@ impl Capture<Inactive> {
     }
 
     /// Activates an inactive capture created from `Capture::from_device()` or returns an error.
+    ///
+    /// libpcap activates the capture but warns about it when it cannot honor every request,
+    /// such as on a device with no promiscuous mode. The capture is usable, so the warning is
+    /// not reported.
     pub fn open(self) -> Result<Capture<Active>, Error> {
-        unsafe {
-            self.check_err(raw::pcap_activate(self.handle.as_ptr()) == 0)?;
-            Ok(mem::transmute::<Capture<Inactive>, Capture<Active>>(self))
+        let status = unsafe { raw::pcap_activate(self.handle.as_ptr()) };
+        if status < 0 {
+            return Err(self.status_err(status));
         }
+
+        Ok(unsafe { mem::transmute::<Capture<Inactive>, Capture<Active>>(self) })
     }
 
     /// Set the read timeout for the Capture. By default, this is 0, so it will block indefinitely.
@@ -264,6 +270,49 @@ mod tests {
 
         let result = capture.open();
         assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_open_warning() {
+        let _m = RAWMTX.lock();
+
+        let mut dummy: isize = 777;
+        let pcap = as_pcap_t(&mut dummy);
+
+        let test_capture = test_capture::<Inactive>(pcap);
+        let capture = test_capture.capture;
+
+        // A device with no promiscuous mode is activated all the same.
+        let ctx = raw::pcap_activate_context();
+        ctx.expect()
+            .withf_st(move |arg1| *arg1 == pcap)
+            .return_once(|_| 2);
+
+        assert!(capture.open().is_ok());
+    }
+
+    #[test]
+    fn test_open_status_error() {
+        let _m = RAWMTX.lock();
+
+        let mut dummy: isize = 777;
+        let pcap = as_pcap_t(&mut dummy);
+
+        let test_capture = test_capture::<Inactive>(pcap);
+        let capture = test_capture.capture;
+
+        let ctx = raw::pcap_activate_context();
+        ctx.expect()
+            .withf_st(move |arg1| *arg1 == pcap)
+            .return_once(|_| raw::PCAP_ERROR_PERM_DENIED);
+
+        let _err = geterr_expect(pcap);
+
+        let error = capture.open().err().unwrap();
+        assert_eq!(
+            error,
+            Error::PcapErrorCode(crate::ErrorCode::PermissionDenied, "oh oh".to_string())
+        );
     }
 
     #[test]

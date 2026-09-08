@@ -188,8 +188,18 @@ impl<T: State + ?Sized> Capture<T> {
         if success { Ok(()) } else { Err(self.get_err()) }
     }
 
+    /// Turn one of libpcap's status codes into an error, with the message it left behind.
+    fn status_err(&self, status: libc::c_int) -> Error {
+        unsafe { Error::from_status(status, raw::pcap_geterr(self.handle.as_ptr())) }
+    }
+
     fn get_err(&self) -> Error {
         unsafe { Error::new(raw::pcap_geterr(self.handle.as_ptr())) }
+    }
+
+    /// Whether the capture is reading a savefile rather than an interface.
+    fn reads_savefile(&self) -> bool {
+        !unsafe { raw::pcap_file(self.handle.as_ptr()) }.is_null()
     }
 }
 
