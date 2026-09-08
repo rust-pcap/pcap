@@ -64,6 +64,36 @@ fn capture_dead_savefile_non_utf8_name() {
 }
 
 #[test]
+fn capture_dead_savefile_bad_caplen() {
+    let data = [1, 2, 3, 4];
+
+    let mut packets = Packets::new();
+    packets.push(1460408319, 1234, 16384, 16384, &data); // caplen past the end of the data
+    packets.push(1460408320, 4321, 16384, 1, &data); // len shorter than what is written
+
+    let mut written = Packets::new();
+    written.push(1460408319, 1234, 4, 16384, &data);
+    written.push(1460408320, 4321, 4, 4, &data);
+
+    let dir = TempDir::new().unwrap();
+    let tmpfile = dir.path().join("test.pcap");
+
+    let cap = Capture::dead(Linktype(1)).unwrap();
+    let mut save = cap.savefile(&tmpfile).unwrap();
+    packets.foreach(|p| save.write(p));
+    drop(save);
+
+    // A 24-byte file header, then a 16-byte record header and 4 bytes of data per packet.
+    assert_eq!(
+        std::fs::metadata(&tmpfile).unwrap().len(),
+        24 + 2 * (16 + 4)
+    );
+
+    let mut cap = Capture::from_file(&tmpfile).unwrap();
+    written.verify(&mut cap);
+}
+
+#[test]
 #[cfg(libpcap_1_7_2)]
 fn capture_dead_savefile_append() {
     let mut packets1 = Packets::new();
