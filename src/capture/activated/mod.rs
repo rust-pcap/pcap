@@ -488,13 +488,22 @@ unsafe impl Send for Savefile {}
 
 impl Savefile {
     /// Write a packet to a capture file
+    ///
+    /// At most `packet.data.len()` bytes are written. A larger `caplen` in the header is capped
+    /// to that, and `len` is raised to the number of bytes written if it is smaller.
     pub fn write(&mut self, packet: &Packet<'_>) {
+        let caplen = packet
+            .header
+            .caplen
+            .min(u32::try_from(packet.data.len()).unwrap_or(u32::MAX));
+        let header = raw::pcap_pkthdr {
+            ts: packet.header.ts,
+            caplen,
+            len: packet.header.len.max(caplen),
+        };
+
         unsafe {
-            raw::pcap_dump(
-                self.handle.as_ptr() as _,
-                &*(packet.header as *const PacketHeader as *const raw::pcap_pkthdr),
-                packet.data.as_ptr(),
-            );
+            raw::pcap_dump(self.handle.as_ptr() as _, &header, packet.data.as_ptr());
         }
     }
 
@@ -670,7 +679,7 @@ mod tests {
     use crate::{
         capture::{
             Active, Capture, Offline,
-            activated::testmod::{PACKET, next_ex_expect},
+            activated::testmod::{DATA, PACKET, TS, next_ex_expect},
             testmod::test_capture,
         },
         raw::testmod::{RAWMTX, as_file, as_pcap_dumper_t, as_pcap_t, geterr_expect},
@@ -1028,6 +1037,47 @@ mod tests {
 
             assert_eq!(unsafe { savefile.file() }, file);
         }
+    }
+
+    // A caplen past the end of the data, and a len shorter than what is written, are covered by
+    // the savefile tests. What is left to check here is that a truncated packet, which is what a
+    // caplen within the data means, still goes through with the header it came with.
+    #[test]
+    fn test_savefile_write_truncated() {
+        let _m = RAWMTX.lock();
+
+        let mut value: isize = 888;
+        let pcap_dumper = as_pcap_dumper_t(&mut value);
+
+        let ctx = raw::pcap_dump_close_context();
+        ctx.expect()
+            .withf_st(move |arg1| *arg1 == pcap_dumper)
+            .return_once(|_| {});
+
+        let mut savefile = Savefile {
+            handle: NonNull::new(pcap_dumper).unwrap(),
+        };
+
+        let header = PacketHeader {
+            ts: TS,
+            caplen: 2,
+            len: 60,
+        };
+
+        let ctx = raw::pcap_dump_context();
+        ctx.expect()
+            .withf_st(move |arg1, arg2, arg3| {
+                let header = unsafe { &**arg2 };
+                *arg1 == pcap_dumper as _
+                    && *arg3 == DATA.as_ptr()
+                    && header.caplen == 2
+                    && header.len == 60
+                    && header.ts.tv_sec == TS.tv_sec
+                    && header.ts.tv_usec == TS.tv_usec
+            })
+            .return_once(|_, _, _| {});
+
+        savefile.write(&Packet::new(&header, &DATA));
     }
 
     #[test]

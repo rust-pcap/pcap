@@ -72,6 +72,7 @@
   handed to libpcap as bytes, so file names that are not valid UTF-8 now work. On Windows such a
   path returns the new `Error::InvalidPath`, where `savefile` used to panic and `from_file` used
   to report that a null pointer had been supplied as the file name.
+- `Savefile::write` no longer reads past the end of the packet data.
 
 ## [2.5.0] - 2026-08-15
 
