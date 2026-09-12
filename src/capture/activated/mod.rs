@@ -184,6 +184,11 @@ impl<T: Activated + ?Sized> Capture<T> {
     /// you probably want to minimize the time between calls to next_packet() method.
     /// In high traffic situations, consider [`Self::dispatch()`] instead, which
     /// processes a whole batch of packets per call.
+    ///
+    /// A savefile that has run out gives [`Error::NoMorePackets`], and a capture stopped with
+    /// [`BreakLoop::breakloop`] gives [`ErrorCode::Break`](crate::ErrorCode::Break). A savefile
+    /// stopped rather than read to the end cannot be told from one that ended, as libpcap reports
+    /// both alike.
     pub fn next_packet(&mut self) -> Result<Packet<'_>, Error> {
         unsafe {
             let mut header: *mut raw::pcap_pkthdr = ptr::null_mut();
@@ -207,9 +212,13 @@ impl<T: Activated + ?Sized> Capture<T> {
                     Err(self.get_err())
                 }
                 -2 => {
-                    // packets are being read from a "savefile" and there are no
-                    // more packets to read
-                    Err(Error::NoMorePackets)
+                    // either a savefile ran out or the loop was stopped; libpcap answers -2 for
+                    // both, and an interface has no end to reach
+                    if self.reads_savefile() {
+                        Err(Error::NoMorePackets)
+                    } else {
+                        Err(self.status_err(retcode))
+                    }
                 }
                 // GRCOV_EXCL_START
                 _ => {
@@ -255,7 +264,11 @@ impl<T: Activated + ?Sized> Capture<T> {
         if let Some(e) = handler.panic_payload {
             resume_unwind(e);
         }
-        self.check_err(return_code == 0)
+        if return_code < 0 {
+            return Err(self.status_err(return_code));
+        }
+
+        Ok(())
     }
 
     /// Process a batch of packets from the capture using `pcap_dispatch`.
@@ -306,8 +319,11 @@ impl<T: Activated + ?Sized> Capture<T> {
         }
         // A successful pcap_dispatch returns the number of packets processed, not 0 like
         // pcap_loop.
-        self.check_err(return_code >= 0)
-            .and(Ok(return_code as usize))
+        if return_code < 0 {
+            return Err(self.status_err(return_code));
+        }
+
+        Ok(return_code as usize)
     }
 
     /// Returns a thread-safe `BreakLoop` handle for calling pcap_breakloop() on an active capture.
@@ -657,7 +673,7 @@ mod tests {
             activated::testmod::{PACKET, next_ex_expect},
             testmod::test_capture,
         },
-        raw::testmod::{RAWMTX, as_pcap_dumper_t, as_pcap_t, geterr_expect},
+        raw::testmod::{RAWMTX, as_file, as_pcap_dumper_t, as_pcap_t, geterr_expect},
     };
 
     use super::*;
@@ -1120,8 +1136,47 @@ mod tests {
             .withf_st(move |arg1, _, _| *arg1 == pcap)
             .return_once_st(move |_, _, _| -2);
 
+        let mut value: isize = 888;
+        let file = as_file(&mut value);
+
+        let ctx = raw::pcap_file_context();
+        ctx.expect()
+            .withf_st(move |arg1| *arg1 == pcap)
+            .return_once_st(move |_| file);
+
         let err = capture.next_packet().unwrap_err();
         assert_eq!(err, Error::NoMorePackets);
+    }
+
+    #[test]
+    fn test_next_packet_broken_loop() {
+        let _m = RAWMTX.lock();
+
+        let mut value: isize = 777;
+        let pcap = as_pcap_t(&mut value);
+
+        let test_capture = test_capture::<Active>(pcap);
+        let mut capture = test_capture.capture;
+
+        let ctx = raw::pcap_next_ex_context();
+        ctx.expect()
+            .withf_st(move |arg1, _, _| *arg1 == pcap)
+            .return_once_st(move |_, _, _| -2);
+
+        // An interface reads no savefile, so the -2 came from pcap_breakloop.
+        let ctx = raw::pcap_file_context();
+        ctx.expect()
+            .withf_st(move |arg1| *arg1 == pcap)
+            .return_once_st(|_| ptr::null_mut());
+
+        // The message left over from an earlier failure is not the reason the loop stopped.
+        let _err = geterr_expect(pcap);
+
+        let err = capture.next_packet().unwrap_err();
+        assert_eq!(
+            err,
+            Error::PcapErrorCode(crate::ErrorCode::Break, String::new())
+        );
     }
 
     #[test]
@@ -1393,6 +1448,31 @@ mod tests {
             })
             .unwrap();
         assert_eq!(packets, 0);
+    }
+
+    #[test]
+    fn loop_error() {
+        let _m = RAWMTX.lock();
+
+        let mut value: isize = 777;
+        let pcap = as_pcap_t(&mut value);
+
+        let test_capture = test_capture::<Active>(pcap);
+        let mut capture: Capture<dyn Activated> = test_capture.capture.into();
+
+        let ctx = raw::pcap_loop_context();
+        ctx.expect()
+            .withf_st(move |arg1, cnt, _, _| *arg1 == pcap && *cnt == -1)
+            .return_once_st(move |_, _, _, _| raw::PCAP_ERROR_BREAK);
+
+        // The message left over from an earlier failure is not the reason the loop stopped.
+        let _err = geterr_expect(pcap);
+
+        let result = capture.for_each(None, |_| {});
+        assert_eq!(
+            result.unwrap_err(),
+            Error::PcapErrorCode(crate::ErrorCode::Break, String::new())
+        );
     }
 
     #[test]

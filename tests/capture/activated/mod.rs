@@ -2,7 +2,7 @@ mod offline;
 
 use tempfile::TempDir;
 
-use pcap::{Capture, Linktype};
+use pcap::{Capture, Error, ErrorCode, Linktype};
 
 use crate::{Packets, capture_from_test_file};
 
@@ -248,4 +248,16 @@ fn read_packet_via_pcap_loop() {
 fn panic_in_pcap_loop() {
     let mut capture = capture_from_test_file("packet_snaplen_65535.pcap");
     capture.for_each(None, |_| panic!()).unwrap();
+}
+
+#[test]
+fn stopped_pcap_loop() {
+    let mut capture = capture_from_test_file("packet_snaplen_65535.pcap");
+    capture.breakloop_handle().breakloop();
+
+    // libpcap says only that the loop stopped, so there is no message to carry.
+    assert_eq!(
+        capture.for_each(None, |_| {}).unwrap_err(),
+        Error::PcapErrorCode(ErrorCode::Break, String::new())
+    );
 }

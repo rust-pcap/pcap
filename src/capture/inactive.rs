@@ -3,7 +3,7 @@ use std::mem;
 
 use crate::{
     Error,
-    capture::{Active, Capture, Inactive},
+    capture::{Active, Capture, Inactive, Warning},
     device::Device,
     raw,
 };
@@ -41,11 +41,27 @@ impl Capture<Inactive> {
     }
 
     /// Activates an inactive capture created from `Capture::from_device()` or returns an error.
+    ///
+    /// libpcap activates the capture but warns about it when it cannot honor every request,
+    /// such as on a device with no promiscuous mode. The capture is usable, so a warning is not
+    /// an error; [`Capture::warning`] is where it can be read.
     pub fn open(self) -> Result<Capture<Active>, Error> {
-        unsafe {
-            self.check_err(raw::pcap_activate(self.handle.as_ptr()) == 0)?;
-            Ok(mem::transmute::<Capture<Inactive>, Capture<Active>>(self))
+        let status = unsafe { raw::pcap_activate(self.handle.as_ptr()) };
+        if status < 0 {
+            return Err(self.status_err(status));
         }
+
+        let mut capture = unsafe { mem::transmute::<Capture<Inactive>, Capture<Active>>(self) };
+
+        // A warning leaves a message of its own, and no call between pcap_create and here
+        // writes the error buffer, so its contents belong to this warning.
+        if status > 0 {
+            capture.warning = Some(unsafe {
+                Warning::from_status(status, raw::pcap_geterr(capture.handle.as_ptr()))
+            });
+        }
+
+        Ok(capture)
     }
 
     /// Set the read timeout for the Capture. By default, this is 0, so it will block indefinitely.
@@ -262,8 +278,60 @@ mod tests {
             .withf_st(move |arg1| *arg1 == pcap)
             .return_once(|_| 0);
 
-        let result = capture.open();
-        assert!(result.is_ok());
+        let capture = capture.open().unwrap();
+        assert_eq!(capture.warning(), None);
+    }
+
+    #[test]
+    fn test_open_warning() {
+        let _m = RAWMTX.lock();
+
+        let mut dummy: isize = 777;
+        let pcap = as_pcap_t(&mut dummy);
+
+        let test_capture = test_capture::<Inactive>(pcap);
+        let capture = test_capture.capture;
+
+        // A device with no promiscuous mode is activated all the same.
+        let ctx = raw::pcap_activate_context();
+        ctx.expect()
+            .withf_st(move |arg1| *arg1 == pcap)
+            .return_once(|_| raw::PCAP_WARNING_PROMISC_NOTSUP);
+
+        let _err = geterr_expect(pcap);
+
+        let capture = capture.open().unwrap();
+        assert_eq!(
+            capture.warning(),
+            Some(&Warning {
+                code: crate::WarningCode::PromiscuousModeNotSupported,
+                message: "oh oh".to_string(),
+            })
+        );
+    }
+
+    #[test]
+    fn test_open_status_error() {
+        let _m = RAWMTX.lock();
+
+        let mut dummy: isize = 777;
+        let pcap = as_pcap_t(&mut dummy);
+
+        let test_capture = test_capture::<Inactive>(pcap);
+        let capture = test_capture.capture;
+
+        let ctx = raw::pcap_activate_context();
+        ctx.expect()
+            .withf_st(move |arg1| *arg1 == pcap)
+            .return_once(|_| raw::PCAP_ERROR_PERM_DENIED);
+
+        let _err = geterr_expect(pcap);
+
+        let error = capture.open().err().unwrap();
+        assert_eq!(
+            error,
+            Error::PcapErrorCode(crate::ErrorCode::PermissionDenied, "oh oh".to_string())
+        );
     }
 
     #[test]

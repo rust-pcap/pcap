@@ -79,7 +79,7 @@ pub use capture::{
         BpfInstruction, BpfProgram, BreakLoop, Direction, Savefile, Stat, iterator::PacketIter,
     },
     inactive::TimestampType,
-    {Activated, Active, Capture, Dead, Inactive, Offline, Precision, State},
+    {Activated, Active, Capture, Dead, Inactive, Offline, Precision, State, Warning, WarningCode},
 };
 pub use codec::PacketCodec;
 pub use device::{Address, ConnectionStatus, Device, DeviceFlags, IfFlags};
@@ -108,6 +108,65 @@ mod stream;
 #[cfg_attr(docsrs, doc(cfg(feature = "capture-stream")))]
 pub use stream::PacketStream;
 
+/// A list of libpcap's own error codes.
+///
+/// Anything else it fails with arrives as [`Error::PcapError`], with only the message to go on.
+/// Not all of these can be reached through this crate, but libpcap defines them and so they are
+/// all here.
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+#[non_exhaustive]
+pub enum ErrorCode {
+    /// The loop was terminated by `BreakLoop::breakloop`
+    Break,
+    /// The capture has not been activated
+    NotActivated,
+    /// The capture has already been activated
+    AlreadyActivated,
+    /// No such device exists
+    NoSuchDevice,
+    /// The device does not support monitor mode
+    MonitorModeNotSupported,
+    /// The operation is only supported in monitor mode
+    NotInMonitorMode,
+    /// No permission to open the device
+    PermissionDenied,
+    /// The interface is not up
+    InterfaceNotUp,
+    /// The device does not support setting the timestamp type
+    CannotSetTimestampType,
+    /// No permission to capture in promiscuous mode
+    PromiscuousPermissionDenied,
+    /// The device does not support the requested timestamp precision
+    TimestampPrecisionNotSupported,
+    /// The capture mechanism is not available
+    CaptureNotSupported,
+}
+
+impl fmt::Display for ErrorCode {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(match self {
+            ErrorCode::Break => "the loop was terminated",
+            ErrorCode::NotActivated => "the capture has not been activated",
+            ErrorCode::AlreadyActivated => "the capture has already been activated",
+            ErrorCode::NoSuchDevice => "no such device exists",
+            ErrorCode::MonitorModeNotSupported => "the device does not support monitor mode",
+            ErrorCode::NotInMonitorMode => "the operation is only supported in monitor mode",
+            ErrorCode::PermissionDenied => "no permission to open the device",
+            ErrorCode::InterfaceNotUp => "the interface is not up",
+            ErrorCode::CannotSetTimestampType => {
+                "the device does not support setting the timestamp type"
+            }
+            ErrorCode::PromiscuousPermissionDenied => {
+                "no permission to capture in promiscuous mode"
+            }
+            ErrorCode::TimestampPrecisionNotSupported => {
+                "the device does not support the requested timestamp precision"
+            }
+            ErrorCode::CaptureNotSupported => "the capture mechanism is not available",
+        })
+    }
+}
+
 /// An error received from pcap
 #[derive(Debug, PartialEq, Eq)]
 pub enum Error {
@@ -117,6 +176,9 @@ pub enum Error {
     InvalidString,
     /// The unerlying library returned an error
     PcapError(String),
+    /// The underlying library returned an error it has a code for, along with the message it
+    /// left behind. The message is sometimes the more useful of the two.
+    PcapErrorCode(ErrorCode, String),
     /// The linktype was invalid or unknown
     InvalidLinktype,
     /// The capture device does not support the timestamp type
@@ -127,6 +189,8 @@ pub enum Error {
     TimeoutExpired,
     /// No more packets to read from the file
     NoMorePackets,
+    /// The interface being captured from went away
+    InterfaceDisappeared,
     /// Must be in non-blocking mode to function
     NonNonBlock,
     /// There is not sufficent memory to create a dead capture
@@ -148,20 +212,60 @@ pub enum Error {
 }
 
 impl Error {
-    unsafe fn new(ptr: *const libc::c_char) -> Error {
+    unsafe fn message(ptr: *const libc::c_char) -> String {
         if ptr.is_null() {
-            return PcapError(String::new());
+            return String::new();
         }
 
         // libpcap truncates its messages at PCAP_ERRBUF_SIZE without regard for character
         // boundaries, so one quoting a long path can end in the middle of a UTF-8 sequence.
         // Take such a message lossily rather than lose it. Strings that are not error messages
         // still go through cstr_to_string, which rejects the malformed ones.
-        PcapError(
-            unsafe { CStr::from_ptr(ptr as _) }
-                .to_string_lossy()
-                .into_owned(),
-        )
+        unsafe { CStr::from_ptr(ptr as _) }
+            .to_string_lossy()
+            .into_owned()
+    }
+
+    unsafe fn new(ptr: *const libc::c_char) -> Error {
+        let message = unsafe { Self::message(ptr) };
+
+        // An interface going away is reported as PCAP_ERROR like every other failure, so the
+        // message is all there is to go on. Windows adds the error code it got to the end,
+        // which is why this matches the start rather than the whole string.
+        if message.starts_with("The interface disappeared") {
+            return InterfaceDisappeared;
+        }
+
+        PcapError(message)
+    }
+
+    /// Read one of the status codes libpcap returns, along with the message it left behind.
+    unsafe fn from_status(status: libc::c_int, ptr: *const libc::c_char) -> Error {
+        // A loop that was told to stop is the one case libpcap leaves no message for, so the
+        // error buffer still holds the last thing that went wrong on the handle. Do not read it.
+        if status == raw::PCAP_ERROR_BREAK {
+            return PcapErrorCode(ErrorCode::Break, String::new());
+        }
+
+        let code = match status {
+            raw::PCAP_ERROR_NOT_ACTIVATED => ErrorCode::NotActivated,
+            raw::PCAP_ERROR_ACTIVATED => ErrorCode::AlreadyActivated,
+            raw::PCAP_ERROR_NO_SUCH_DEVICE => ErrorCode::NoSuchDevice,
+            raw::PCAP_ERROR_RFMON_NOTSUP => ErrorCode::MonitorModeNotSupported,
+            raw::PCAP_ERROR_NOT_RFMON => ErrorCode::NotInMonitorMode,
+            raw::PCAP_ERROR_PERM_DENIED => ErrorCode::PermissionDenied,
+            raw::PCAP_ERROR_IFACE_NOT_UP => ErrorCode::InterfaceNotUp,
+            raw::PCAP_ERROR_CANTSET_TSTAMP_TYPE => ErrorCode::CannotSetTimestampType,
+            raw::PCAP_ERROR_PROMISC_PERM_DENIED => ErrorCode::PromiscuousPermissionDenied,
+            raw::PCAP_ERROR_TSTAMP_PRECISION_NOTSUP => ErrorCode::TimestampPrecisionNotSupported,
+            raw::PCAP_ERROR_CAPTURE_NOTSUP => ErrorCode::CaptureNotSupported,
+            // PCAP_ERROR is what libpcap uses when it has no more specific code, and a code it
+            // gained after this was written would land here too. Either way the message is all
+            // that tells the conditions apart.
+            _ => return unsafe { Self::new(ptr) },
+        };
+
+        PcapErrorCode(code, unsafe { Self::message(ptr) })
     }
 
     fn with_errbuf<T, F>(func: F) -> Result<T, Error>
@@ -207,12 +311,18 @@ impl fmt::Display for Error {
             MalformedError(ref e) => write!(f, "libpcap returned invalid UTF-8: {e}"),
             InvalidString => write!(f, "libpcap returned a null string"),
             PcapError(ref e) => write!(f, "libpcap error: {e}"),
+            // The code is what a caller matches on; the message is what libpcap writes for a
+            // reader, and it usually says the same thing at more length. Only fall back to
+            // describing the code when there is no message, as for a loop that was told to stop.
+            PcapErrorCode(code, ref e) if e.is_empty() => write!(f, "libpcap error: {code}"),
+            PcapErrorCode(_, ref e) => write!(f, "libpcap error: {e}"),
             InvalidLinktype => write!(f, "invalid or unknown linktype"),
             UnsupportedTimestampType => write!(f, "unsupported timestamp type"),
             UnsupportedTimestampPrecision => write!(f, "unsupported timestamp precision"),
             TimeoutExpired => write!(f, "timeout expired while reading from a live capture"),
             NonNonBlock => write!(f, "must be in non-blocking mode to function"),
             NoMorePackets => write!(f, "no more packets to read from the file"),
+            InterfaceDisappeared => write!(f, "the interface being captured from went away"),
             InsufficientMemory => write!(f, "insufficient memory"),
             InvalidInputString => write!(f, "invalid input string (internal null)"),
             IoError(ref e) => write!(f, "io error occurred: {e:?}"),
@@ -232,6 +342,7 @@ impl std::error::Error for Error {
         match *self {
             MalformedError(..) => "libpcap returned invalid UTF-8",
             PcapError(..) => "libpcap FFI error",
+            PcapErrorCode(..) => "libpcap FFI error with a status code",
             InvalidString => "libpcap returned a null string",
             InvalidLinktype => "invalid or unknown linktype",
             UnsupportedTimestampType => "unsupported timestamp type",
@@ -239,6 +350,7 @@ impl std::error::Error for Error {
             TimeoutExpired => "timeout expired while reading from a live capture",
             NonNonBlock => "must be in non-blocking mode to function",
             NoMorePackets => "no more packets to read from the file",
+            InterfaceDisappeared => "the interface being captured from went away",
             InsufficientMemory => "insufficient memory",
             InvalidInputString => "invalid input string (internal null)",
             IoError(..) => "io error occurred",
@@ -346,6 +458,85 @@ mod tests {
     }
 
     #[test]
+    fn test_error_interface_disappeared() {
+        let message = CString::new("The interface disappeared").unwrap();
+        let error = unsafe { Error::new(message.as_ptr()) };
+        assert_eq!(error, Error::InterfaceDisappeared);
+
+        // Windows puts the error code it got on the end of the message.
+        let message = CString::new(
+            "The interface disappeared (error code ERROR_DEVICE_REMOVED/STATUS_DEVICE_REMOVED)",
+        )
+        .unwrap();
+        let error = unsafe { Error::new(message.as_ptr()) };
+        assert_eq!(error, Error::InterfaceDisappeared);
+
+        // Another message about the interface is still a plain one.
+        let message = CString::new("The interface went down").unwrap();
+        let error = unsafe { Error::new(message.as_ptr()) };
+        assert_eq!(
+            error,
+            Error::PcapError("The interface went down".to_string())
+        );
+    }
+
+    #[test]
+    fn test_error_from_status() {
+        let message = CString::new("no dice").unwrap();
+        let cases = [
+            (raw::PCAP_ERROR_BREAK, ErrorCode::Break),
+            (raw::PCAP_ERROR_NOT_ACTIVATED, ErrorCode::NotActivated),
+            (raw::PCAP_ERROR_ACTIVATED, ErrorCode::AlreadyActivated),
+            (raw::PCAP_ERROR_NO_SUCH_DEVICE, ErrorCode::NoSuchDevice),
+            (
+                raw::PCAP_ERROR_RFMON_NOTSUP,
+                ErrorCode::MonitorModeNotSupported,
+            ),
+            (raw::PCAP_ERROR_NOT_RFMON, ErrorCode::NotInMonitorMode),
+            (raw::PCAP_ERROR_PERM_DENIED, ErrorCode::PermissionDenied),
+            (raw::PCAP_ERROR_IFACE_NOT_UP, ErrorCode::InterfaceNotUp),
+            (
+                raw::PCAP_ERROR_CANTSET_TSTAMP_TYPE,
+                ErrorCode::CannotSetTimestampType,
+            ),
+            (
+                raw::PCAP_ERROR_PROMISC_PERM_DENIED,
+                ErrorCode::PromiscuousPermissionDenied,
+            ),
+            (
+                raw::PCAP_ERROR_TSTAMP_PRECISION_NOTSUP,
+                ErrorCode::TimestampPrecisionNotSupported,
+            ),
+            (
+                raw::PCAP_ERROR_CAPTURE_NOTSUP,
+                ErrorCode::CaptureNotSupported,
+            ),
+        ];
+
+        for (status, code) in cases {
+            // A stopped loop is the one code that leaves the error buffer alone, so it is also
+            // the one whose message is not read.
+            let kept = match code {
+                ErrorCode::Break => String::new(),
+                _ => "no dice".to_string(),
+            };
+            let error = unsafe { Error::from_status(status, message.as_ptr()) };
+            assert_eq!(error, Error::PcapErrorCode(code, kept));
+
+            // With no message left behind, each code has to describe itself.
+            let error = unsafe { Error::from_status(status, std::ptr::null()) };
+            assert_eq!(error, Error::PcapErrorCode(code, String::new()));
+            assert!(error.to_string().len() > "libpcap error: ".len());
+        }
+
+        // The generic code, and one libpcap has yet to define, leave only the message.
+        for status in [raw::PCAP_ERROR, -99] {
+            let error = unsafe { Error::from_status(status, message.as_ptr()) };
+            assert_eq!(error, Error::PcapError("no dice".to_string()));
+        }
+    }
+
+    #[test]
     #[allow(deprecated)]
     fn test_errors() {
         let mut errors: Vec<Error> = vec![];
@@ -361,6 +552,13 @@ mod tests {
         errors.push(Error::UnsupportedTimestampPrecision);
         errors.push(Error::TimeoutExpired);
         errors.push(Error::NoMorePackets);
+        errors.push(Error::InterfaceDisappeared);
+        errors.push(Error::PcapErrorCode(
+            ErrorCode::PermissionDenied,
+            "nope".to_string(),
+        ));
+        // A code libpcap leaves no message with still has to describe itself.
+        errors.push(Error::PcapErrorCode(ErrorCode::Break, String::new()));
         errors.push(Error::NonNonBlock);
         errors.push(Error::InsufficientMemory);
         errors.push(CString::new(b"f\0oo".to_vec()).unwrap_err().into());
