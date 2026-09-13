@@ -30,6 +30,7 @@
   `Warning` carrying a `WarningCode` and the message that came with it.
 - `Error::PcapErrorCode`, carrying the `ErrorCode` libpcap failed with and the message it left
   behind.
+- Sync link-layer types with libpcap 1.10.7 release.
 
 ### Changed
 

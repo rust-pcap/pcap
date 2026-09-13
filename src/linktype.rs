@@ -167,6 +167,20 @@ impl Linktype {
     pub const Z_WAVE_SERIAL: Self = Self(287);
     pub const USB_2_0: Self = Self(288);
     pub const ATSC_ALP: Self = Self(289);
+    pub const ETW: Self = Self(290);
+    pub const NETANALYZER_NG: Self = Self(291);
+    pub const ZBOSS_NCP: Self = Self(292);
+    pub const USB_2_0_LOW_SPEED: Self = Self(293);
+    pub const USB_2_0_FULL_SPEED: Self = Self(294);
+    pub const USB_2_0_HIGH_SPEED: Self = Self(295);
+    pub const AUERSWALD_LOG: Self = Self(296);
+    pub const ZWAVE_TAP: Self = Self(297);
+    pub const SILABS_DEBUG_CHANNEL: Self = Self(298);
+    pub const FIRA_UCI: Self = Self(299);
+    pub const MDB: Self = Self(300);
+    pub const DECT_NR: Self = Self(301);
+    pub const EDK2_MM: Self = Self(302);
+    pub const DEBUG_ONLY: Self = Self(303);
 }
 
 #[cfg(test)]
