@@ -32,7 +32,7 @@ This crate requires the libpcap (or Npcap on Windows) library.
 
 1. Install [Npcap](https://npcap.com/#download).
 2. Download the [Npcap SDK](https://npcap.com/#download).
-3. Add the SDK's `/Lib` or `/Lib/x64` folder to your `LIB` environment variable.
+3. Add the SDK's `/Lib`, `/Lib/x64` or `/Lib/ARM64` folder to your `LIB` environment variable, matching the architecture you are building for.
 
 ### Linux
 
