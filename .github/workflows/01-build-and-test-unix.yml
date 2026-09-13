@@ -21,7 +21,7 @@ jobs:
   build-and-test:
     runs-on: ${{ inputs.os }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - if: ${{ contains(inputs.os, 'ubuntu') }}
         run: sudo apt-get install libpcap-dev
       - if: ${{ contains(inputs.os, 'macos') }}
