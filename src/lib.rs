@@ -213,17 +213,7 @@ pub enum Error {
 
 impl Error {
     unsafe fn message(ptr: *const libc::c_char) -> String {
-        if ptr.is_null() {
-            return String::new();
-        }
-
-        // libpcap truncates its messages at PCAP_ERRBUF_SIZE without regard for character
-        // boundaries, so one quoting a long path can end in the middle of a UTF-8 sequence.
-        // Take such a message lossily rather than lose it. Strings that are not error messages
-        // still go through cstr_to_string, which rejects the malformed ones.
-        unsafe { CStr::from_ptr(ptr as _) }
-            .to_string_lossy()
-            .into_owned()
+        unsafe { cstr_to_string_lossy(ptr) }.unwrap_or_default()
     }
 
     unsafe fn new(ptr: *const libc::c_char) -> Error {
@@ -277,13 +267,23 @@ impl Error {
     }
 }
 
+unsafe fn cstr<'a>(ptr: *const libc::c_char) -> Option<&'a CStr> {
+    (!ptr.is_null()).then(|| unsafe { CStr::from_ptr(ptr as _) })
+}
+
+// Strict, for a string that goes back to libpcap: a device name that will not round-trip is worse
+// than no name at all.
 unsafe fn cstr_to_string(ptr: *const libc::c_char) -> Result<Option<String>, Error> {
-    let string = if ptr.is_null() {
-        None
-    } else {
-        Some(unsafe { CStr::from_ptr(ptr as _) }.to_str()?.to_owned())
-    };
-    Ok(string)
+    Ok(unsafe { cstr(ptr) }
+        .map(CStr::to_str)
+        .transpose()?
+        .map(str::to_owned))
+}
+
+// Lossy, for a string that is only displayed: a message truncated mid-sequence at
+// PCAP_ERRBUF_SIZE, or a description in the local Windows code page, is worth showing anyway.
+unsafe fn cstr_to_string_lossy(ptr: *const libc::c_char) -> Option<String> {
+    unsafe { cstr(ptr) }.map(|s| s.to_string_lossy().into_owned())
 }
 
 fn path_to_cstring(path: &Path) -> Result<CString, Error> {

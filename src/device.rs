@@ -1,4 +1,4 @@
-use std::{convert::TryFrom, net::IpAddr, ptr};
+use std::{net::IpAddr, ptr};
 
 use bitflags::bitflags;
 
@@ -8,7 +8,7 @@ use windows_sys::Win32::Networking::WinSock;
 use crate::{
     Error,
     capture::{Active, Capture},
-    cstr_to_string, raw,
+    cstr_to_string, cstr_to_string_lossy, raw,
 };
 
 bitflags! {
@@ -143,32 +143,52 @@ impl Device {
 
     /// Returns the default Device suitable for captures according to pcap_findalldevs,
     /// or an error from pcap. Note that there may be no suitable devices.
+    ///
+    /// A device whose name is not valid UTF-8 is passed over, as in `Device::list`.
     pub fn lookup() -> Result<Option<Device>, Error> {
         unsafe {
             Device::with_all_devs(|all_devs| {
-                let dev = all_devs;
-                Ok(if !dev.is_null() {
-                    Some(Device::try_from(&*dev)?)
-                } else {
-                    None
-                })
+                let mut dev = all_devs;
+                while !dev.is_null() {
+                    if let Some(device) = Device::from_pcap_if_t(&*dev) {
+                        return Ok(Some(device));
+                    }
+                    dev = (*dev).next;
+                }
+                Ok(None)
             })
         }
     }
 
     /// Returns a vector of `Device`s known by pcap via pcap_findalldevs.
+    ///
+    /// A device whose name is not valid UTF-8 is left out, since that name is the only handle
+    /// libpcap offers on it and it cannot be opened.
     pub fn list() -> Result<Vec<Device>, Error> {
         unsafe {
             Device::with_all_devs(|all_devs| {
                 let mut devices = vec![];
                 let mut dev = all_devs;
                 while !dev.is_null() {
-                    devices.push(Device::try_from(&*dev)?);
+                    if let Some(device) = Device::from_pcap_if_t(&*dev) {
+                        devices.push(device);
+                    }
                     dev = (*dev).next;
                 }
                 Ok(devices)
             })
         }
+    }
+
+    // Returns `None` when the name cannot be decoded, since the device cannot be opened without
+    // it. The devices on either side of it are unaffected.
+    unsafe fn from_pcap_if_t(dev: &raw::pcap_if_t) -> Option<Device> {
+        Some(Device::new(
+            unsafe { cstr_to_string(dev.name) }.ok().flatten()?,
+            unsafe { cstr_to_string_lossy(dev.description) },
+            unsafe { Address::new_vec(dev.addresses) },
+            DeviceFlags::from(dev.flags),
+        ))
     }
 
     unsafe fn with_all_devs<T, F>(func: F) -> Result<T, Error>
@@ -191,19 +211,6 @@ impl Device {
 impl From<&str> for Device {
     fn from(name: &str) -> Self {
         Device::new(name.into(), None, Vec::new(), DeviceFlags::empty())
-    }
-}
-
-impl TryFrom<&raw::pcap_if_t> for Device {
-    type Error = Error;
-
-    fn try_from(dev: &raw::pcap_if_t) -> Result<Self, Error> {
-        Ok(Device::new(
-            unsafe { cstr_to_string(dev.name)?.ok_or(Error::InvalidString)? },
-            unsafe { cstr_to_string(dev.description)? },
-            unsafe { Address::new_vec(dev.addresses) },
-            DeviceFlags::from(dev.flags),
-        ))
     }
 }
 
@@ -335,6 +342,19 @@ mod tests {
     static IF2_NAME: &str = "if2";
     static IF1_DESC: &str = "if1 desc";
     static IF2_DESC: &str = "if2 desc";
+
+    fn dev(name: &[u8], description: Option<&[u8]>) -> raw::pcap_if_t {
+        raw::pcap_if_t {
+            next: std::ptr::null_mut(),
+            name: CString::new(name).unwrap().into_raw(),
+            description: match description {
+                Some(description) => CString::new(description).unwrap().into_raw(),
+                None => std::ptr::null_mut(),
+            },
+            addresses: std::ptr::null_mut(),
+            flags: 0,
+        }
+    }
 
     fn devs() -> Vec<raw::pcap_if_t> {
         let mut devs = vec![
@@ -637,6 +657,105 @@ mod tests {
 
         let result = Device::list();
         assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_list_bad_name() {
+        let _m = RAWMTX.lock();
+
+        let mut devs = vec![
+            dev(IF1_NAME.as_bytes(), Some(IF1_DESC.as_bytes())),
+            dev(b"d\xff\xfe0", Some(IF2_DESC.as_bytes())),
+            dev(IF2_NAME.as_bytes(), Some(IF2_DESC.as_bytes())),
+        ];
+        devs[0].next = &mut devs[1];
+        devs[1].next = &mut devs[2];
+        let devs_ptr = devs.as_mut_ptr();
+
+        let ctx = raw::pcap_findalldevs_context();
+        ctx.expect().return_once_st(move |arg1, _| {
+            unsafe { *arg1 = devs_ptr };
+            0
+        });
+
+        let ctx = raw::pcap_freealldevs_context();
+        ctx.expect().return_once(move |_| {});
+
+        // The interface in the middle is gone, the ones either side of it are not.
+        let devices = Device::list().unwrap();
+        assert_eq!(devices.len(), 2);
+        assert_eq!(&devices[0].name, IF1_NAME);
+        assert_eq!(&devices[1].name, IF2_NAME);
+    }
+
+    #[test]
+    fn test_lookup_bad_name() {
+        let _m = RAWMTX.lock();
+
+        let mut devs = vec![
+            dev(b"d\xff\xfe0", Some(IF1_DESC.as_bytes())),
+            dev(IF2_NAME.as_bytes(), Some(IF2_DESC.as_bytes())),
+        ];
+        devs[0].next = &mut devs[1];
+        let devs_ptr = devs.as_mut_ptr();
+
+        let ctx = raw::pcap_findalldevs_context();
+        ctx.expect().return_once_st(move |arg1, _| {
+            unsafe { *arg1 = devs_ptr };
+            0
+        });
+
+        let ctx = raw::pcap_freealldevs_context();
+        ctx.expect().return_once(move |_| {});
+
+        let device = Device::lookup().unwrap().unwrap();
+        assert_eq!(&device.name, IF2_NAME);
+    }
+
+    #[test]
+    fn test_lookup_all_bad() {
+        let _m = RAWMTX.lock();
+
+        let mut devs = vec![dev(b"d\xff\xfe0", Some(IF1_DESC.as_bytes()))];
+        let devs_ptr = devs.as_mut_ptr();
+
+        let ctx = raw::pcap_findalldevs_context();
+        ctx.expect().return_once_st(move |arg1, _| {
+            unsafe { *arg1 = devs_ptr };
+            0
+        });
+
+        let ctx = raw::pcap_freealldevs_context();
+        ctx.expect().return_once(move |_| {});
+
+        assert!(Device::lookup().unwrap().is_none());
+    }
+
+    #[test]
+    fn test_list_descriptions() {
+        let _m = RAWMTX.lock();
+
+        let mut devs = vec![
+            dev(IF1_NAME.as_bytes(), Some(b"caf\xe9")),
+            dev(IF2_NAME.as_bytes(), None),
+        ];
+        devs[0].next = &mut devs[1];
+        let devs_ptr = devs.as_mut_ptr();
+
+        let ctx = raw::pcap_findalldevs_context();
+        ctx.expect().return_once_st(move |arg1, _| {
+            unsafe { *arg1 = devs_ptr };
+            0
+        });
+
+        let ctx = raw::pcap_freealldevs_context();
+        ctx.expect().return_once(move |_| {});
+
+        // A description in some other encoding costs the caller a replacement character, no more.
+        let devices = Device::list().unwrap();
+        assert_eq!(devices.len(), 2);
+        assert_eq!(devices[0].desc.as_deref(), Some("caf\u{fffd}"));
+        assert_eq!(devices[1].desc, None);
     }
 
     #[test]
