@@ -37,15 +37,14 @@ impl Version {
         ]
     }
 
-    fn max() -> Version {
-        #[cfg(not(windows))]
-        {
-            Version::new(1, 9, 1)
-        }
-        #[cfg(windows)]
-        {
-            Version::new(1, 0, 0)
-        }
+    fn fallback() -> Version {
+        Version::new(1, 9, 1)
+    }
+
+    fn newest() -> Version {
+        Version::list()
+            .pop()
+            .expect("the version list is not empty")
     }
 
     fn docs_rs() -> Version {
@@ -106,7 +105,7 @@ fn get_libpcap_version(libdirpath: Option<PathBuf>) -> Result<Version, Box<dyn s
     // "well-behaved." See https://github.com/nagisa/rust_libloading/issues/86 and
     // https://github.com/nagisa/rust_libloading/blob/0.8.3/src/changelog.rs#L96-L151 for details.
     let Ok(lib) = (unsafe { libloading::Library::new(libfile) }) else {
-        return Ok(Version::max());
+        return Ok(Version::fallback());
     };
 
     type PcapLibVersion = unsafe extern "C" fn() -> *mut c_char;
@@ -175,7 +174,20 @@ fn main() {
     println!("cargo:rerun-if-env-changed=LIBPCAP_LIBDIR");
     println!("cargo:rerun-if-env-changed=LIBPCAP_VER");
 
-    // If user explicitly set LIBPCAP_LIBDIR, honour their wishes. This keeps
+    let windows_target = env::var("CARGO_CFG_TARGET_OS").as_deref() == Ok("windows");
+
+    // A Windows target imports no entrypoint from wpcap.dll. Declare the full
+    // list unless the caller has specified a version with LIBPCAP_VER.
+    if windows_target {
+        let version = match env::var("LIBPCAP_VER") {
+            Ok(pinned) => Version::parse(&pinned).expect("invalid LIBPCAP_VER"),
+            Err(_) => Version::newest(),
+        };
+        emit_cfg_flags(version);
+        return;
+    }
+
+    // If user explicitly set LIBPCAP_LIBDIR, honor their wishes. This keeps
     // existing build scripts running. If it's not set, try pkg-config. If
     // that's not set, try last ditch effort to build even though library wasn't
     // explicitly given.

@@ -113,7 +113,14 @@ fn capture_dead_savefile_append() {
     drop(save);
 
     let cap = Capture::dead(Linktype(1)).unwrap();
-    let mut save = cap.savefile_append(&tmpfile).unwrap();
+    let appended = cap.savefile_append(&tmpfile);
+
+    #[cfg(windows)]
+    if matches!(appended, Err(Error::EntrypointNotFound(_))) {
+        return;
+    }
+
+    let mut save = appended.unwrap();
     packets2.foreach(|p| save.write(p));
     drop(save);
 
@@ -134,7 +141,14 @@ fn capture_dead_savefile_offset() {
     let mut save = cap.savefile(&tmpfile).unwrap();
 
     // The file header has been written, the packets have not.
-    let header_only = save.offset().unwrap();
+    let offset = save.offset();
+
+    #[cfg(windows)]
+    if matches!(offset, Err(Error::EntrypointNotFound(_))) {
+        return;
+    }
+
+    let header_only = offset.unwrap();
     assert!(header_only > 0);
 
     packets.foreach(|p| save.write(p));

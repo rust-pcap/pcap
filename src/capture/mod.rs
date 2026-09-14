@@ -93,6 +93,8 @@ impl State for Dead {}
 pub struct Capture<T: State + ?Sized> {
     nonblock: bool,
     warning: Option<Warning>,
+    #[cfg(windows)]
+    min_to_copy: Option<i32>,
     handle: Arc<PcapHandle>,
     _marker: PhantomData<T>,
 }
@@ -128,6 +130,8 @@ impl<T: State + ?Sized> From<NonNull<raw::pcap_t>> for Capture<T> {
         Capture {
             nonblock: false,
             warning: None,
+            #[cfg(windows)]
+            min_to_copy: None,
             handle: Arc::new(PcapHandle { handle }),
             _marker: PhantomData,
         }
@@ -139,6 +143,8 @@ impl<T: State + ?Sized> Capture<T> {
     where
         F: FnOnce(*const libc::c_char, *mut libc::c_char) -> *mut raw::pcap_t,
     {
+        raw::require_library()?;
+
         Error::with_errbuf(|err| {
             let handle = match path {
                 None => func(ptr::null(), err),

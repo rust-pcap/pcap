@@ -18,18 +18,24 @@ pub struct Linktype(pub i32);
 impl Linktype {
     /// Gets the name of the link type, such as EN10MB
     pub fn get_name(&self) -> Result<String, Error> {
+        raw::require_library()?;
+
         unsafe { cstr_to_string(raw::pcap_datalink_val_to_name(self.0)) }?
             .ok_or(Error::InvalidLinktype)
     }
 
     /// Gets the description of a link type.
     pub fn get_description(&self) -> Result<String, Error> {
+        raw::require_library()?;
+
         unsafe { cstr_to_string(raw::pcap_datalink_val_to_description(self.0)) }?
             .ok_or(Error::InvalidLinktype)
     }
 
     /// Gets the linktype from a name string
     pub fn from_name(name: &str) -> Result<Linktype, Error> {
+        raw::require_library()?;
+
         let name = CString::new(name)?;
         let val = unsafe { raw::pcap_datalink_name_to_val(name.as_ptr()) };
         if val == -1 {
