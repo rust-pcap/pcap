@@ -45,6 +45,21 @@ jobs:
       NPCAP_OEM_PASSWORD: ${{ secrets.NPCAP_OEM_PASSWORD }}
       NPCAP_OEM_USERNAME: ${{ secrets.NPCAP_OEM_USERNAME }}
 
+  windows-npcap-versions:
+    if: github.event_name != 'pull_request'
+    strategy:
+      fail-fast: false
+      matrix:
+        npcap: [ 'none', '1.10' ]
+    uses: './.github/workflows/01-build-and-test-windows.yml'
+    with:
+      os: 'windows-latest'
+      toolchain: 'stable'
+      npcap: ${{ matrix.npcap }}
+    secrets:
+      NPCAP_OEM_PASSWORD: ${{ secrets.NPCAP_OEM_PASSWORD }}
+      NPCAP_OEM_USERNAME: ${{ secrets.NPCAP_OEM_USERNAME }}
+
   windows-lint-stable:
     uses: './.github/workflows/03-lint.yml'
     with:
