@@ -61,6 +61,8 @@ impl SendQueue {
     /// Applications that need to precalculate exact buffer sizes can use [`packet_header_size()`](crate::packet_header_size())
     /// to get the size of the header that is implicitly added along with each packet.
     pub fn new(memsize: u32) -> Result<Self, Error> {
+        raw::require_library()?;
+
         let squeue = unsafe { raw::pcap_sendqueue_alloc(memsize) };
         let squeue = NonNull::new(squeue).ok_or(Error::InsufficientMemory)?;
 

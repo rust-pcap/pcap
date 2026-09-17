@@ -169,6 +169,7 @@ impl fmt::Display for ErrorCode {
 
 /// An error received from pcap
 #[derive(Debug, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum Error {
     /// The underlying library returned invalid UTF-8
     MalformedError(std::str::Utf8Error),
@@ -207,6 +208,12 @@ pub enum Error {
     InvalidPath,
     /// Errno error
     ErrnoError(errno::Errno),
+    #[cfg(windows)]
+    /// The capture library could not be loaded
+    LibraryNotFound,
+    #[cfg(windows)]
+    /// The capture library does not have an entrypoint the call needs
+    EntrypointNotFound(&'static str),
     /// Buffer size overflows capacity
     BufferOverflow,
 }
@@ -292,7 +299,7 @@ fn path_to_cstring(path: &Path) -> Result<CString, Error> {
         use std::os::unix::ffi::OsStrExt;
         path.as_os_str().as_bytes()
     };
-    // libpcap has no entry points taking wide strings. It reads the path in the local code page,
+    // libpcap has no entrypoints taking wide strings. It reads the path in the local code page,
     // or in UTF-8 once pcap_init has been asked for that, so give it the UTF-8 form. A path that
     // is not valid UTF-8 holds an unpaired surrogate, which has no form libpcap would accept.
     #[cfg(windows)]
@@ -331,6 +338,15 @@ impl fmt::Display for Error {
             #[cfg(windows)]
             InvalidPath => write!(f, "invalid path (not valid UTF-8)"),
             ErrnoError(ref e) => write!(f, "libpcap os errno: {e}"),
+            #[cfg(windows)]
+            LibraryNotFound => write!(f, "could not load wpcap.dll, Npcap may not be installed"),
+            #[cfg(windows)]
+            EntrypointNotFound(name) => {
+                write!(
+                    f,
+                    "the installed wpcap.dll does not export {name}, upgrade to a newer Npcap"
+                )
+            }
             BufferOverflow => write!(f, "buffer size too large"),
         }
     }
@@ -359,6 +375,10 @@ impl std::error::Error for Error {
             #[cfg(windows)]
             InvalidPath => "invalid path (not valid UTF-8)",
             ErrnoError(..) => "internal error, providing errno",
+            #[cfg(windows)]
+            LibraryNotFound => "could not load wpcap.dll",
+            #[cfg(windows)]
+            EntrypointNotFound(..) => "wpcap.dll is missing an entrypoint",
             BufferOverflow => "buffer size too large",
         }
     }
@@ -425,6 +445,13 @@ pub enum CharEncoding {
 /// usually not UTF-8.
 #[cfg(libpcap_1_10_0)]
 pub fn init(encoding: CharEncoding) -> Result<(), Error> {
+    raw::require_library()?;
+
+    #[cfg(windows)]
+    if !raw::has_init() {
+        return Err(Error::EntrypointNotFound("pcap_init"));
+    }
+
     Error::with_errbuf(|err| {
         if unsafe { raw::pcap_init(encoding as _, err) } != 0 {
             return Err(unsafe { Error::new(err) });
@@ -568,6 +595,10 @@ mod tests {
         #[cfg(windows)]
         errors.push(Error::InvalidPath);
         errors.push(Error::ErrnoError(errno::Errno(125)));
+        #[cfg(windows)]
+        errors.push(Error::LibraryNotFound);
+        #[cfg(windows)]
+        errors.push(Error::EntrypointNotFound("pcap_set_immediate_mode"));
         errors.push(Error::BufferOverflow);
 
         for error in errors.iter() {
@@ -604,6 +635,11 @@ mod tests {
     #[cfg(libpcap_1_10_0)]
     fn test_init() {
         let _m = RAWMTX.lock();
+
+        #[cfg(windows)]
+        let has = raw::has_init_context();
+        #[cfg(windows)]
+        has.expect().times(..).return_const(true);
 
         let ctx = raw::pcap_init_context();
         ctx.expect()

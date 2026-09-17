@@ -21,16 +21,22 @@ const NAMES: &[&str] = &[
 ];
 
 #[cfg(not(windows))]
-fn use_utf8_paths() {}
+fn use_utf8_paths() -> bool {
+    true
+}
 
+// wpcap.dll may predate pcap_init, in which case the path stays in the local code page and
+// there is nothing here to test.
 #[cfg(windows)]
-fn use_utf8_paths() {
-    pcap::init(pcap::CharEncoding::Utf8).unwrap();
+fn use_utf8_paths() -> bool {
+    pcap::init(pcap::CharEncoding::Utf8).is_ok()
 }
 
 #[test]
 fn savefile_round_trip_non_ascii_paths() {
-    use_utf8_paths();
+    if !use_utf8_paths() {
+        return;
+    }
 
     let dir = TempDir::new().unwrap();
 

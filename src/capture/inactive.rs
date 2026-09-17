@@ -61,6 +61,14 @@ impl Capture<Inactive> {
             });
         }
 
+        // Now that the handle is active, `pcap_setmintocopy` will take the value that
+        // `immediate_mode` left behind.
+        #[cfg(windows)]
+        if let Some(size) = capture.min_to_copy {
+            capture
+                .check_err(unsafe { raw::pcap_setmintocopy(capture.handle.as_ptr(), size) == 0 })?;
+        }
+
         Ok(capture)
     }
 
@@ -77,6 +85,11 @@ impl Capture<Inactive> {
     /// If the capture device does not support the timestamp type, an error will be returned.
     #[cfg(libpcap_1_2_1)]
     pub fn tstamp_type(self, tstamp_type: TimestampType) -> Result<Capture<Inactive>, Error> {
+        #[cfg(windows)]
+        if !raw::has_tstamp_type() {
+            return Err(Error::EntrypointNotFound("pcap_set_tstamp_type"));
+        }
+
         // libpcap leaves the error buffer alone here. All it reports is whether the device
         // claims to support the type, so there is no message to pass on.
         if unsafe { raw::pcap_set_tstamp_type(self.handle.as_ptr(), tstamp_type as _) } != 0 {
@@ -94,7 +107,7 @@ impl Capture<Inactive> {
 
     /// Set immediate mode on or off. By default, this is off.
     ///
-    /// Note that in WinPcap immediate mode is set by passing a 0 argument to `min_to_copy`.
+    /// Note that in WinPcap, immediate mode is set by passing a 0 argument to `min_to_copy`.
     /// Immediate mode will be unset if `min_to_copy` is later called with a non-zero argument.
     /// Immediate mode is unset by resetting `min_to_copy` to the WinPcap default possibly changing
     /// a previously set value. When using `min_to_copy`, it is best to avoid `immediate_mode`.
@@ -104,23 +117,25 @@ impl Capture<Inactive> {
         // immediate mode were more complicated, depended on the OS, and in some configurations had
         // to be set on an active capture. See
         // https://www.tcpdump.org/manpages/pcap_set_immediate_mode.3pcap.html. Since we do not
-        // expect pre-1.5.0 version on unix systems in the wild, we simply ignore those cases.
+        // expect pre-1.5.0 version on unix systems in the wild, those cases are simply ignored.
+        // Without `pcap_set_immediate_mode`, immediate mode is a `pcap_setmintocopy` of 0,
+        // which pcap takes only once the handle has been activated, so leave the value for
+        // `open`.
+        #[cfg(windows)]
+        if !raw::has_immediate_mode() || !cfg!(libpcap_1_5_0) {
+            let mut capture = self;
+            capture.min_to_copy = Some(if to {
+                0
+            } else {
+                raw::WINPCAP_MINTOCOPY_DEFAULT
+            });
+
+            return capture;
+        }
+
         #[cfg(libpcap_1_5_0)]
         unsafe {
             raw::pcap_set_immediate_mode(self.handle.as_ptr(), to as _)
-        };
-
-        // In WinPcap we use `pcap_setmintocopy` as it does not have `pcap_set_immediate_mode`.
-        #[cfg(all(windows, not(libpcap_1_5_0)))]
-        unsafe {
-            raw::pcap_setmintocopy(
-                self.handle.as_ptr(),
-                if to {
-                    0
-                } else {
-                    raw::WINPCAP_MINTOCOPY_DEFAULT
-                },
-            )
         };
 
         self
@@ -156,6 +171,11 @@ impl Capture<Inactive> {
     /// If the capture device does not support the timestamp precision, an error will be returned.
     #[cfg(libpcap_1_5_0)]
     pub fn precision(self, precision: Precision) -> Result<Capture<Inactive>, Error> {
+        #[cfg(windows)]
+        if !raw::has_tstamp_precision() {
+            return Err(Error::EntrypointNotFound("pcap_set_tstamp_precision"));
+        }
+
         // libpcap leaves the error buffer alone here. All it reports is whether the device
         // claims to support the precision, so there is no message to pass on.
         if unsafe { raw::pcap_set_tstamp_precision(self.handle.as_ptr(), precision as _) } != 0 {
@@ -384,6 +404,11 @@ mod tests {
         let test_capture = test_capture::<Inactive>(pcap);
         let capture = test_capture.capture;
 
+        #[cfg(windows)]
+        let has_ctx = raw::has_tstamp_type_context();
+        #[cfg(windows)]
+        has_ctx.expect().times(2).returning(|| true);
+
         let ctx = raw::pcap_set_tstamp_type_context();
         ctx.expect()
             .withf_st(move |arg1, _| *arg1 == pcap)
@@ -413,6 +438,27 @@ mod tests {
     }
 
     #[test]
+    #[cfg(all(windows, libpcap_1_2_1))]
+    fn test_timestamp_type_missing() {
+        let _m = RAWMTX.lock();
+
+        let mut dummy: isize = 777;
+        let pcap = as_pcap_t(&mut dummy);
+
+        let test_capture = test_capture::<Inactive>(pcap);
+        let capture = test_capture.capture;
+
+        let ctx = raw::has_tstamp_type_context();
+        ctx.expect().return_once(|| false);
+
+        let result = capture.tstamp_type(TimestampType::Host);
+        assert!(matches!(
+            result,
+            Err(Error::EntrypointNotFound("pcap_set_tstamp_type"))
+        ));
+    }
+
+    #[test]
     fn test_promisc() {
         let _m = RAWMTX.lock();
 
@@ -430,36 +476,36 @@ mod tests {
         let _capture = capture.promisc(true);
     }
 
-    #[cfg(libpcap_1_5_0)]
+    #[cfg(all(libpcap_1_5_0, windows))]
+    struct ImmediateModeExpect(
+        raw::__pcap_set_immediate_mode::Context,
+        raw::__has_immediate_mode::Context,
+    );
+
+    #[cfg(all(libpcap_1_5_0, not(windows)))]
     struct ImmediateModeExpect(raw::__pcap_set_immediate_mode::Context);
 
-    #[cfg(all(windows, not(libpcap_1_5_0)))]
-    struct ImmediateModeExpect(raw::__pcap_setmintocopy::Context);
-
-    #[cfg(any(libpcap_1_5_0, windows))]
+    #[cfg(libpcap_1_5_0)]
     fn immediate_mode_expect(pcap: *mut raw::pcap_t) -> ImmediateModeExpect {
-        #[cfg(libpcap_1_5_0)]
+        let ctx = raw::pcap_set_immediate_mode_context();
+        ctx.checkpoint();
+        ctx.expect()
+            .withf_st(move |arg1, _| *arg1 == pcap)
+            .return_once(|_, _| 0);
+
+        #[cfg(windows)]
         {
-            let ctx = raw::pcap_set_immediate_mode_context();
-            ctx.checkpoint();
-            ctx.expect()
-                .withf_st(move |arg1, _| *arg1 == pcap)
-                .return_once(|_, _| 0);
-            ImmediateModeExpect(ctx)
+            let has_ctx = raw::has_immediate_mode_context();
+            has_ctx.checkpoint();
+            has_ctx.expect().return_once(|| true);
+            ImmediateModeExpect(ctx, has_ctx)
         }
-        #[cfg(all(windows, not(libpcap_1_5_0)))]
-        {
-            let ctx = raw::pcap_setmintocopy_context();
-            ctx.checkpoint();
-            ctx.expect()
-                .withf_st(move |arg1, _| *arg1 == pcap)
-                .return_once(|_, _| 0);
-            ImmediateModeExpect(ctx)
-        }
+        #[cfg(not(windows))]
+        ImmediateModeExpect(ctx)
     }
 
     #[test]
-    #[cfg(any(libpcap_1_5_0, windows))]
+    #[cfg(libpcap_1_5_0)]
     fn test_immediate_mode() {
         let _m = RAWMTX.lock();
 
@@ -474,6 +520,96 @@ mod tests {
 
         let _ctx = immediate_mode_expect(pcap);
         let _capture = capture.immediate_mode(false);
+    }
+
+    // A library without pcap_set_immediate_mode takes the value through pcap_setmintocopy
+    // instead, and only once the handle is active.
+    #[cfg(windows)]
+    fn winpcap_open_expect(
+        pcap: *mut raw::pcap_t,
+        size: i32,
+        ret: libc::c_int,
+    ) -> (
+        raw::__pcap_activate::Context,
+        raw::__pcap_setmintocopy::Context,
+    ) {
+        let activate = raw::pcap_activate_context();
+        activate.checkpoint();
+        activate
+            .expect()
+            .withf_st(move |arg1| *arg1 == pcap)
+            .return_once(|_| 0);
+
+        let mintocopy = raw::pcap_setmintocopy_context();
+        mintocopy.checkpoint();
+        mintocopy
+            .expect()
+            .withf_st(move |arg1, arg2| *arg1 == pcap && *arg2 == size)
+            .return_once(move |_, _| ret);
+
+        (activate, mintocopy)
+    }
+
+    #[test]
+    #[cfg(windows)]
+    fn test_immediate_mode_winpcap() {
+        let _m = RAWMTX.lock();
+
+        let mut dummy: isize = 777;
+        let pcap = as_pcap_t(&mut dummy);
+
+        let test_capture = test_capture::<Inactive>(pcap);
+        let capture = test_capture.capture;
+
+        let has_ctx = raw::has_immediate_mode_context();
+        has_ctx.expect().times(2).returning(|| false);
+
+        let capture = capture.immediate_mode(false).immediate_mode(true);
+
+        let _ctx = winpcap_open_expect(pcap, 0, 0);
+        assert!(capture.open().is_ok());
+    }
+
+    #[test]
+    #[cfg(windows)]
+    fn test_immediate_mode_winpcap_off() {
+        let _m = RAWMTX.lock();
+
+        let mut dummy: isize = 777;
+        let pcap = as_pcap_t(&mut dummy);
+
+        let test_capture = test_capture::<Inactive>(pcap);
+        let capture = test_capture.capture;
+
+        let has_ctx = raw::has_immediate_mode_context();
+        has_ctx.expect().return_once(|| false);
+
+        let capture = capture.immediate_mode(false);
+
+        let _ctx = winpcap_open_expect(pcap, raw::WINPCAP_MINTOCOPY_DEFAULT, 0);
+        assert!(capture.open().is_ok());
+    }
+
+    #[test]
+    #[cfg(windows)]
+    fn test_immediate_mode_winpcap_error() {
+        let _m = RAWMTX.lock();
+
+        let mut dummy: isize = 777;
+        let pcap = as_pcap_t(&mut dummy);
+
+        let test_capture = test_capture::<Inactive>(pcap);
+        let capture = test_capture.capture;
+
+        let has_ctx = raw::has_immediate_mode_context();
+        has_ctx.expect().return_once(|| false);
+
+        let capture = capture.immediate_mode(true);
+
+        let _ctx = winpcap_open_expect(pcap, 0, -1);
+        let _err = geterr_expect(pcap);
+
+        assert!(capture.open().is_err());
     }
 
     #[test]
@@ -542,6 +678,11 @@ mod tests {
         let test_capture = test_capture::<Inactive>(pcap);
         let capture = test_capture.capture;
 
+        #[cfg(windows)]
+        let has_ctx = raw::has_tstamp_precision_context();
+        #[cfg(windows)]
+        has_ctx.expect().times(2).returning(|| true);
+
         let ctx = raw::pcap_set_tstamp_precision_context();
         ctx.expect()
             .withf_st(move |arg1, _| *arg1 == pcap)
@@ -559,6 +700,27 @@ mod tests {
             capture.precision(Precision::Nano).err().unwrap(),
             Error::UnsupportedTimestampPrecision
         );
+    }
+
+    #[test]
+    #[cfg(all(windows, libpcap_1_5_0))]
+    fn test_precision_missing() {
+        let _m = RAWMTX.lock();
+
+        let mut dummy: isize = 777;
+        let pcap = as_pcap_t(&mut dummy);
+
+        let test_capture = test_capture::<Inactive>(pcap);
+        let capture = test_capture.capture;
+
+        let ctx = raw::has_tstamp_precision_context();
+        ctx.expect().return_once(|| false);
+
+        let result = capture.precision(Precision::Nano);
+        assert!(matches!(
+            result,
+            Err(Error::EntrypointNotFound("pcap_set_tstamp_precision"))
+        ));
     }
 
     #[test]
