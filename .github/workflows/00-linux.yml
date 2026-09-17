@@ -15,6 +15,12 @@ jobs:
       os: 'ubuntu-latest'
       toolchain: 'stable'
 
+  linux-arm-build-and-test-stable:
+    uses: './.github/workflows/01-build-and-test-unix.yml'
+    with:
+      os: 'ubuntu-24.04-arm'
+      toolchain: 'stable'
+
   linux-build-and-test-msrv:
     uses: './.github/workflows/01-build-and-test-unix.yml'
     with:

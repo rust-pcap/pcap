@@ -41,7 +41,7 @@ jobs:
       LLVM_PROFILE_FILE: 'target/debug/profraw/pcap-%p-%m.profraw'
       RUSTFLAGS: '-C instrument-coverage'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - if: ${{ contains(inputs.os, 'ubuntu') }}
         run: sudo apt-get install libpcap-dev
       - if: ${{ contains(inputs.os, 'macos') }}
@@ -93,7 +93,7 @@ jobs:
       - run: ${{ env.PCAP_CI_COV_CMD }} --fail-under ${{ env.PCAP_CI_COV_FAIL_UNDER_ALL_FEATURES }}
       # On push to main push results to coverage branch.
       - if: ${{ (github.event_name == 'push') && (github.ref == 'refs/heads/main') && contains(inputs.os, 'ubuntu') }}
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           clean: false
           ref: coverage

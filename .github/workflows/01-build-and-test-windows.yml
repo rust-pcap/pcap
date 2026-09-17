@@ -27,11 +27,12 @@ jobs:
   build-and-test:
     runs-on: ${{ inputs.os }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - run: |
           Invoke-WebRequest -Uri "https://npcap.com/dist/npcap-sdk-1.16.zip" -OutFile "C:/npcap-sdk.zip"
           Expand-Archive -LiteralPath C:/npcap-sdk.zip -DestinationPath C:/npcap-sdk
-          echo "LIB=C:/npcap-sdk/Lib/x64" >> $env:GITHUB_ENV
+          $arch = if ("${{ runner.arch }}" -eq "ARM64") { "ARM64" } else { "x64" }
+          echo "LIB=C:/npcap-sdk/Lib/$arch" >> $env:GITHUB_ENV
       # Secrets are not passed to workflows that are triggered by a pull request from a fork.
       # https://docs.github.com/actions/automating-your-workflow-with-github-actions/creating-and-using-encrypted-secrets
       - if: github.event_name != 'pull_request'

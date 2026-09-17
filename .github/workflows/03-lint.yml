@@ -16,7 +16,7 @@ jobs:
     env:
       PCAP_CI_CLIPPY_FLAGS: '-D warnings'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - run: |
           rustup update --no-self-update stable
           rustup override set stable

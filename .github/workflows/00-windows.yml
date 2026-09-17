@@ -18,6 +18,15 @@ jobs:
       NPCAP_OEM_PASSWORD: ${{ secrets.NPCAP_OEM_PASSWORD }}
       NPCAP_OEM_USERNAME: ${{ secrets.NPCAP_OEM_USERNAME }}
 
+  windows-arm-build-and-test-stable:
+    uses: './.github/workflows/01-build-and-test-windows.yml'
+    with:
+      os: 'windows-11-arm'
+      toolchain: 'stable'
+    secrets:
+      NPCAP_OEM_PASSWORD: ${{ secrets.NPCAP_OEM_PASSWORD }}
+      NPCAP_OEM_USERNAME: ${{ secrets.NPCAP_OEM_USERNAME }}
+
   windows-build-and-test-msrv:
     uses: './.github/workflows/01-build-and-test-windows.yml'
     with:
