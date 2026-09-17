@@ -256,32 +256,9 @@ mod tests {
     mod linux {
         use std::os::unix::io::RawFd;
 
-        use crate::raw;
+        use crate::{capture::selectable::testmod::FdPair, raw};
 
         use super::*;
-
-        // A real file descriptor to stand in for the one libpcap would hand out. AsyncFd registers
-        // it for real, so the sink takes the same path it would with a live capture.
-        struct FdPair([RawFd; 2]);
-
-        impl FdPair {
-            fn new() -> Self {
-                let mut fds: [RawFd; 2] = [-1, -1];
-                let rc = unsafe {
-                    libc::socketpair(libc::AF_UNIX, libc::SOCK_STREAM, 0, fds.as_mut_ptr())
-                };
-                assert_eq!(rc, 0, "Unable to create a socketpair");
-                Self(fds)
-            }
-        }
-
-        impl Drop for FdPair {
-            fn drop(&mut self) {
-                for fd in self.0 {
-                    unsafe { libc::close(fd) };
-                }
-            }
-        }
 
         // The caller holds on to the TestCapture, which owns the pcap_close expectation that fires
         // when the sink is dropped.
