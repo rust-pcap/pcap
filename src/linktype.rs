@@ -18,26 +18,26 @@ pub struct Linktype(pub i32);
 impl Linktype {
     /// Gets the name of the link type, such as EN10MB
     pub fn get_name(&self) -> Result<String, Error> {
-        raw::require_library()?;
+        let library = raw::require_library()?;
 
-        unsafe { cstr_to_string(raw::pcap_datalink_val_to_name(self.0)) }?
+        unsafe { cstr_to_string(raw::pcap_datalink_val_to_name(&library, self.0)) }?
             .ok_or(Error::InvalidLinktype)
     }
 
     /// Gets the description of a link type.
     pub fn get_description(&self) -> Result<String, Error> {
-        raw::require_library()?;
+        let library = raw::require_library()?;
 
-        unsafe { cstr_to_string(raw::pcap_datalink_val_to_description(self.0)) }?
+        unsafe { cstr_to_string(raw::pcap_datalink_val_to_description(&library, self.0)) }?
             .ok_or(Error::InvalidLinktype)
     }
 
     /// Gets the linktype from a name string
     pub fn from_name(name: &str) -> Result<Linktype, Error> {
-        raw::require_library()?;
+        let library = raw::require_library()?;
 
         let name = CString::new(name)?;
-        let val = unsafe { raw::pcap_datalink_name_to_val(name.as_ptr()) };
+        let val = unsafe { raw::pcap_datalink_name_to_val(&library, name.as_ptr()) };
         if val == -1 {
             return Err(Error::InvalidLinktype);
         }
@@ -202,14 +202,14 @@ mod tests {
 
         let cstr = CString::new(name).unwrap();
         let ctx = raw::pcap_datalink_val_to_name_context();
-        ctx.expect().return_once(|_| cstr.into_raw());
+        ctx.expect().return_once(|_, _| cstr.into_raw());
 
         let linktype_name = Linktype::ARCNET_LINUX.get_name().unwrap();
         assert_eq!(&linktype_name, name);
 
         let ctx = raw::pcap_datalink_val_to_name_context();
         ctx.checkpoint();
-        ctx.expect().return_once(|_| std::ptr::null());
+        ctx.expect().return_once(|_, _| std::ptr::null());
 
         let err = Linktype::ARCNET_LINUX.get_name().unwrap_err();
         assert_eq!(err, Error::InvalidLinktype);
@@ -222,7 +222,7 @@ mod tests {
 
         let cstr = CString::new(desc).unwrap();
         let ctx = raw::pcap_datalink_val_to_description_context();
-        ctx.expect().return_once(|_| cstr.into_raw());
+        ctx.expect().return_once(|_, _| cstr.into_raw());
 
         let linktype_name = Linktype::ARCNET_LINUX.get_description().unwrap();
         assert_eq!(&linktype_name, desc);
@@ -233,14 +233,14 @@ mod tests {
         let _m = RAWMTX.lock();
 
         let ctx = raw::pcap_datalink_name_to_val_context();
-        ctx.expect().return_once(|_| 7);
+        ctx.expect().return_once(|_, _| 7);
 
         let linktype = Linktype::from_name("git rekt scrub").unwrap();
         assert_eq!(linktype, Linktype::ARCNET_BSD);
 
         let ctx = raw::pcap_datalink_name_to_val_context();
         ctx.checkpoint();
-        ctx.expect().return_once(|_| -1);
+        ctx.expect().return_once(|_, _| -1);
 
         let err = Linktype::from_name("git rekt scrub").unwrap_err();
         assert_eq!(err, Error::InvalidLinktype);

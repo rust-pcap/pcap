@@ -445,7 +445,7 @@ pub enum CharEncoding {
 /// usually not UTF-8.
 #[cfg(libpcap_1_10_0)]
 pub fn init(encoding: CharEncoding) -> Result<(), Error> {
-    raw::require_library()?;
+    let library = raw::require_library()?;
 
     #[cfg(windows)]
     if !raw::has_init() {
@@ -453,7 +453,7 @@ pub fn init(encoding: CharEncoding) -> Result<(), Error> {
     }
 
     Error::with_errbuf(|err| {
-        if unsafe { raw::pcap_init(encoding as _, err) } != 0 {
+        if unsafe { raw::pcap_init(&library, encoding as _, err) } != 0 {
             return Err(unsafe { Error::new(err) });
         }
         Ok(())
@@ -643,8 +643,8 @@ mod tests {
 
         let ctx = raw::pcap_init_context();
         ctx.expect()
-            .withf_st(|arg1, _| *arg1 == raw::PCAP_CHAR_ENC_UTF_8)
-            .return_once(|_, _| 0);
+            .withf_st(|_, arg1, _| *arg1 == raw::PCAP_CHAR_ENC_UTF_8)
+            .return_once(|_, _, _| 0);
 
         let result = init(CharEncoding::Utf8);
         assert!(result.is_ok());
@@ -652,8 +652,8 @@ mod tests {
         let ctx = raw::pcap_init_context();
         ctx.checkpoint();
         ctx.expect()
-            .withf_st(|arg1, _| *arg1 == raw::PCAP_CHAR_ENC_LOCAL)
-            .return_once(|_, _| -1);
+            .withf_st(|_, arg1, _| *arg1 == raw::PCAP_CHAR_ENC_LOCAL)
+            .return_once(|_, _, _| -1);
 
         let result = init(CharEncoding::Local);
         assert!(result.is_err());

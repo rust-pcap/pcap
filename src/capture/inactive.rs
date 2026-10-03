@@ -35,8 +35,8 @@ impl Capture<Inactive> {
     pub fn from_device<D: Into<Device>>(device: D) -> Result<Capture<Inactive>, Error> {
         let device: Device = device.into();
         let name = CString::new(device.name)?;
-        Capture::new_raw(Some(name), |name, err| unsafe {
-            raw::pcap_create(name, err)
+        Capture::new_raw(Some(name), |library, name, err| unsafe {
+            raw::pcap_create(library, name, err)
         })
     }
 
@@ -261,7 +261,7 @@ mod tests {
         let pcap = as_pcap_t(&mut dummy);
 
         let ctx = raw::pcap_create_context();
-        ctx.expect().return_once_st(move |_, _| pcap);
+        ctx.expect().return_once_st(move |_, _, _| pcap);
 
         let ctx = raw::pcap_close_context();
         ctx.expect()
@@ -277,7 +277,7 @@ mod tests {
         let _m = RAWMTX.lock();
 
         let ctx = raw::pcap_create_context();
-        ctx.expect().return_once_st(|_, _| std::ptr::null_mut());
+        ctx.expect().return_once_st(|_, _, _| std::ptr::null_mut());
 
         let result = Capture::from_device("some_device");
         assert!(result.is_err());

@@ -13,9 +13,9 @@ use crate::capture::Precision;
 impl Capture<Dead> {
     /// Creates a "fake" capture handle for the given link type.
     pub fn dead(linktype: Linktype) -> Result<Capture<Dead>, Error> {
-        raw::require_library()?;
+        let library = raw::require_library()?;
 
-        let handle = unsafe { raw::pcap_open_dead(linktype.0, 65535) };
+        let handle = unsafe { raw::pcap_open_dead(&library, linktype.0, 65535) };
         Ok(Capture::from(
             NonNull::<raw::pcap_t>::new(handle).ok_or(Error::InsufficientMemory)?,
         ))
@@ -27,7 +27,7 @@ impl Capture<Dead> {
         linktype: Linktype,
         precision: Precision,
     ) -> Result<Capture<Dead>, Error> {
-        raw::require_library()?;
+        let library = raw::require_library()?;
 
         #[cfg(windows)]
         if !raw::has_dead_precision() {
@@ -37,7 +37,7 @@ impl Capture<Dead> {
         }
 
         let handle = unsafe {
-            raw::pcap_open_dead_with_tstamp_precision(linktype.0, 65535, precision as u32)
+            raw::pcap_open_dead_with_tstamp_precision(&library, linktype.0, 65535, precision as u32)
         };
         Ok(Capture::from(
             NonNull::<raw::pcap_t>::new(handle).ok_or(Error::InsufficientMemory)?,
@@ -62,7 +62,7 @@ mod tests {
         let pcap = as_pcap_t(&mut dummy);
 
         let ctx = raw::pcap_open_dead_context();
-        ctx.expect().return_once_st(move |_, _| pcap);
+        ctx.expect().return_once_st(move |_, _, _| pcap);
 
         let ctx = raw::pcap_close_context();
         ctx.expect()
@@ -88,8 +88,13 @@ mod tests {
 
         let ctx = raw::pcap_open_dead_with_tstamp_precision_context();
         ctx.expect()
-            .with(predicate::always(), predicate::always(), predicate::eq(1))
-            .return_once_st(move |_, _, _| pcap);
+            .with(
+                predicate::always(),
+                predicate::always(),
+                predicate::always(),
+                predicate::eq(1),
+            )
+            .return_once_st(move |_, _, _, _| pcap);
 
         let ctx = raw::pcap_close_context();
         ctx.expect()

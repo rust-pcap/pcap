@@ -316,21 +316,45 @@ mod loader {
     }
 }
 
-// The entrypoints that do not take a handle must confirm the library is present before calling
-// into it.
-// Under cfg(test) the entrypoints are mocked, so there is no library required.
+pub struct Library(());
+
+// Under cfg(test) the entrypoints are mocked, so there is no library to find.
 #[cfg(any(not(windows), test))]
-pub fn require_library() -> Result<(), Error> {
-    Ok(())
+pub fn require_library() -> Result<Library, Error> {
+    Ok(Library(()))
 }
 
 #[cfg(all(windows, not(test)))]
-pub fn require_library() -> Result<(), Error> {
+pub fn require_library() -> Result<Library, Error> {
     if loader::is_available() {
-        Ok(())
+        Ok(Library(()))
     } else {
         Err(Error::LibraryNotFound)
     }
+}
+
+#[cfg(not(windows))]
+macro_rules! pcap_entry {
+    ($name:ident($($arg:ident: $argty:ty),*) $(-> $ret:ty)?) => {{
+        unsafe extern "C" {
+            fn $name($($arg: $argty),*) $(-> $ret)?;
+        }
+
+        unsafe { $name($($arg),*) }
+    }};
+}
+
+#[cfg(windows)]
+macro_rules! pcap_entry {
+    ($name:ident($($arg:ident: $argty:ty),*) $(-> $ret:ty)?) => {{
+        static ENTRY: super::loader::Entry =
+            super::loader::Entry::new(concat!(stringify!($name), "\0"));
+
+        let entry: unsafe extern "C" fn($($argty),*) $(-> $ret)? =
+            unsafe { std::mem::transmute(ENTRY.address()) };
+
+        unsafe { entry($($arg),*) }
+    }};
 }
 
 #[cfg(not(windows))]
@@ -362,8 +386,6 @@ macro_rules! pcap_ffi {
     };
 }
 
-// On Windows, each one becomes a call through an address requested from the library the first
-// time it is needed.
 #[cfg(windows)]
 macro_rules! pcap_ffi {
     (
@@ -385,19 +407,50 @@ macro_rules! pcap_ffi {
             $(
                 $(#[$fnattr])*
                 pub unsafe fn $name($($arg: $argty),*) $(-> $ret)? {
-                    static ENTRY: super::loader::Entry =
-                        super::loader::Entry::new(concat!(stringify!($name), "\0"));
-
-                    let entry: unsafe extern "C" fn($($argty),*) $(-> $ret)? =
-                        unsafe { std::mem::transmute(ENTRY.address()) };
-
-                    unsafe { entry($($arg),*) }
+                    pcap_entry!($name($($arg: $argty),*) $(-> $ret)?)
                 }
             )*
 
             // The names this module passes to GetProcAddress. Nothing verifies them at link
             // time.
             #[cfg(test)]
+            #[allow(clippy::vec_init_then_push)]
+            pub fn entrypoint_names() -> Vec<&'static str> {
+                let mut names = Vec::new();
+                $(
+                    $(#[$fnattr])*
+                    names.push(concat!(stringify!($name), "\0"));
+                )*
+                names
+            }
+        }
+    };
+}
+
+macro_rules! pcap_ffi_library {
+    (
+        $(#[$modattr:meta])*
+        pub mod $module:ident {
+            unsafe extern "C" {
+                $(
+                    $(#[$fnattr:meta])*
+                    pub fn $name:ident($($arg:ident: $argty:ty),* $(,)?) $(-> $ret:ty)?;
+                )*
+            }
+        }
+    ) => {
+        $(#[$modattr])*
+        pub mod $module {
+            use super::*;
+
+            $(
+                $(#[$fnattr])*
+                pub unsafe fn $name(_library: &Library, $($arg: $argty),*) $(-> $ret)? {
+                    pcap_entry!($name($($arg: $argty),*) $(-> $ret)?)
+                }
+            )*
+
+            #[cfg(all(windows, test))]
             #[allow(clippy::vec_init_then_push)]
             pub fn entrypoint_names() -> Vec<&'static str> {
                 let mut names = Vec::new();
@@ -418,7 +471,6 @@ pcap_ffi! {
             // [OBSOLETE] pub fn pcap_lookupdev(arg1: *mut c_char) -> *mut c_char;
             // pub fn pcap_lookupnet(arg1: *const c_char, arg2: *mut c_uint, arg3: *mut c_uint,
             //                       arg4: *mut c_char) -> c_int;
-            pub fn pcap_create(arg1: *const c_char, arg2: *mut c_char) -> *mut pcap_t;
             pub fn pcap_set_snaplen(arg1: *mut pcap_t, arg2: c_int) -> c_int;
             pub fn pcap_set_promisc(arg1: *mut pcap_t, arg2: c_int) -> c_int;
             // pub fn pcap_can_set_rfmon(arg1: *mut pcap_t) -> c_int;
@@ -427,8 +479,6 @@ pcap_ffi! {
             pub fn pcap_activate(arg1: *mut pcap_t) -> c_int;
             // pub fn pcap_open_live(arg1: *const c_char, arg2: c_int, arg3: c_int, arg4: c_int,
             //                       arg5: *mut c_char) -> *mut pcap_t;
-            pub fn pcap_open_dead(arg1: c_int, arg2: c_int) -> *mut pcap_t;
-            pub fn pcap_open_offline(arg1: *const c_char, arg2: *mut c_char) -> *mut pcap_t;
             pub fn pcap_close(arg1: *mut pcap_t);
             pub fn pcap_loop(
                 arg1: *mut pcap_t,
@@ -479,9 +529,6 @@ pcap_ffi! {
             pub fn pcap_list_datalinks(arg1: *mut pcap_t, arg2: *mut *mut c_int) -> c_int;
             pub fn pcap_set_datalink(arg1: *mut pcap_t, arg2: c_int) -> c_int;
             pub fn pcap_free_datalinks(arg1: *mut c_int);
-            pub fn pcap_datalink_name_to_val(arg1: *const c_char) -> c_int;
-            pub fn pcap_datalink_val_to_name(arg1: c_int) -> *const c_char;
-            pub fn pcap_datalink_val_to_description(arg1: c_int) -> *const c_char;
             pub fn pcap_snapshot(arg1: *mut pcap_t) -> c_int;
             // pub fn pcap_is_swapped(arg1: *mut pcap_t) -> c_int;
             pub fn pcap_major_version(arg1: *mut pcap_t) -> c_int;
@@ -501,7 +548,6 @@ pcap_ffi! {
             pub fn pcap_dump_flush(arg1: *mut pcap_dumper_t) -> c_int;
             pub fn pcap_dump_close(arg1: *mut pcap_dumper_t);
             pub fn pcap_dump(arg1: *mut c_uchar, arg2: *const pcap_pkthdr, arg3: *const c_uchar);
-            pub fn pcap_findalldevs(arg1: *mut *mut pcap_if_t, arg2: *mut c_char) -> c_int;
             pub fn pcap_freealldevs(arg1: *mut pcap_if_t);
             // pub fn pcap_lib_version() -> *const c_char;
             // pub fn bpf_image(arg1: *const bpf_insn, arg2: c_int) -> *mut c_char;
@@ -516,18 +562,6 @@ pcap_ffi! {
             pub fn pcap_set_tstamp_type(arg1: *mut pcap_t, arg2: c_int) -> c_int;
 
             // pub fn pcap_get_tstamp_precision(arg1: *mut pcap_t) -> c_int;
-            #[cfg(libpcap_1_5_0)]
-            pub fn pcap_open_dead_with_tstamp_precision(
-                arg1: c_int,
-                arg2: c_int,
-                arg3: c_uint,
-            ) -> *mut pcap_t;
-            #[cfg(libpcap_1_5_0)]
-            pub fn pcap_open_offline_with_tstamp_precision(
-                arg1: *const c_char,
-                arg2: c_uint,
-                arg3: *mut c_char,
-            ) -> *mut pcap_t;
             #[cfg(libpcap_1_5_0)]
             pub fn pcap_set_immediate_mode(arg1: *mut pcap_t, arg2: c_int) -> c_int;
             #[cfg(libpcap_1_5_0)]
@@ -559,9 +593,6 @@ pcap_ffi! {
             // From libpcap 1.9.1, not bound:
             // pcap_datalink_val_to_description_or_dlt
 
-            #[cfg(libpcap_1_10_0)]
-            pub fn pcap_init(arg1: c_uint, arg2: *mut c_char) -> c_int;
-
             // From libpcap 1.10.0, not bound:
             // pcap_remoteact_accept_ex
         }
@@ -580,15 +611,7 @@ pcap_ffi! {
             // wpcap exports no FILE * entrypoints: libpcap may be linked against a different C
             // runtime than its caller. On Windows pcap.h defines these names as macros that pull
             // the OS handle out of the FILE * and call pcap_hopen_offline()/pcap_dump_hopen().
-            pub fn pcap_fopen_offline(arg1: *mut FILE, arg2: *mut c_char) -> *mut pcap_t;
             pub fn pcap_dump_fopen(arg1: *mut pcap_t, fp: *mut FILE) -> *mut pcap_dumper_t;
-
-            #[cfg(libpcap_1_5_0)]
-            pub fn pcap_fopen_offline_with_tstamp_precision(
-                arg1: *mut FILE,
-                arg2: c_uint,
-                arg3: *mut c_char,
-            ) -> *mut pcap_t;
         }
     }
 }
@@ -611,7 +634,6 @@ pcap_ffi! {
         unsafe extern "C" {
             pub fn pcap_setmintocopy(arg1: *mut pcap_t, arg2: c_int) -> c_int;
             pub fn pcap_getevent(p: *mut pcap_t) -> HANDLE;
-            pub fn pcap_sendqueue_alloc(memsize: c_uint) -> *mut pcap_send_queue;
             pub fn pcap_sendqueue_destroy(queue: *mut pcap_send_queue);
             pub fn pcap_sendqueue_queue(
                 queue: *mut pcap_send_queue,
@@ -623,6 +645,50 @@ pcap_ffi! {
                 queue: *mut pcap_send_queue,
                 sync: c_int,
             ) -> c_uint;
+        }
+    }
+}
+
+pcap_ffi_library! {
+    #[cfg_attr(test, automock)]
+    pub mod ffi_library {
+        unsafe extern "C" {
+            pub fn pcap_create(arg1: *const c_char, arg2: *mut c_char) -> *mut pcap_t;
+            pub fn pcap_open_dead(arg1: c_int, arg2: c_int) -> *mut pcap_t;
+            pub fn pcap_open_offline(arg1: *const c_char, arg2: *mut c_char) -> *mut pcap_t;
+            pub fn pcap_datalink_name_to_val(arg1: *const c_char) -> c_int;
+            pub fn pcap_datalink_val_to_name(arg1: c_int) -> *const c_char;
+            pub fn pcap_datalink_val_to_description(arg1: c_int) -> *const c_char;
+            pub fn pcap_findalldevs(arg1: *mut *mut pcap_if_t, arg2: *mut c_char) -> c_int;
+
+            // The FILE * entrypoint wpcap does not export; see ffi_unix above.
+            #[cfg(not(windows))]
+            pub fn pcap_fopen_offline(arg1: *mut FILE, arg2: *mut c_char) -> *mut pcap_t;
+
+            #[cfg(windows)]
+            pub fn pcap_sendqueue_alloc(memsize: c_uint) -> *mut pcap_send_queue;
+
+            #[cfg(libpcap_1_5_0)]
+            pub fn pcap_open_dead_with_tstamp_precision(
+                arg1: c_int,
+                arg2: c_int,
+                arg3: c_uint,
+            ) -> *mut pcap_t;
+            #[cfg(libpcap_1_5_0)]
+            pub fn pcap_open_offline_with_tstamp_precision(
+                arg1: *const c_char,
+                arg2: c_uint,
+                arg3: *mut c_char,
+            ) -> *mut pcap_t;
+            #[cfg(all(not(windows), libpcap_1_5_0))]
+            pub fn pcap_fopen_offline_with_tstamp_precision(
+                arg1: *mut FILE,
+                arg2: c_uint,
+                arg3: *mut c_char,
+            ) -> *mut pcap_t;
+
+            #[cfg(libpcap_1_10_0)]
+            pub fn pcap_init(arg1: c_uint, arg2: *mut c_char) -> c_int;
         }
     }
 }
@@ -709,6 +775,7 @@ mod optional_tests {
         let names = super::ffi::entrypoint_names()
             .into_iter()
             .chain(super::ffi_windows::entrypoint_names())
+            .chain(super::ffi_library::entrypoint_names())
             .filter(|name| !OPTIONAL.contains(name));
         for name in names {
             assert!(
@@ -753,6 +820,9 @@ pub use ffi_macos::*;
 pub use ffi_windows::*;
 
 #[cfg(not(test))]
+pub use ffi_library::*;
+
+#[cfg(not(test))]
 #[cfg(windows)]
 pub use optional::*;
 
@@ -770,6 +840,9 @@ pub use mock_ffi_macos::*;
 #[cfg(test)]
 #[cfg(windows)]
 pub use mock_ffi_windows::*;
+
+#[cfg(test)]
+pub use mock_ffi_library::*;
 
 #[cfg(test)]
 #[cfg(windows)]

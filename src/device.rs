@@ -195,11 +195,11 @@ impl Device {
     where
         F: FnOnce(*mut raw::pcap_if_t) -> Result<T, Error>,
     {
-        raw::require_library()?;
+        let library = raw::require_library()?;
 
         let all_devs = Error::with_errbuf(|err| {
             let mut all_devs: *mut raw::pcap_if_t = ptr::null_mut();
-            if unsafe { raw::pcap_findalldevs(&mut all_devs, err) } != 0 {
+            if unsafe { raw::pcap_findalldevs(&library, &mut all_devs, err) } != 0 {
                 return Err(unsafe { Error::new(err) });
             }
             Ok(all_devs)
@@ -533,7 +533,7 @@ mod tests {
         let pcap = as_pcap_t(&mut dummy);
 
         let ctx = raw::pcap_create_context();
-        ctx.expect().return_once_st(move |_, _| pcap);
+        ctx.expect().return_once_st(move |_, _, _| pcap);
 
         let ctx = raw::pcap_activate_context();
         ctx.expect()
@@ -556,7 +556,7 @@ mod tests {
         let _m = RAWMTX.lock();
 
         let ctx = raw::pcap_findalldevs_context();
-        ctx.expect().return_once_st(move |arg1, _| {
+        ctx.expect().return_once_st(move |_, arg1, _| {
             unsafe { *arg1 = std::ptr::null_mut() };
             0
         });
@@ -575,7 +575,7 @@ mod tests {
 
         let ctx = raw::pcap_findalldevs_context();
         ctx.checkpoint();
-        ctx.expect().return_once_st(move |arg1, _| {
+        ctx.expect().return_once_st(move |_, arg1, _| {
             unsafe { *arg1 = devs_ptr };
             0
         });
@@ -592,7 +592,7 @@ mod tests {
 
         let ctx = raw::pcap_findalldevs_context();
         ctx.checkpoint();
-        ctx.expect().return_once_st(move |_, _| -1);
+        ctx.expect().return_once_st(move |_, _, _| -1);
 
         let ctx = raw::pcap_freealldevs_context();
         ctx.checkpoint();
@@ -606,7 +606,7 @@ mod tests {
         let _m = RAWMTX.lock();
 
         let ctx = raw::pcap_findalldevs_context();
-        ctx.expect().return_once_st(move |arg1, _| {
+        ctx.expect().return_once_st(move |_, arg1, _| {
             unsafe { *arg1 = std::ptr::null_mut() };
             0
         });
@@ -628,7 +628,7 @@ mod tests {
 
         let ctx = raw::pcap_findalldevs_context();
         ctx.checkpoint();
-        ctx.expect().return_once_st(move |arg1, _| {
+        ctx.expect().return_once_st(move |_, arg1, _| {
             unsafe { *arg1 = devs_ptr };
             0
         });
@@ -652,7 +652,7 @@ mod tests {
 
         let ctx = raw::pcap_findalldevs_context();
         ctx.checkpoint();
-        ctx.expect().return_once_st(move |_, _| -1);
+        ctx.expect().return_once_st(move |_, _, _| -1);
 
         let ctx = raw::pcap_freealldevs_context();
         ctx.checkpoint();
@@ -675,7 +675,7 @@ mod tests {
         let devs_ptr = devs.as_mut_ptr();
 
         let ctx = raw::pcap_findalldevs_context();
-        ctx.expect().return_once_st(move |arg1, _| {
+        ctx.expect().return_once_st(move |_, arg1, _| {
             unsafe { *arg1 = devs_ptr };
             0
         });
@@ -702,7 +702,7 @@ mod tests {
         let devs_ptr = devs.as_mut_ptr();
 
         let ctx = raw::pcap_findalldevs_context();
-        ctx.expect().return_once_st(move |arg1, _| {
+        ctx.expect().return_once_st(move |_, arg1, _| {
             unsafe { *arg1 = devs_ptr };
             0
         });
@@ -722,7 +722,7 @@ mod tests {
         let devs_ptr = devs.as_mut_ptr();
 
         let ctx = raw::pcap_findalldevs_context();
-        ctx.expect().return_once_st(move |arg1, _| {
+        ctx.expect().return_once_st(move |_, arg1, _| {
             unsafe { *arg1 = devs_ptr };
             0
         });
@@ -745,7 +745,7 @@ mod tests {
         let devs_ptr = devs.as_mut_ptr();
 
         let ctx = raw::pcap_findalldevs_context();
-        ctx.expect().return_once_st(move |arg1, _| {
+        ctx.expect().return_once_st(move |_, arg1, _| {
             unsafe { *arg1 = devs_ptr };
             0
         });

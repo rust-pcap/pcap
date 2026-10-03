@@ -141,14 +141,14 @@ impl<T: State + ?Sized> From<NonNull<raw::pcap_t>> for Capture<T> {
 impl<T: State + ?Sized> Capture<T> {
     fn new_raw<F>(path: Option<CString>, func: F) -> Result<Capture<T>, Error>
     where
-        F: FnOnce(*const libc::c_char, *mut libc::c_char) -> *mut raw::pcap_t,
+        F: FnOnce(&raw::Library, *const libc::c_char, *mut libc::c_char) -> *mut raw::pcap_t,
     {
-        raw::require_library()?;
+        let library = raw::require_library()?;
 
         Error::with_errbuf(|err| {
             let handle = match path {
-                None => func(ptr::null(), err),
-                Some(path) => func(path.as_ptr(), err),
+                None => func(&library, ptr::null(), err),
+                Some(path) => func(&library, path.as_ptr(), err),
             };
             Ok(Capture::from(
                 NonNull::<raw::pcap_t>::new(handle).ok_or_else(|| unsafe { Error::new(err) })?,
