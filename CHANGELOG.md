@@ -30,6 +30,10 @@
   `Warning` carrying a `WarningCode` and the message that came with it.
 - `Error::PcapErrorCode`, carrying the `ErrorCode` libpcap failed with and the message it left
   behind.
+- `Error` has a new `LibraryNotFound` variant on Windows, returned when `wpcap.dll` cannot be
+  loaded.
+- `Error` has a new `EntrypointNotFound` variant on Windows, returned when `wpcap.dll` does not
+  export an entrypoint a call needs.
 - Sync link-layer types with libpcap 1.10.7 release.
 
 ### Changed
@@ -56,11 +60,11 @@
   path used to arrive as `Error::MalformedError` with the message thrown away. It now arrives as
   `Error::PcapError`. Device and link-layer type names are still rejected when malformed, though
   a rejected device name no longer takes the rest of the list with it.
-- `Error` has a new `InvalidPath` variant on Windows, which exhaustive matches have to cover.
 - `windows-sys` updated from 0.36 to 0.61. `HANDLE` is a raw pointer there rather than an `isize`,
   which changes the signature of `Capture::get_event` on Windows. A raw pointer is not `Send`, so
   a type of your own that stores the returned `HANDLE` no longer derives `Send` and can no longer
   be moved to another thread without a wrapper of its own. `PacketStream` is unaffected.
+- Windows binaries import nothing from `wpcap.dll` and pin no libpcap version at build time.
 
 ### Removed
 
@@ -70,7 +74,7 @@
 ### Fixed
 
 - `Capture::from_file`, `Capture::from_file_with_precision`, `Capture::savefile` and
-  `Capture::savefile_append` no longer convert the path with `Path::to_str`. On UN*X the path is
+  `Capture::savefile_append` no longer convert the path with `Path::to_str`. On UN\*X the path is
   handed to libpcap as bytes, so file names that are not valid UTF-8 now work. On Windows such a
   path returns the new `Error::InvalidPath`, where `savefile` used to panic and `from_file` used
   to report that a null pointer had been supplied as the file name.
@@ -78,6 +82,7 @@
 - `Device::list` and `Device::lookup` leave out an interface whose name is not valid UTF-8
   instead of failing the whole enumeration with `Error::MalformedError`, and keep a description
   that is not valid UTF-8 lossily rather than rejecting it.
+- `immediate_mode` now takes effect on a Windows build without `pcap_set_immediate_mode`.
 
 ## [2.5.0] - 2026-08-15
 

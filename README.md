@@ -30,9 +30,7 @@ This crate requires the libpcap (or Npcap on Windows) library.
 
 ### Windows
 
-1. Install [Npcap](https://npcap.com/#download).
-2. Download the [Npcap SDK](https://npcap.com/#download).
-3. Add the SDK's `/Lib`, `/Lib/x64` or `/Lib/ARM64` folder to your `LIB` environment variable, matching the architecture you are building for.
+Install [Npcap](https://npcap.com/#download).
 
 ### Linux
 
@@ -69,11 +67,15 @@ If you are linking dynamically with libpcap, pcap will try to consult libpcap fo
 
 If `LIBPCAP_LIBDIR` is unset, the build will attempt to find the library via `pkg-config` instead. On most setups, this is the easiest way to get things working and may even eliminate the need for any custom build scripts in your software.
 
+**These options do not apply on Windows.** No library is linked at build time, and `LIBPCAP_LIBDIR` is ignored.
+
 #### Library Version
 
 If setting the library location does not work or you are linking statically, you may need to set the libpcap version manually. You can do this by setting the environment variable `LIBPCAP_VER` to the desired version (e.g. `env LIBPCAP_VER=1.5.0`). By default, if pcap fails to query libpcap/wpcap for its API version, it will assume the newest API so this should only be necessary if you are using an old version of libpcap.
 
 Note that `LIBPCAP_VER` is respected even if you haven't set `LIBPCAP_LIBDIR` and are using `pkg-config`. If it is unset, we'll find whatever available version as long as it's supported by the library.
+
+On Windows there is no version to query. Each entrypoint is declared and resolved the first time it is called, so `LIBPCAP_VER` is required only when you deliberately wish to build against a reduced API. Calling an entrypoint that the installed `wpcap.dll` does not export, will return `Error::EntrypointNotFound` instead of failing the build.
 
 ## Optional Features
 

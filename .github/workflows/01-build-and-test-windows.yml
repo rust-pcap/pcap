@@ -11,6 +11,11 @@ on:
         required: false
         default: false
         type: boolean
+      npcap:
+        description: 'Npcap release to install, or none to leave the library out.'
+        required: false
+        default: '1.89'
+        type: string
     secrets:
       NPCAP_OEM_PASSWORD:
         required: true
@@ -21,25 +26,20 @@ env:
   RUST_BACKTRACE: 1
   CARGO_TERM_VERBOSE: true
   CARGO_TERM_COLOR: always
-  PCAP_CI_TEST_TARGETS: ${{ (github.event_name == 'pull_request') && '--lib' || '--all-targets' }}
+  PCAP_CI_TEST_TARGETS: ${{ (inputs.npcap == 'none' || github.event_name == 'pull_request') && '--lib' || '--all-targets' }}
 
 jobs:
   build-and-test:
     runs-on: ${{ inputs.os }}
     steps:
       - uses: actions/checkout@v7
-      - run: |
-          Invoke-WebRequest -Uri "https://npcap.com/dist/npcap-sdk-1.16.zip" -OutFile "C:/npcap-sdk.zip"
-          Expand-Archive -LiteralPath C:/npcap-sdk.zip -DestinationPath C:/npcap-sdk
-          $arch = if ("${{ runner.arch }}" -eq "ARM64") { "ARM64" } else { "x64" }
-          echo "LIB=C:/npcap-sdk/Lib/$arch" >> $env:GITHUB_ENV
       # Secrets are not passed to workflows that are triggered by a pull request from a fork.
       # https://docs.github.com/actions/automating-your-workflow-with-github-actions/creating-and-using-encrypted-secrets
-      - if: github.event_name != 'pull_request'
+      - if: inputs.npcap != 'none' && github.event_name != 'pull_request'
         run: |
           $SecPassword = ConvertTo-SecureString "${{ secrets.NPCAP_OEM_PASSWORD }}" -AsPlainText -Force
           $CredObject = New-Object System.Management.Automation.PSCredential ("${{ secrets.NPCAP_OEM_USERNAME }}", $SecPassword)
-          Invoke-WebRequest -Uri "https://npcap.com/oem/dist/npcap-1.88-oem.exe" -OutFile C:/npcap-oem.exe -Credential $CredObject
+          Invoke-WebRequest -Uri "https://npcap.com/oem/dist/npcap-${{ inputs.npcap }}-oem.exe" -OutFile C:/npcap-oem.exe -Credential $CredObject
           C:/npcap-oem.exe /S
       - run: |
           rustup update --no-self-update ${{ inputs.toolchain }}

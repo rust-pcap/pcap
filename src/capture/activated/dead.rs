@@ -13,7 +13,9 @@ use crate::capture::Precision;
 impl Capture<Dead> {
     /// Creates a "fake" capture handle for the given link type.
     pub fn dead(linktype: Linktype) -> Result<Capture<Dead>, Error> {
-        let handle = unsafe { raw::pcap_open_dead(linktype.0, 65535) };
+        let library = raw::require_library()?;
+
+        let handle = unsafe { raw::pcap_open_dead(&library, linktype.0, 65535) };
         Ok(Capture::from(
             NonNull::<raw::pcap_t>::new(handle).ok_or(Error::InsufficientMemory)?,
         ))
@@ -25,8 +27,17 @@ impl Capture<Dead> {
         linktype: Linktype,
         precision: Precision,
     ) -> Result<Capture<Dead>, Error> {
+        let library = raw::require_library()?;
+
+        #[cfg(windows)]
+        if !raw::has_dead_precision() {
+            return Err(Error::EntrypointNotFound(
+                "pcap_open_dead_with_tstamp_precision",
+            ));
+        }
+
         let handle = unsafe {
-            raw::pcap_open_dead_with_tstamp_precision(linktype.0, 65535, precision as u32)
+            raw::pcap_open_dead_with_tstamp_precision(&library, linktype.0, 65535, precision as u32)
         };
         Ok(Capture::from(
             NonNull::<raw::pcap_t>::new(handle).ok_or(Error::InsufficientMemory)?,
@@ -51,7 +62,7 @@ mod tests {
         let pcap = as_pcap_t(&mut dummy);
 
         let ctx = raw::pcap_open_dead_context();
-        ctx.expect().return_once_st(move |_, _| pcap);
+        ctx.expect().return_once_st(move |_, _, _| pcap);
 
         let ctx = raw::pcap_close_context();
         ctx.expect()
@@ -70,10 +81,20 @@ mod tests {
         let mut dummy: isize = 777;
         let pcap = as_pcap_t(&mut dummy);
 
+        #[cfg(windows)]
+        let ctx = raw::has_dead_precision_context();
+        #[cfg(windows)]
+        ctx.expect().return_once(|| true);
+
         let ctx = raw::pcap_open_dead_with_tstamp_precision_context();
         ctx.expect()
-            .with(predicate::always(), predicate::always(), predicate::eq(1))
-            .return_once_st(move |_, _, _| pcap);
+            .with(
+                predicate::always(),
+                predicate::always(),
+                predicate::always(),
+                predicate::eq(1),
+            )
+            .return_once_st(move |_, _, _, _| pcap);
 
         let ctx = raw::pcap_close_context();
         ctx.expect()
@@ -82,5 +103,17 @@ mod tests {
 
         let result = Capture::dead_with_precision(Linktype::ETHERNET, Precision::Nano);
         assert!(result.is_ok());
+    }
+
+    #[test]
+    #[cfg(all(windows, libpcap_1_5_0))]
+    fn test_dead_precision_missing() {
+        let _m = RAWMTX.lock();
+
+        let ctx = raw::has_dead_precision_context();
+        ctx.expect().return_once(|| false);
+
+        let result = Capture::dead_with_precision(Linktype::ETHERNET, Precision::Nano);
+        assert!(matches!(result, Err(Error::EntrypointNotFound(_))));
     }
 }

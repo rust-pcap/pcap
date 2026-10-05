@@ -23,8 +23,8 @@ impl Capture<Offline> {
     /// which on most systems is not UTF-8: the name gets mangled and the file is not found.
     pub fn from_file<P: AsRef<Path>>(path: P) -> Result<Capture<Offline>, Error> {
         let path = path_to_cstring(path.as_ref())?;
-        Capture::new_raw(Some(path), |path, err| unsafe {
-            raw::pcap_open_offline(path, err)
+        Capture::new_raw(Some(path), |library, path, err| unsafe {
+            raw::pcap_open_offline(library, path, err)
         })
     }
 
@@ -39,9 +39,17 @@ impl Capture<Offline> {
         path: P,
         precision: Precision,
     ) -> Result<Capture<Offline>, Error> {
+        #[cfg(windows)]
+        if !raw::has_offline_precision() {
+            raw::require_library()?;
+            return Err(Error::EntrypointNotFound(
+                "pcap_open_offline_with_tstamp_precision",
+            ));
+        }
+
         let path = path_to_cstring(path.as_ref())?;
-        Capture::new_raw(Some(path), |path, err| unsafe {
-            raw::pcap_open_offline_with_tstamp_precision(path, precision as _, err)
+        Capture::new_raw(Some(path), |library, path, err| unsafe {
+            raw::pcap_open_offline_with_tstamp_precision(library, path, precision as _, err)
         })
     }
 
@@ -53,7 +61,9 @@ impl Capture<Offline> {
     #[cfg(not(windows))]
     pub unsafe fn from_raw_fd(fd: RawFd) -> Result<Capture<Offline>, Error> {
         unsafe { open_raw_fd(fd, b'r') }.and_then(|file| {
-            Capture::new_raw(None, |_, err| unsafe { raw::pcap_fopen_offline(file, err) })
+            Capture::new_raw(None, |library, _, err| unsafe {
+                raw::pcap_fopen_offline(library, file, err)
+            })
         })
     }
 
@@ -69,8 +79,8 @@ impl Capture<Offline> {
         precision: Precision,
     ) -> Result<Capture<Offline>, Error> {
         unsafe { open_raw_fd(fd, b'r') }.and_then(|file| {
-            Capture::new_raw(None, |_, err| unsafe {
-                raw::pcap_fopen_offline_with_tstamp_precision(file, precision as _, err)
+            Capture::new_raw(None, |library, _, err| unsafe {
+                raw::pcap_fopen_offline_with_tstamp_precision(library, file, precision as _, err)
             })
         })
     }
@@ -111,7 +121,7 @@ mod tests {
         let pcap = as_pcap_t(&mut dummy);
 
         let ctx = raw::pcap_open_offline_context();
-        ctx.expect().return_once_st(move |_, _| pcap);
+        ctx.expect().return_once_st(move |_, _, _| pcap);
 
         let ctx = raw::pcap_close_context();
         ctx.expect()
@@ -130,10 +140,20 @@ mod tests {
         let mut dummy: isize = 777;
         let pcap = as_pcap_t(&mut dummy);
 
+        #[cfg(windows)]
+        let ctx = raw::has_offline_precision_context();
+        #[cfg(windows)]
+        ctx.expect().return_once(|| true);
+
         let ctx = raw::pcap_open_offline_with_tstamp_precision_context();
         ctx.expect()
-            .with(predicate::always(), predicate::eq(1), predicate::always())
-            .return_once_st(move |_, _, _| pcap);
+            .with(
+                predicate::always(),
+                predicate::always(),
+                predicate::eq(1),
+                predicate::always(),
+            )
+            .return_once_st(move |_, _, _, _| pcap);
 
         let ctx = raw::pcap_close_context();
         ctx.expect()
@@ -142,6 +162,18 @@ mod tests {
 
         let result = Capture::from_file_with_precision("path/to/nowhere", Precision::Nano);
         assert!(result.is_ok());
+    }
+
+    #[test]
+    #[cfg(all(windows, libpcap_1_5_0))]
+    fn test_from_file_precision_missing() {
+        let _m = RAWMTX.lock();
+
+        let ctx = raw::has_offline_precision_context();
+        ctx.expect().return_once(|| false);
+
+        let result = Capture::from_file_with_precision("path/to/nowhere", Precision::Nano);
+        assert!(matches!(result, Err(Error::EntrypointNotFound(_))));
     }
 
     #[test]

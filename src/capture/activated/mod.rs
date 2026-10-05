@@ -155,6 +155,11 @@ impl<T: Activated + ?Sized> Capture<T> {
     /// which on most systems is not UTF-8: the name gets mangled and the file lands elsewhere.
     #[cfg(libpcap_1_7_2)]
     pub fn savefile_append<P: AsRef<Path>>(&self, path: P) -> Result<Savefile, Error> {
+        #[cfg(windows)]
+        if !raw::has_dump_append() {
+            return Err(Error::EntrypointNotFound("pcap_dump_open_append"));
+        }
+
         let name = path_to_cstring(path.as_ref())?;
         let handle_opt = NonNull::<raw::pcap_dumper_t>::new(unsafe {
             raw::pcap_dump_open_append(self.handle.as_ptr(), name.as_ptr())
@@ -522,6 +527,11 @@ impl Savefile {
         // Prior to 1.9.0 when `pcap_dump_ftell64` was introduced, the offset was only reported as
         // a `long`. Where that is a 32-bit type, as it is on Windows, the call fails once the
         // savefile has grown past 2 GB.
+        #[cfg(windows)]
+        if !raw::has_dump_ftell64() {
+            return Err(Error::EntrypointNotFound("pcap_dump_ftell64"));
+        }
+
         #[cfg(libpcap_1_9_0)]
         let offset = unsafe { raw::pcap_dump_ftell64(self.handle.as_ptr()) };
 
@@ -888,6 +898,11 @@ mod tests {
         let test_capture = test_capture::<Offline>(pcap);
         let capture = test_capture.capture;
 
+        #[cfg(windows)]
+        let ctx = raw::has_dump_append_context();
+        #[cfg(windows)]
+        ctx.expect().return_once(|| true);
+
         let ctx = raw::pcap_dump_open_append_context();
         ctx.expect()
             .withf_st(move |arg1, _| *arg1 == pcap)
@@ -900,6 +915,24 @@ mod tests {
 
         let result = capture.savefile_append("path/to/nowhere");
         assert!(result.is_ok());
+    }
+
+    #[test]
+    #[cfg(all(windows, libpcap_1_7_2))]
+    fn test_savefile_append_missing() {
+        let _m = RAWMTX.lock();
+
+        let mut value: isize = 777;
+        let pcap = as_pcap_t(&mut value);
+
+        let test_capture = test_capture::<Offline>(pcap);
+        let capture = test_capture.capture;
+
+        let ctx = raw::has_dump_append_context();
+        ctx.expect().return_once(|| false);
+
+        let result = capture.savefile_append("path/to/nowhere");
+        assert!(matches!(result, Err(Error::EntrypointNotFound(_))));
     }
 
     #[test]
@@ -933,6 +966,11 @@ mod tests {
 
         let test_capture = test_capture::<Offline>(pcap);
         let capture = test_capture.capture;
+
+        #[cfg(windows)]
+        let has_ctx = raw::has_dump_append_context();
+        #[cfg(windows)]
+        has_ctx.expect().return_once(|| true);
 
         let ctx = raw::pcap_dump_open_append_context();
         ctx.expect()
@@ -978,6 +1016,11 @@ mod tests {
     #[test]
     fn test_savefile_ops() {
         let _m = RAWMTX.lock();
+
+        #[cfg(windows)]
+        let has_ftell64 = raw::has_dump_ftell64_context();
+        #[cfg(windows)]
+        has_ftell64.expect().times(..).return_const(true);
 
         let mut value: isize = 888;
         let pcap_dumper = as_pcap_dumper_t(&mut value);
