@@ -83,6 +83,8 @@
   instead of failing the whole enumeration with `Error::MalformedError`, and keep a description
   that is not valid UTF-8 lossily rather than rejecting it.
 - `immediate_mode` now takes effect on a Windows build without `pcap_set_immediate_mode`.
+- Packet headers follow the layout of the libpcap in use, whose `struct timeval` is wider than
+  `libc::timeval` on a 32-bit system with a 64-bit `time_t`.
 
 ## [2.5.0] - 2026-08-15
 

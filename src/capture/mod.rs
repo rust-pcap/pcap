@@ -8,6 +8,7 @@ use std::{
     ffi::CString,
     fmt,
     marker::PhantomData,
+    mem::MaybeUninit,
     ptr::{self, NonNull},
     sync::Arc,
 };
@@ -15,7 +16,7 @@ use std::{
 #[cfg(windows)]
 use windows_sys::Win32::Foundation::HANDLE;
 
-use crate::{Error, raw};
+use crate::{Error, packet::PacketHeader, raw};
 
 /// Phantom type representing an inactive capture handle.
 pub enum Inactive {}
@@ -95,6 +96,9 @@ pub struct Capture<T: State + ?Sized> {
     warning: Option<Warning>,
     #[cfg(windows)]
     min_to_copy: Option<i32>,
+    // Holds the header that `next_packet` converts when libpcap lays it out differently from
+    // `PacketHeader`.
+    header: MaybeUninit<PacketHeader>,
     handle: Arc<PcapHandle>,
     _marker: PhantomData<T>,
 }
@@ -132,6 +136,7 @@ impl<T: State + ?Sized> From<NonNull<raw::pcap_t>> for Capture<T> {
             warning: None,
             #[cfg(windows)]
             min_to_copy: None,
+            header: MaybeUninit::uninit(),
             handle: Arc::new(PcapHandle { handle }),
             _marker: PhantomData,
         }

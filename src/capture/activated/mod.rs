@@ -7,7 +7,8 @@ use std::{
     any::Any,
     convert::TryInto,
     ffi::CString,
-    fmt, mem,
+    fmt,
+    mem::{self, MaybeUninit},
     panic::{AssertUnwindSafe, catch_unwind, resume_unwind},
     path::Path,
     ptr::{self, NonNull},
@@ -202,9 +203,10 @@ impl<T: Activated + ?Sized> Capture<T> {
             match retcode {
                 i if i >= 1 => {
                     // packet was read without issue
+                    let header = PacketHeader::from_raw(header, &mut self.header);
                     Ok(Packet::new(
-                        &*(&*header as *const raw::pcap_pkthdr as *const PacketHeader),
-                        slice::from_raw_parts(packet, (*header).caplen as _),
+                        header,
+                        slice::from_raw_parts(packet, header.caplen as _),
                     ))
                 }
                 0 => {
@@ -425,10 +427,9 @@ where
         packet: *const libc::c_uchar,
     ) {
         unsafe {
-            let packet = Packet::new(
-                &*(header as *const PacketHeader),
-                slice::from_raw_parts(packet, (*header).caplen as _),
-            );
+            let mut converted = MaybeUninit::uninit();
+            let header = PacketHeader::from_raw(header, &mut converted);
+            let packet = Packet::new(header, slice::from_raw_parts(packet, header.caplen as _));
 
             let slf = slf as *mut Self;
             let func = &mut (*slf).func;
@@ -501,14 +502,19 @@ impl Savefile {
             .header
             .caplen
             .min(u32::try_from(packet.data.len()).unwrap_or(u32::MAX));
-        let header = raw::pcap_pkthdr {
+        let header = PacketHeader {
             ts: packet.header.ts,
             caplen,
             len: packet.header.len.max(caplen),
         };
+        let mut converted = MaybeUninit::uninit();
 
         unsafe {
-            raw::pcap_dump(self.handle.as_ptr() as _, &header, packet.data.as_ptr());
+            raw::pcap_dump(
+                self.handle.as_ptr() as _,
+                header.as_raw(&mut converted),
+                packet.data.as_ptr(),
+            );
         }
     }
 
@@ -580,7 +586,7 @@ pub struct BpfProgram(raw::bpf_program);
 impl BpfProgram {
     /// checks whether a filter matches a packet
     pub fn filter(&self, buf: &[u8]) -> bool {
-        let header: raw::pcap_pkthdr = raw::pcap_pkthdr {
+        let header = PacketHeader {
             ts: libc::timeval {
                 tv_sec: 0,
                 tv_usec: 0,
@@ -588,7 +594,10 @@ impl BpfProgram {
             caplen: buf.len() as u32,
             len: buf.len() as u32,
         };
-        unsafe { raw::pcap_offline_filter(&self.0, &header, buf.as_ptr()) > 0 }
+        let mut converted = MaybeUninit::uninit();
+        unsafe {
+            raw::pcap_offline_filter(&self.0, header.as_raw(&mut converted), buf.as_ptr()) > 0
+        }
     }
 
     pub fn get_instructions(&self) -> &[BpfInstruction] {
