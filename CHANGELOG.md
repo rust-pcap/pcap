@@ -70,6 +70,8 @@
 
 - `IfFlags::from_bits_unchecked`, which `bitflags` 1 generated. `bitflags` 2 provides
   `IfFlags::from_bits_retain` instead.
+- `From<NonNull<pcap_t>>` for `Capture` and `From<NonNull<pcap_dumper_t>>` for `Savefile`, which
+  let safe code close a handle twice or wrap a dangling pointer.
 
 ### Fixed
 

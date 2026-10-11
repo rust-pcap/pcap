@@ -122,11 +122,11 @@ impl Drop for PcapHandle {
 
 unsafe impl<T: State + ?Sized> Send for Capture<T> {}
 
-// `Capture` is not safe to implement Sync as the libpcap functions it uses are not promised to have
-// thread-safe access to the same `raw::pcap_t *` from multiple threads.
-#[allow(clippy::arc_with_non_send_sync)]
-impl<T: State + ?Sized> From<NonNull<raw::pcap_t>> for Capture<T> {
-    fn from(handle: NonNull<raw::pcap_t>) -> Self {
+impl<T: State + ?Sized> Capture<T> {
+    // `Capture` is not safe to implement Sync as the libpcap functions it uses are not promised to
+    // have thread-safe access to the same `raw::pcap_t *` from multiple threads.
+    #[allow(clippy::arc_with_non_send_sync)]
+    fn from_handle(handle: NonNull<raw::pcap_t>) -> Self {
         Capture {
             nonblock: false,
             warning: None,
@@ -136,9 +136,7 @@ impl<T: State + ?Sized> From<NonNull<raw::pcap_t>> for Capture<T> {
             _marker: PhantomData,
         }
     }
-}
 
-impl<T: State + ?Sized> Capture<T> {
     fn new_raw<F>(path: Option<CString>, func: F) -> Result<Capture<T>, Error>
     where
         F: FnOnce(&raw::Library, *const libc::c_char, *mut libc::c_char) -> *mut raw::pcap_t,
@@ -150,7 +148,7 @@ impl<T: State + ?Sized> Capture<T> {
                 None => func(&library, ptr::null(), err),
                 Some(path) => func(&library, path.as_ptr(), err),
             };
-            Ok(Capture::from(
+            Ok(Capture::from_handle(
                 NonNull::<raw::pcap_t>::new(handle).ok_or_else(|| unsafe { Error::new(err) })?,
             ))
         })
@@ -312,7 +310,7 @@ pub mod testmod {
             .return_once(|_| {});
 
         TestCapture {
-            capture: Capture::<T>::from(NonNull::new(pcap).unwrap()),
+            capture: Capture::<T>::from_handle(NonNull::new(pcap).unwrap()),
             _close_ctx: ctx,
         }
     }
