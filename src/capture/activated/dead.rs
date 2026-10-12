@@ -16,7 +16,7 @@ impl Capture<Dead> {
         let library = raw::require_library()?;
 
         let handle = unsafe { raw::pcap_open_dead(&library, linktype.0, 65535) };
-        Ok(Capture::from(
+        Ok(Capture::from_handle(
             NonNull::<raw::pcap_t>::new(handle).ok_or(Error::InsufficientMemory)?,
         ))
     }
@@ -39,7 +39,7 @@ impl Capture<Dead> {
         let handle = unsafe {
             raw::pcap_open_dead_with_tstamp_precision(&library, linktype.0, 65535, precision as u32)
         };
-        Ok(Capture::from(
+        Ok(Capture::from_handle(
             NonNull::<raw::pcap_t>::new(handle).ok_or(Error::InsufficientMemory)?,
         ))
     }

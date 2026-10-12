@@ -120,7 +120,7 @@ impl<T: Activated + ?Sized> Capture<T> {
         let handle = self
             .check_err(handle_opt.is_some())
             .map(|_| handle_opt.unwrap())?;
-        Ok(Savefile::from(handle))
+        Ok(Savefile { handle })
     }
 
     /// Create a `Savefile` context for recording captured packets using this `Capture`'s
@@ -139,7 +139,7 @@ impl<T: Activated + ?Sized> Capture<T> {
             let handle = self
                 .check_err(handle_opt.is_some())
                 .map(|_| handle_opt.unwrap())?;
-            Ok(Savefile::from(handle))
+            Ok(Savefile { handle })
         })
     }
 
@@ -167,7 +167,7 @@ impl<T: Activated + ?Sized> Capture<T> {
         let handle = self
             .check_err(handle_opt.is_some())
             .map(|_| handle_opt.unwrap())?;
-        Ok(Savefile::from(handle))
+        Ok(Savefile { handle })
     }
 
     /// Set the direction of the capture
@@ -557,12 +557,6 @@ impl Savefile {
     #[cfg(not(windows))]
     pub unsafe fn file(&self) -> *mut FILE {
         unsafe { raw::pcap_dump_file(self.handle.as_ptr()) }
-    }
-}
-
-impl From<NonNull<raw::pcap_dumper_t>> for Savefile {
-    fn from(handle: NonNull<raw::pcap_dumper_t>) -> Self {
-        Savefile { handle }
     }
 }
 
