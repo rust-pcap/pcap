@@ -63,7 +63,7 @@ To solve this, you can try helping the pcap crate compile the correct feature se
 
 #### Library Location
 
-If you are linking dynamically with libpcap, pcap will try to consult libpcap for its version. However, if your library is in an unconventional location and you had to customize `cargo:rustc-link-search=native` in your own build script, pcap's build script is unable to pick up on that and will default to the most recent API version. If you are not using the most recent library version, please communicate the library's location to pcap's build script using the `LIBPCAP_LIBDIR` environment variable.
+When linking dynamically, pcap's build script queries libpcap for its version. It does not see search paths added with `cargo:rustc-link-search=native` by another build script, and for a library in an unconventional location it may detect the version of another libpcap or assume the newest API. Setting the `LIBPCAP_LIBDIR` environment variable to the library's directory avoids this.
 
 If `LIBPCAP_LIBDIR` is unset, the build will attempt to find the library via `pkg-config` instead. On most setups, this is the easiest way to get things working and may even eliminate the need for any custom build scripts in your software.
 
@@ -71,7 +71,9 @@ If `LIBPCAP_LIBDIR` is unset, the build will attempt to find the library via `pk
 
 #### Library Version
 
-If setting the library location does not work or you are linking statically, you may need to set the libpcap version manually. You can do this by setting the environment variable `LIBPCAP_VER` to the desired version (e.g. `env LIBPCAP_VER=1.5.0`). By default, if pcap fails to query libpcap/wpcap for its API version, it will assume the newest API so this should only be necessary if you are using an old version of libpcap.
+If setting the library location does not help, or the library is linked statically, set the libpcap version manually with the `LIBPCAP_VER` environment variable (e.g., `env LIBPCAP_VER=1.5.0`). This should be necessary only for an old version of libpcap: when pcap cannot query libpcap for its API version, it warns and assumes the newest API.
+
+Without pkg-config, or with `LIBPCAP_LIBDIR` set, pcap loads the library to query its version. That fails for a static library, for a library built for another target, and for any library on musl when the build script itself is linked statically, which rustup's musl toolchains do by default. In that case the version is taken from `pkgconfig/libpcap.pc` under `LIBPCAP_LIBDIR`, and without that file the newest API is assumed.
 
 Note that `LIBPCAP_VER` is respected even if you haven't set `LIBPCAP_LIBDIR` and are using `pkg-config`. If it is unset, we'll find whatever available version as long as it's supported by the library.
 

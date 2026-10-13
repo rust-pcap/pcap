@@ -1,7 +1,8 @@
 use std::env;
 use std::ffi::CStr;
+use std::fs;
 use std::os::raw::c_char;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 #[derive(PartialEq, Eq, PartialOrd, Ord)]
 struct Version {
@@ -35,10 +36,6 @@ impl Version {
             Version::new(1, 9, 1),
             Version::new(1, 10, 0),
         ]
-    }
-
-    fn fallback() -> Version {
-        Version::new(1, 9, 1)
     }
 
     fn newest() -> Version {
@@ -89,14 +86,12 @@ fn get_libpcap_version(libdirpath: Option<PathBuf>) -> Result<Version, Box<dyn s
         return Version::parse(&libver);
     }
 
-    #[cfg(all(unix, not(target_os = "macos")))]
-    let mut libfile = PathBuf::from("libpcap.so");
-    #[cfg(target_os = "macos")]
-    let mut libfile = PathBuf::from("libpcap.dylib");
-    #[cfg(windows)]
-    let mut libfile = PathBuf::from("wpcap.dll");
+    let mut libfile = match env::var("CARGO_CFG_TARGET_OS").as_deref() {
+        Ok("macos") => PathBuf::from("libpcap.dylib"),
+        _ => PathBuf::from("libpcap.so"),
+    };
 
-    if let Some(libdir) = libdirpath {
+    if let Some(libdir) = &libdirpath {
         libfile = libdir.join(libfile);
     }
 
@@ -105,7 +100,8 @@ fn get_libpcap_version(libdirpath: Option<PathBuf>) -> Result<Version, Box<dyn s
     // "well-behaved." See https://github.com/nagisa/rust_libloading/issues/86 and
     // https://github.com/nagisa/rust_libloading/blob/0.8.3/src/changelog.rs#L96-L151 for details.
     let Ok(lib) = (unsafe { libloading::Library::new(libfile) }) else {
-        return Ok(Version::fallback());
+        let version = libdirpath.as_deref().and_then(version_from_pc_file);
+        return Ok(version.unwrap_or_else(assumed_version));
     };
 
     type PcapLibVersion = unsafe extern "C" fn() -> *mut c_char;
@@ -117,37 +113,36 @@ fn get_libpcap_version(libdirpath: Option<PathBuf>) -> Result<Version, Box<dyn s
 
     let err = format!("cannot infer pcap lib version from: {v_str}");
 
-    #[cfg(not(windows))]
-    {
-        let re =
-            regex::Regex::new(r"libpcap version ([[:digit:]]+)\.([[:digit:]]+)\.([[:digit:]]+)")?;
-        let captures = re.captures(v_str).ok_or_else(|| err.clone())?;
+    let re = regex::Regex::new(r"libpcap version ([[:digit:]]+)\.([[:digit:]]+)\.([[:digit:]]+)")?;
+    let captures = re.captures(v_str).ok_or_else(|| err.clone())?;
 
-        let major_str = captures.get(1).ok_or_else(|| err.clone())?.as_str();
-        let minor_str = captures.get(2).ok_or_else(|| err.clone())?.as_str();
-        let micro_str = captures.get(3).ok_or_else(|| err.clone())?.as_str();
+    let major_str = captures.get(1).ok_or_else(|| err.clone())?.as_str();
+    let minor_str = captures.get(2).ok_or_else(|| err.clone())?.as_str();
+    let micro_str = captures.get(3).ok_or_else(|| err.clone())?.as_str();
 
-        Ok(Version::new(
-            major_str.parse::<usize>()?,
-            minor_str.parse::<usize>()?,
-            micro_str.parse::<usize>()?,
-        ))
-    }
+    Ok(Version::new(
+        major_str.parse::<usize>()?,
+        minor_str.parse::<usize>()?,
+        micro_str.parse::<usize>()?,
+    ))
+}
 
-    #[cfg(windows)]
-    {
-        let re = regex::Regex::new(r"based on libpcap version ([[:digit:]]+)\.([[:digit:]]+)")?;
-        let captures = re.captures(v_str).ok_or_else(|| err.clone())?;
+fn version_from_pc_file(libdir: &Path) -> Option<Version> {
+    let text = fs::read_to_string(libdir.join("pkgconfig").join("libpcap.pc")).ok()?;
+    let version = text
+        .lines()
+        .find_map(|line| line.strip_prefix("Version:"))?;
 
-        let major_str = captures.get(1).ok_or_else(|| err.clone())?.as_str();
-        let minor_str = captures.get(2).ok_or_else(|| err.clone())?.as_str();
+    Version::parse(version).ok()
+}
 
-        Ok(Version::new(
-            major_str.parse::<usize>()?,
-            minor_str.parse::<usize>()?,
-            0,
-        ))
-    }
+fn assumed_version() -> Version {
+    println!(
+        "cargo:warning=cannot query the pcap lib version, assuming {}; set LIBPCAP_VER to override",
+        Version::newest()
+    );
+
+    Version::newest()
 }
 
 fn emit_cfg_flags(version: Version) {
