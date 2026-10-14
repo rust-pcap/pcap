@@ -24,10 +24,12 @@ pub struct PacketStream<T: Activated + ?Sized, C> {
 impl<T: Activated + ?Sized, C> PacketStream<T, C> {
     pub(crate) fn new(capture: Capture<T>, codec: C) -> Result<Self, Error> {
         let capture = SelectableCapture::new(capture)?;
-        Ok(PacketStream {
-            inner: AsyncFd::with_interest(capture, tokio::io::Interest::READABLE)?,
-            codec,
-        })
+        // SAFETY: The descriptor belongs to the capture that `AsyncFd` takes ownership of, and
+        // stays open until that capture is dropped.
+        let inner =
+            unsafe { AsyncFd::register_with_interest(capture, tokio::io::Interest::READABLE) }
+                .map_err(io::Error::from)?;
+        Ok(PacketStream { inner, codec })
     }
 
     /// Returns a mutable reference to the inner [`Capture`].

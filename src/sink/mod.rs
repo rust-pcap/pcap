@@ -75,8 +75,13 @@ pub struct PacketSink<C> {
 impl<C> PacketSink<C> {
     pub(crate) fn new(capture: Capture<Active>) -> Result<Self, Error> {
         let capture = SelectableCapture::new(capture)?;
+        // SAFETY: The descriptor belongs to the capture that `AsyncFd` takes ownership of, and
+        // stays open until that capture is dropped.
+        let inner =
+            unsafe { AsyncFd::register_with_interest(capture, tokio::io::Interest::WRITABLE) }
+                .map_err(io::Error::from)?;
         Ok(PacketSink {
-            inner: AsyncFd::with_interest(capture, tokio::io::Interest::WRITABLE)?,
+            inner,
             packet: None,
             closed: false,
         })
