@@ -298,10 +298,12 @@ pub mod testmod {
     use raw::testmod::RAWMTX;
 
     use super::*;
+    use crate::packet::{self, Layout};
 
     pub struct TestCapture<T: State + ?Sized> {
         pub capture: Capture<T>,
         _close_ctx: raw::__pcap_close::Context,
+        _layout_ctx: packet::__layout::Context,
     }
 
     pub fn test_capture<T: State + ?Sized>(pcap: *mut raw::pcap_t) -> TestCapture<T> {
@@ -314,9 +316,13 @@ pub mod testmod {
             .withf_st(move |ptr| *ptr == pcap)
             .return_once(|_| {});
 
+        let layout_ctx = packet::layout_context();
+        layout_ctx.expect().times(..).return_const(Layout::Native);
+
         TestCapture {
             capture: Capture::<T>::from_handle(NonNull::new(pcap).unwrap()),
             _close_ctx: ctx,
+            _layout_ctx: layout_ctx,
         }
     }
 }

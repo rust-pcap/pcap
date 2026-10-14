@@ -695,6 +695,7 @@ mod tests {
             activated::testmod::{DATA, PACKET, TS, next_ex_expect},
             testmod::test_capture,
         },
+        packet::{self, Layout},
         raw::testmod::{RAWMTX, as_file, as_pcap_dumper_t, as_pcap_t, geterr_expect},
     };
 
@@ -1025,6 +1026,9 @@ mod tests {
         #[cfg(windows)]
         has_ftell64.expect().times(..).return_const(true);
 
+        let layout = packet::layout_context();
+        layout.expect().times(..).return_const(Layout::Native);
+
         let mut value: isize = 888;
         let pcap_dumper = as_pcap_dumper_t(&mut value);
 
@@ -1091,6 +1095,9 @@ mod tests {
     #[test]
     fn test_savefile_write_truncated() {
         let _m = RAWMTX.lock();
+
+        let layout = packet::layout_context();
+        layout.expect().times(..).return_const(Layout::Native);
 
         let mut value: isize = 888;
         let pcap_dumper = as_pcap_dumper_t(&mut value);

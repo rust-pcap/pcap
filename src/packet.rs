@@ -1,5 +1,8 @@
 use std::{fmt, mem::MaybeUninit, ops::Deref, ptr};
 
+#[cfg(test)]
+use mockall::automock;
+
 use crate::raw;
 
 /// Represents a packet returned from pcap.
@@ -48,6 +51,11 @@ impl PacketHeader {
     /// Returns the header that libpcap handed out, borrowing it when the loaded libpcap lays
     /// headers out as `PacketHeader` does and converting it into `buf` when it does not.
     ///
+    /// The two layouts can differ on a 32-bit target, where libpcap's `struct timeval` may be
+    /// wider or narrower than `libc::timeval`, as [`Layout`] explains. Reading such a header as a
+    /// `PacketHeader` would take `caplen` from the wrong offset and slice the packet data with it,
+    /// which is why every header that libpcap hands to the crate goes through this method.
+    ///
     /// # Safety
     ///
     /// `header` must point to a header filled in by libpcap that remains valid while the returned
@@ -75,6 +83,10 @@ impl PacketHeader {
     /// Returns a pointer to the header laid out as the loaded libpcap reads it, for a call that
     /// takes one: the header itself when the layouts match, and a copy converted into `buf` when
     /// they do not. The pointer is valid as long as both `self` and `buf` are.
+    ///
+    /// This is the reverse of [`PacketHeader::from_raw`]. `pcap_dump` and `pcap_offline_filter`
+    /// read the header in libpcap's layout, which can differ from that of `PacketHeader` as
+    /// [`Layout`] explains, and would misread a `PacketHeader` passed to them as is.
     #[inline]
     pub(crate) fn as_raw(&self, buf: &mut MaybeUninit<RawHeader>) -> *const raw::pcap_pkthdr {
         self.borrow_or_write(layout(), buf)
@@ -92,8 +104,6 @@ impl PacketHeader {
         }
     }
 
-    // `time_t` and `suseconds_t` are 32 or 64 bits wide depending on the target.
-    #[allow(clippy::unnecessary_cast)]
     unsafe fn read(header: *const raw::pcap_pkthdr, layout: Layout) -> PacketHeader {
         match layout {
             Layout::Native => {
@@ -129,7 +139,6 @@ impl PacketHeader {
         }
     }
 
-    #[allow(clippy::unnecessary_cast)]
     fn write(self, layout: Layout) -> RawHeader {
         match layout {
             Layout::Native => RawHeader::Native(raw::pcap_pkthdr {
@@ -183,7 +192,7 @@ impl Eq for PacketHeader {}
 // Only a 32-bit target asks libpcap for the layout, so elsewhere nothing constructs `Narrow` or
 // `Wide`.
 #[cfg_attr(not(any(test, target_pointer_width = "32")), allow(dead_code))]
-enum Layout {
+pub(crate) enum Layout {
     /// The layout of `raw::pcap_pkthdr`.
     Native,
     /// `ts` holds two 32-bit fields, where `libc::timeval` is wider.
@@ -229,29 +238,34 @@ impl RawHeader {
     }
 }
 
-/// On a 32-bit target the C library may use a 64-bit `time_t`, so libpcap's `struct timeval` can
-/// differ from `libc::timeval` and the layout has to be asked of libpcap. Elsewhere the crate takes
-/// the layout to be that of `raw::pcap_pkthdr`.
-#[cfg(not(target_pointer_width = "32"))]
-#[inline]
-fn layout() -> Layout {
-    Layout::Native
-}
+#[cfg_attr(test, automock)]
+mod detect {
+    use super::Layout;
 
-#[cfg(target_pointer_width = "32")]
-#[inline]
-fn layout() -> Layout {
-    // The FFI is mocked under test, and the mocks hand out headers laid out as `raw::pcap_pkthdr`.
-    #[cfg(test)]
-    {
+    /// On a 32-bit target the C library may use a 64-bit `time_t`, so libpcap's `struct timeval`
+    /// can differ from `libc::timeval` and the layout has to be asked of libpcap. Elsewhere the
+    /// crate takes the layout to be that of `raw::pcap_pkthdr`.
+    #[cfg(not(target_pointer_width = "32"))]
+    #[cfg_attr(test, allow(dead_code))]
+    #[inline]
+    pub fn layout() -> Layout {
         Layout::Native
     }
-    #[cfg(not(test))]
-    {
+
+    #[cfg(target_pointer_width = "32")]
+    #[cfg_attr(test, allow(dead_code))]
+    #[inline]
+    pub fn layout() -> Layout {
         static LAYOUT: std::sync::OnceLock<Layout> = std::sync::OnceLock::new();
-        *LAYOUT.get_or_init(probe)
+        *LAYOUT.get_or_init(super::probe)
     }
 }
+
+#[cfg(not(test))]
+use detect::layout;
+
+#[cfg(test)]
+pub(crate) use mock_detect::*;
 
 /// Asks the loaded libpcap where it reads `len`. A filter of two instructions, `ld len` and
 /// `ret a`, returns the packet length, and the header passed with it holds 16 where a 16-byte
