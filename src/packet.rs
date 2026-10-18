@@ -164,9 +164,10 @@ impl PacketHeader {
 
 impl fmt::Debug for PacketHeader {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        // tv_usec holds nanoseconds when the capture was opened with Precision::Nano.
         write!(
             f,
-            "PacketHeader {{ ts: {}.{:06}, caplen: {}, len: {} }}",
+            "PacketHeader {{ ts: timeval {{ tv_sec: {}, tv_usec: {} }}, caplen: {}, len: {} }}",
             self.ts.tv_sec, self.ts.tv_usec, self.caplen, self.len
         )
     }
@@ -350,7 +351,10 @@ mod tests {
 
     #[test]
     fn test_packet_header_display() {
-        assert!(!format!("{HEADER:?}").is_empty());
+        assert_eq!(
+            format!("{HEADER:?}"),
+            "PacketHeader { ts: timeval { tv_sec: 5, tv_usec: 50 }, caplen: 5, len: 9 }"
+        );
     }
 
     #[test]
