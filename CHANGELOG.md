@@ -75,6 +75,8 @@
 
 ### Fixed
 
+- The build script reads the libpcap version from `libpcap.pc` under `LIBPCAP_LIBDIR` when it
+  cannot load the target's library, and failing that warns and assumes the newest API.
 - `Capture::from_file`, `Capture::from_file_with_precision`, `Capture::savefile` and
   `Capture::savefile_append` no longer convert the path with `Path::to_str`. On UN\*X the path is
   handed to libpcap as bytes, so file names that are not valid UTF-8 now work. On Windows such a
