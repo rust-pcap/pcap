@@ -35,9 +35,11 @@ impl Capture<Inactive> {
     pub fn from_device<D: Into<Device>>(device: D) -> Result<Capture<Inactive>, Error> {
         let device: Device = device.into();
         let name = CString::new(device.name)?;
-        Capture::new_raw(Some(name), |library, name, err| unsafe {
+        let mut capture = Capture::new_raw(Some(name.clone()), |library, name, err| unsafe {
             raw::pcap_create(library, name, err)
-        })
+        })?;
+        capture.device = Some(name);
+        Ok(capture)
     }
 
     /// Activates an inactive capture created from `Capture::from_device()` or returns an error.
@@ -270,6 +272,52 @@ mod tests {
 
         let result = Capture::from_device("some_device");
         assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_from_device_netmask() {
+        let _m = RAWMTX.lock();
+
+        let mut dummy: isize = 777;
+        let pcap = as_pcap_t(&mut dummy);
+
+        let ctx = raw::pcap_create_context();
+        ctx.expect().return_once_st(move |_, _, _| pcap);
+
+        let ctx = raw::pcap_lookupnet_context();
+        ctx.expect().times(1).returning_st(|_, _, _, mask, _| {
+            unsafe { *mask = u32::from_ne_bytes([255, 255, 240, 0]) };
+            0
+        });
+        ctx.expect().times(1).returning(|_, _, _, _, _| -1);
+
+        let ctx = raw::pcap_activate_context();
+        ctx.expect()
+            .withf_st(move |arg1| *arg1 == pcap)
+            .return_once(|_| 0);
+
+        let ctx = raw::pcap_compile_context();
+        ctx.expect()
+            .withf_st(move |arg1, _, _, _, arg5| *arg1 == pcap && *arg5 == 0xffff_f000)
+            .times(1)
+            .returning(|_, _, _, _, _| 0);
+        ctx.expect()
+            .withf_st(move |arg1, _, _, _, arg5| *arg1 == pcap && *arg5 == 0)
+            .times(2)
+            .returning(|_, _, _, _, _| 0);
+
+        let ctx = raw::pcap_freecode_context();
+        ctx.expect().times(3).returning(|_| {});
+
+        let ctx = raw::pcap_close_context();
+        ctx.expect()
+            .withf_st(move |ptr| *ptr == pcap)
+            .return_once(|_| {});
+
+        let capture = Capture::from_device("some_device").unwrap().open().unwrap();
+        assert!(capture.compile("ip broadcast", false).is_ok());
+        assert!(capture.compile("tcp", false).is_ok());
+        assert!(capture.compile("ip broadcast", false).is_ok());
     }
 
     #[test]

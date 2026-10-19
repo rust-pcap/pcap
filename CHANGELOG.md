@@ -4,6 +4,7 @@
 
 ### Added
 
+- Binding for `pcap_lookupnet` added.
 - `TimestampType::HostHighPrecUnsynced`, which libpcap 1.10.0 added alongside committing
   `PCAP_TSTAMP_HOST_HIPREC` to being synchronized with the system clock. It is only present when
   building against libpcap 1.10.0 or later, since earlier versions do not know the type.
@@ -89,6 +90,8 @@
 - `immediate_mode` now takes effect on a Windows build without `pcap_set_immediate_mode`.
 - Packet headers follow the layout of the libpcap in use, whose `struct timeval` is wider than
   `libc::timeval` on a 32-bit system with a 64-bit `time_t`.
+- `compile` and `filter` on a capture opened from a device pass libpcap the device's netmask
+  instead of 0.
 
 ## [2.5.0] - 2026-08-15
 

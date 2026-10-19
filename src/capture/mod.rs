@@ -94,6 +94,7 @@ impl State for Dead {}
 pub struct Capture<T: State + ?Sized> {
     nonblock: bool,
     warning: Option<Warning>,
+    device: Option<CString>,
     #[cfg(windows)]
     min_to_copy: Option<i32>,
     // Holds the header that `next_packet` converts when libpcap lays it out differently from
@@ -134,6 +135,7 @@ impl<T: State + ?Sized> Capture<T> {
         Capture {
             nonblock: false,
             warning: None,
+            device: None,
             #[cfg(windows)]
             min_to_copy: None,
             header: MaybeUninit::uninit(),
