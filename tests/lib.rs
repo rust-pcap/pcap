@@ -213,3 +213,36 @@ fn test_raw_fd_api() {
         pipe_thread.join().unwrap();
     }
 }
+
+#[test]
+#[cfg(not(windows))]
+fn test_raw_fd_closed_on_error() {
+    use std::fs::{self, File};
+    use std::os::unix::fs::MetadataExt;
+    use std::os::unix::io::{IntoRawFd, RawFd};
+
+    use tempfile::TempDir;
+
+    let dir = TempDir::new().unwrap();
+    let path = dir.path().join("notes.txt");
+    fs::write(&path, "not a capture file").unwrap();
+    let ino = fs::metadata(&path).unwrap().ino();
+
+    // A test running in parallel may reuse a closed descriptor's number at once.
+    let still_open = |fd: RawFd| unsafe {
+        let mut stat = std::mem::zeroed::<libc::stat>();
+        libc::fstat(fd, &mut stat) == 0 && stat.st_ino == ino as _
+    };
+
+    let fd = File::open(&path).unwrap().into_raw_fd();
+    assert!(unsafe { Capture::from_raw_fd(fd) }.is_err());
+    assert!(!still_open(fd));
+
+    #[cfg(libpcap_1_5_0)]
+    {
+        let fd = File::open(&path).unwrap().into_raw_fd();
+        let precision = pcap::Precision::Micro;
+        assert!(unsafe { Capture::from_raw_fd_with_precision(fd, precision) }.is_err());
+        assert!(!still_open(fd));
+    }
+}

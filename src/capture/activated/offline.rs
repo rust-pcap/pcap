@@ -58,11 +58,16 @@ impl Capture<Offline> {
     /// # Safety
     ///
     /// Unsafe, because the returned Capture assumes it is the sole owner of the file descriptor.
+    /// If libpcap cannot open a capture from the descriptor, it is closed before the error is
+    /// returned.
     #[cfg(not(windows))]
     pub unsafe fn from_raw_fd(fd: RawFd) -> Result<Capture<Offline>, Error> {
         unsafe { open_raw_fd(fd, b'r') }.and_then(|file| {
             Capture::new_raw(None, |library, _, err| unsafe {
                 raw::pcap_fopen_offline(library, file, err)
+            })
+            .inspect_err(|_| unsafe {
+                libc::fclose(file);
             })
         })
     }
@@ -73,6 +78,8 @@ impl Capture<Offline> {
     /// # Safety
     ///
     /// Unsafe, because the returned Capture assumes it is the sole owner of the file descriptor.
+    /// If libpcap cannot open a capture from the descriptor, it is closed before the error is
+    /// returned.
     #[cfg(all(not(windows), libpcap_1_5_0))]
     pub unsafe fn from_raw_fd_with_precision(
         fd: RawFd,
@@ -81,6 +88,9 @@ impl Capture<Offline> {
         unsafe { open_raw_fd(fd, b'r') }.and_then(|file| {
             Capture::new_raw(None, |library, _, err| unsafe {
                 raw::pcap_fopen_offline_with_tstamp_precision(library, file, precision as _, err)
+            })
+            .inspect_err(|_| unsafe {
+                libc::fclose(file);
             })
         })
     }
