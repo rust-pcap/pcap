@@ -1334,14 +1334,14 @@ mod tests {
         let ctx = raw::pcap_compile_context();
         ctx.checkpoint();
         ctx.expect()
-            .withf_st(move |arg1, _, _, _, _| *arg1 == pcap)
+            .withf_st(move |arg1, _, _, _, arg5| *arg1 == pcap && *arg5 == 0)
             .return_once(|_, _, _, _, _| 0);
 
         let ctx = raw::pcap_freecode_context();
         ctx.checkpoint();
         ctx.expect().return_once(|_| {});
 
-        let result = capture.compile("some bpf program", false);
+        let result = capture.compile("ip broadcast", false);
         assert!(result.is_ok());
     }
 

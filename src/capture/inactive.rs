@@ -289,6 +289,7 @@ mod tests {
             unsafe { *mask = u32::from_ne_bytes([255, 255, 240, 0]) };
             0
         });
+        ctx.expect().times(1).returning(|_, _, _, _, _| -1);
 
         let ctx = raw::pcap_activate_context();
         ctx.expect()
@@ -302,11 +303,11 @@ mod tests {
             .returning(|_, _, _, _, _| 0);
         ctx.expect()
             .withf_st(move |arg1, _, _, _, arg5| *arg1 == pcap && *arg5 == 0)
-            .times(1)
+            .times(2)
             .returning(|_, _, _, _, _| 0);
 
         let ctx = raw::pcap_freecode_context();
-        ctx.expect().times(2).returning(|_| {});
+        ctx.expect().times(3).returning(|_| {});
 
         let ctx = raw::pcap_close_context();
         ctx.expect()
@@ -316,6 +317,7 @@ mod tests {
         let capture = Capture::from_device("some_device").unwrap().open().unwrap();
         assert!(capture.compile("ip broadcast", false).is_ok());
         assert!(capture.compile("tcp", false).is_ok());
+        assert!(capture.compile("ip broadcast", false).is_ok());
     }
 
     #[test]
